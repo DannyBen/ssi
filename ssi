@@ -153,7 +153,7 @@ ssi_completion_usage() {
 # :command.usage
 ssi_uninstall_usage() {
   printf "ssi uninstall - Uninstall files\n\n"
-  printf "Alias: rm, remove\n"
+  printf "Alias: u, rm, remove\n"
   echo
 
   printf "%s\n" "$(bold "Usage:")"
@@ -976,7 +976,7 @@ parse_requirements() {
       shift $#
       ;;
 
-    uninstall | rm | remove)
+    uninstall | u | rm | remove)
       action="uninstall"
       shift
       ssi_uninstall_parse_requirements "$@"

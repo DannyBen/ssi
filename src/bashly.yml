@@ -28,7 +28,7 @@ commands:
   args: *install_args
 
 - name: uninstall
-  alias: [rm, remove]
+  alias: [u, rm, remove]
   help: Uninstall files
 
   commands:

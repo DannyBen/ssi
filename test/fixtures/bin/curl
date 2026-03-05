@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+if [[ "$1" == "-fsSL" ]]; then
+  url="$2"
+  dest=""
+  for ((i=1; i<=$#; i++)); do
+    if [[ "${!i}" == "-o" ]]; then
+      j=$((i+1))
+      dest="${!j}"
+      break
+    fi
+  done
+  printf "downloaded:%s" "$url" > "$dest"
+  exit 0
+fi
+exit 1

@@ -1,0 +1,46 @@
+name: ssi
+help: Simple Script Installer
+version: 0.1.0
+
+commands:
+- name: bin
+  alias: exec
+  help: Install executable file
+
+  args: &install_args
+  - name: source
+    help: URL to download from or '-' to read from stdin
+    default: "-"
+
+- name: man
+  alias: doc
+  help: Install man page
+  args: *install_args
+
+- name: completion
+  alias: comp
+  help: Install completion script
+  args: *install_args
+
+- name: uninstall
+  alias: [rm, remove]
+  help: Uninstall files
+
+  commands:
+  - name: bin
+    alias: exec
+    help: Uninstall executable file
+
+    args: &uninstall_args
+    - name: name
+      help: File name to uninstall
+
+  - name: man
+    alias: doc
+    help: Uninstall man page
+    args: *uninstall_args
+
+  - name: completion
+    alias: comp
+    help: Uninstall completion script
+    args: *uninstall_args

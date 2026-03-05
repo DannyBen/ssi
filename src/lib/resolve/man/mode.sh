@@ -36,23 +36,3 @@ resolve_man_mode() {
 
   printf "user"
 }
-
-resolve_man_base_path() {
-  local mode
-  mode="$(resolve_man_mode "${1:-auto}")" || return 1
-
-  if [[ "$mode" == "system" ]]; then
-    printf "/usr/local/share/man"
-  else
-    printf "%s/man" "${XDG_DATA_HOME:-$HOME/.local/share}"
-  fi
-}
-
-resolve_man_path() {
-  local section="${1:-1}"
-  local mode="${2:-auto}"
-  local base_path
-
-  base_path="$(resolve_man_base_path "$mode")" || return 1
-  printf "%s/man%s" "$base_path" "$section"
-}

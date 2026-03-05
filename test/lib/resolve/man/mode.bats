@@ -27,7 +27,7 @@
   '
 
   [ "$status" -eq 1 ]
-  [[ "$output" == *"invalid mode: nope"* ]]
+  [ -z "$output" ]
 }
 
 @test "resolve_man_mode auto resolves to system when sudo works" {

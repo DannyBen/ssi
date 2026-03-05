@@ -1,4 +1,4 @@
-resolve_man_mode() {
+resolve_completion_mode() {
   local mode="${1:-auto}"
 
   case "$mode" in
@@ -18,12 +18,12 @@ resolve_man_mode() {
     return 0
   fi
 
-  if [[ -d "/usr/local/share/man" && -w "/usr/local/share/man" ]]; then
+  if [[ -d "/usr/local/share" && -w "/usr/local/share" ]]; then
     printf "system"
     return 0
   fi
 
-  if [[ -d "/usr/local/share" && -w "/usr/local/share" ]]; then
+  if [[ -d "/usr/local/etc" && -w "/usr/local/etc" ]]; then
     printf "system"
     return 0
   fi

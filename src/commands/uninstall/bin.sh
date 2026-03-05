@@ -1,5 +1,29 @@
-echo "# This file is located at 'src/commands/uninstall/bin.sh'."
-echo "# It contains the implementation for the 'ssi uninstall bin' command."
-echo "# The code you write here will be wrapped by a function named 'ssi_uninstall_bin_command()'."
-echo "# Feel free to edit this file; your changes will persist when regenerating."
-inspect_args
+name="${args[name]}"
+user_path="$HOME/.local/bin/$name"
+system_path="/usr/local/bin/$name"
+removed=0
+
+if [[ -f "$user_path" ]]; then
+  rm -f "$user_path"
+  printf "removed: %s\n" "$user_path"
+  removed=1
+fi
+
+if [[ -f "$system_path" ]]; then
+  if [[ "${EUID:-$(id -u)}" -eq 0 || -w "/usr/local/bin" ]]; then
+    rm -f "$system_path"
+    printf "removed: %s\n" "$system_path"
+    removed=1
+  elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+    sudo rm -f "$system_path"
+    printf "removed: %s\n" "$system_path"
+    removed=1
+  else
+    printf "cannot remove (permission denied): %s\n" "$system_path" >&2
+    return 1
+  fi
+fi
+
+if [[ "$removed" -eq 0 ]]; then
+  printf "not found: %s\n" "$name"
+fi

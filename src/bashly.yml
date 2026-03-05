@@ -11,6 +11,10 @@ commands:
   - name: source
     help: URL to download from or '-' to read from stdin
     default: "-"
+  flags:
+  - long: --name
+    arg: name
+    help: Explicit target file name (required for stdin or ambiguous sources)
 
 - name: man
   alias: doc

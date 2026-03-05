@@ -55,7 +55,7 @@ ssi_bin_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi bin [SOURCE]\n"
+  printf "  ssi bin [SOURCE] [OPTIONS]\n"
   printf "  ssi bin --help | -h\n"
   echo
 
@@ -63,6 +63,12 @@ ssi_bin_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--name NAME")"
+    printf "    Explicit target file name (required for stdin or ambiguous sources)\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(green "--help, -h")"
@@ -370,16 +376,469 @@ cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
 black_underlined() { print_in_color "\e[4;30m" "$*"; }
 white_underlined() { print_in_color "\e[4;37m" "$*"; }
 
+# src/lib/create_dir.sh
+create_dir() {
+  local dir="${1:-}"
+
+  if [[ -z "$dir" ]]; then
+    fail "Missing directory"
+    return 1
+  fi
+
+  if [[ -d "$dir" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$dir" 2>/dev/null && return 0
+
+  if is_sudo_usable; then
+    sudo mkdir -p "$dir" || {
+      fail "Could not create directory: $dir"
+      return 1
+    }
+    return 0
+  fi
+
+  fail "Could not create directory: $dir"
+  return 1
+}
+
+# src/lib/fetch/download/to_file.sh
+fetch_download_to_file() {
+  local url="${1:-}"
+  local destination="${2:-}"
+
+  if [[ -z "$url" || -z "$destination" ]]; then
+    fail "Missing URL or destination for download"
+    return 1
+  fi
+
+  if is_command curl; then
+    curl -fsSL "$url" -o "$destination" && return 0
+    fail "Failed downloading with curl: $url"
+    return 1
+  fi
+
+  if is_command wget; then
+    wget -qO "$destination" "$url" && return 0
+    fail "Failed downloading with wget: $url"
+    return 1
+  fi
+
+  fail "No downloader available (need curl or wget)"
+  return 1
+}
+
+# src/lib/fetch/source/to_temp_file.sh
+fetch_source_to_temp_file() {
+  local source="${1:--}"
+  local temp_root="${2:-${TMPDIR:-/tmp}}"
+  local source_type temp_file
+
+  source_type="$(fetch_source_type "$source")" || return 1
+
+  temp_file="$(mktemp "${temp_root%/}/ssi.fetch.XXXXXX")" || {
+    fail "Could not allocate temporary file"
+    return 1
+  }
+
+  case "$source_type" in
+    stdin)
+      cat > "$temp_file" || {
+        fail "Could not read source from stdin"
+        return 1
+      }
+      ;;
+    file)
+      cp "$source" "$temp_file" || {
+        fail "Could not copy source file"
+        return 1
+      }
+      ;;
+    url)
+      fetch_download_to_file "$source" "$temp_file" || return 1
+      ;;
+  esac
+
+  printf "%s" "$temp_file"
+}
+
+# src/lib/fetch/source/type.sh
+fetch_source_type() {
+  local source="${1:--}"
+
+  if [[ "$source" == "-" ]]; then
+    printf "stdin"
+    return 0
+  elif [[ "$source" =~ ^https?:// ]]; then
+    printf "url"
+    return 0
+  elif [[ -f "$source" ]]; then
+    printf "file"
+    return 0
+  else
+    fail "Invalid source: $source"
+    return 1
+  fi
+}
+
+# src/lib/install_file.sh
+install_file() {
+  local source="${1:-}"
+  local destination="${2:-}"
+  local mode="${3:-755}"
+  local destination_dir
+
+  if [[ -z "$source" || -z "$destination" ]]; then
+    fail "Missing source or destination for install"
+    return 1
+  fi
+
+  destination_dir="$(dirname "$destination")"
+  create_dir "$destination_dir" || return 1
+
+  install -m "$mode" "$source" "$destination" 2>/dev/null && return 0
+
+  if is_sudo_usable; then
+    sudo install -m "$mode" "$source" "$destination" && return 0
+  fi
+
+  fail "Could not install file to destination: $destination"
+  return 1
+}
+
+# src/lib/is_command.sh
+is_command() {
+  local name="${1:-}"
+  [[ -n "$name" ]] && command -v "$name" >/dev/null 2>&1
+}
+
+# src/lib/is_root.sh
+is_root() {
+  [ "$(id -u)" -eq 0 ]
+}
+
+# src/lib/is_sudo_usable.sh
+is_sudo_usable() {
+  command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1
+}
+
+# src/lib/is_writable_dir.sh
+is_writable_dir() {
+  local dir="$1"
+  [[ -n "$dir" && -d "$dir" && -w "$dir" ]]
+}
+
+# src/lib/log.sh
+log() {
+  : "${log_level:=${SSI_LOG_LEVEL:-info}}"
+
+  local level="$1"
+  shift
+  local msg="$*"
+  local caller color_func rank_req rank_cur
+
+  case "$level" in
+    debug) rank_req=10 ;;
+    info) rank_req=20 ;;
+    warn) rank_req=30 ;;
+    error) rank_req=40 ;;
+    *) rank_req=20 ;;
+  esac
+
+  case "$log_level" in
+    debug) rank_cur=10 ;;
+    info) rank_cur=20 ;;
+    warn) rank_cur=30 ;;
+    error) rank_cur=40 ;;
+    *) rank_cur=20 ;;
+  esac
+
+  # filter by level
+  [[ $rank_req -lt $rank_cur ]] && return 0
+
+  # choose color function
+  color_func="cyan"
+  case "$level" in
+    debug) color_func="magenta" ;;
+    info) color_func="green" ;;
+    warn) color_func="yellow_bold" ;;
+    error) color_func="red_bold" ;;
+  esac
+
+  if [[ "$log_level" == "debug" ]]; then
+    caller="${FUNCNAME[1]}"
+    printf "$(green_bold "•") %s • %s $(green_bold →) %s\n" \
+      "$("$color_func" "$level")" "$(cyan "$caller")" "$msg" >&2
+  else
+    printf "$(green_bold "•") %s $(green_bold →) %s\n" \
+      "$("$color_func" "$level")" "$msg" >&2
+  fi
+}
+
+fail() {
+  log error "$*"
+  return 1
+}
+
+# src/lib/resolve/bin/mode.sh
+resolve_bin_mode() {
+  local mode="${1:-auto}"
+
+  case "$mode" in
+    system | user)
+      printf "%s" "$mode"
+      return 0
+      ;;
+    auto)
+      ;;
+    *)
+      fail "Could not resolve install mode"
+      return 1
+      ;;
+  esac
+
+  if is_root; then
+    printf "system"
+    return 0
+  fi
+
+  if is_writable_dir "/usr/local/bin"; then
+    printf "system"
+    return 0
+  fi
+
+  if is_sudo_usable; then
+    printf "system"
+    return 0
+  fi
+
+  printf "user"
+}
+
+# src/lib/resolve/bin/root.sh
+resolve_bin_root() {
+  local mode
+  mode="$(resolve_bin_mode "${1:-auto}")" || {
+    fail "Could not resolve binary root"
+    return 1
+  }
+
+  if [[ "$mode" == "system" ]]; then
+    printf "/usr/local/bin"
+  else
+    printf "%s/.local/bin" "$HOME"
+  fi
+}
+
+# src/lib/resolve/completion/base_path.sh
+resolve_completion_base_path() {
+  local shell="${1:-}"
+  local mode="${2:-auto}"
+  local data_home
+
+  [[ -n "$shell" ]] || return 1
+  mode="$(resolve_completion_mode "$mode")" || return 1
+
+  case "$shell" in
+    bash | zsh | fish)
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  if [[ "$mode" == "system" ]]; then
+    case "$shell" in
+      bash)
+        if [[ -d "/usr/local/share/bash-completion/completions" ]]; then
+          printf "/usr/local/share/bash-completion/completions"
+        elif [[ -d "/usr/local/etc/bash_completion.d" ]]; then
+          printf "/usr/local/etc/bash_completion.d"
+        elif [[ -d "/usr/share/bash-completion/completions" ]]; then
+          printf "/usr/share/bash-completion/completions"
+        else
+          printf "/usr/local/share/bash-completion/completions"
+        fi
+        ;;
+      zsh)
+        printf "/usr/local/share/zsh/site-functions"
+        ;;
+      fish)
+        printf "/usr/local/share/fish/vendor_completions.d"
+        ;;
+    esac
+    return 0
+  fi
+
+  data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+  case "$shell" in
+    bash)
+      printf "%s/bash-completion/completions" "$data_home"
+      ;;
+    zsh)
+      printf "%s/zsh/site-functions" "$data_home"
+      ;;
+    fish)
+      printf "%s/fish/vendor_completions.d" "$data_home"
+      ;;
+  esac
+}
+
+# src/lib/resolve/completion/mode.sh
+resolve_completion_mode() {
+  local mode="${1:-auto}"
+
+  case "$mode" in
+    system | user)
+      printf "%s" "$mode"
+      return 0
+      ;;
+    auto)
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    printf "system"
+    return 0
+  fi
+
+  if [[ -d "/usr/local/share" && -w "/usr/local/share" ]]; then
+    printf "system"
+    return 0
+  fi
+
+  if [[ -d "/usr/local/etc" && -w "/usr/local/etc" ]]; then
+    printf "system"
+    return 0
+  fi
+
+  if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+    printf "system"
+    return 0
+  fi
+
+  printf "user"
+}
+
+# src/lib/resolve/man/base_path.sh
+resolve_man_base_path() {
+  local mode
+  mode="$(resolve_man_mode "${1:-auto}")" || return 1
+
+  if [[ "$mode" == "system" ]]; then
+    printf "/usr/local/share/man"
+  else
+    printf "%s/man" "${XDG_DATA_HOME:-$HOME/.local/share}"
+  fi
+}
+
+# src/lib/resolve/man/mode.sh
+resolve_man_mode() {
+  local mode="${1:-auto}"
+
+  case "$mode" in
+    system | user)
+      printf "%s" "$mode"
+      return 0
+      ;;
+    auto)
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    printf "system"
+    return 0
+  fi
+
+  if [[ -d "/usr/local/share/man" && -w "/usr/local/share/man" ]]; then
+    printf "system"
+    return 0
+  fi
+
+  if [[ -d "/usr/local/share" && -w "/usr/local/share" ]]; then
+    printf "system"
+    return 0
+  fi
+
+  if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+    printf "system"
+    return 0
+  fi
+
+  printf "user"
+}
+
+# src/lib/resolve/man/path.sh
+resolve_man_path() {
+  local section="${1:-1}"
+  local mode="${2:-auto}"
+  local base_path
+
+  base_path="$(resolve_man_base_path "$mode")" || return 1
+  printf "%s/man%s" "$base_path" "$section"
+}
+
+# src/lib/resolve/target_name_from_source.sh
+resolve_target_name_from_source() {
+  local source_input="${1:-}"
+  local name=""
+
+  if [[ -z "$source_input" ]]; then
+    fail "Missing source input"
+    return 1
+  fi
+
+  if [[ "$source_input" == "-" ]]; then
+    printf ""
+    return 0
+  fi
+
+  if [[ "$source_input" =~ ^https?:// ]]; then
+    name="${source_input##*/}"
+    name="${name%%\?*}"
+    printf "%s" "$name"
+    return 0
+  fi
+
+  printf "%s" "$(basename "$source_input")"
+}
+
 # :command.command_functions
 # :command.function
 ssi_bin_command() {
 
   # src/commands/bin.sh
-  echo "# This file is located at 'src/commands/bin.sh'."
-  echo "# It contains the implementation for the 'ssi bin' command."
-  echo "# The code you write here will be wrapped by a function named 'ssi_bin_command()'."
-  echo "# Feel free to edit this file; your changes will persist when regenerating."
-  inspect_args
+  source_input="${args[source]}"
+  explicit_name="${args[name]:-}"
+
+  mode="$(resolve_bin_mode)" || return 1
+  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
+    return 1
+  fi
+
+  bin_root="$(resolve_bin_root "$mode")" || return 1
+  target_path="${bin_root}/${target_name}"
+
+  install_file "$temp_file" "$target_path" 755 || return 1
+
+  rm -f "$temp_file"
+  printf "installed: %s\n" "$target_path"
 
 }
 
@@ -411,11 +870,35 @@ ssi_completion_command() {
 ssi_uninstall_bin_command() {
 
   # src/commands/uninstall/bin.sh
-  echo "# This file is located at 'src/commands/uninstall/bin.sh'."
-  echo "# It contains the implementation for the 'ssi uninstall bin' command."
-  echo "# The code you write here will be wrapped by a function named 'ssi_uninstall_bin_command()'."
-  echo "# Feel free to edit this file; your changes will persist when regenerating."
-  inspect_args
+  name="${args[name]}"
+  user_path="$HOME/.local/bin/$name"
+  system_path="/usr/local/bin/$name"
+  removed=0
+
+  if [[ -f "$user_path" ]]; then
+    rm -f "$user_path"
+    printf "removed: %s\n" "$user_path"
+    removed=1
+  fi
+
+  if [[ -f "$system_path" ]]; then
+    if [[ "${EUID:-$(id -u)}" -eq 0 || -w "/usr/local/bin" ]]; then
+      rm -f "$system_path"
+      printf "removed: %s\n" "$system_path"
+      removed=1
+    elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+      sudo rm -f "$system_path"
+      printf "removed: %s\n" "$system_path"
+      removed=1
+    else
+      printf "cannot remove (permission denied): %s\n" "$system_path" >&2
+      return 1
+    fi
+  fi
+
+  if [[ "$removed" -eq 0 ]]; then
+    printf "not found: %s\n" "$name"
+  fi
 
 }
 
@@ -567,6 +1050,19 @@ ssi_bin_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2

@@ -1,0 +1,46 @@
+#!/usr/bin/env bats
+
+setup() {
+  source "$BATS_TEST_DIRNAME/../../src/lib/is_sudo_usable.sh"
+}
+
+@test "is_sudo_usable returns success when sudo command exists and sudo -n true passes" {
+  command() {
+    if [[ "$1" == "-v" && "$2" == "sudo" ]]; then
+      return 0
+    fi
+    builtin command "$@"
+  }
+  sudo() { return 0; }
+
+  run is_sudo_usable
+
+  [ "$status" -eq 0 ]
+}
+
+@test "is_sudo_usable returns failure when sudo command is missing" {
+  command() {
+    if [[ "$1" == "-v" && "$2" == "sudo" ]]; then
+      return 1
+    fi
+    builtin command "$@"
+  }
+
+  run is_sudo_usable
+
+  [ "$status" -ne 0 ]
+}
+
+@test "is_sudo_usable returns failure when sudo command exists but sudo -n true fails" {
+  command() {
+    if [[ "$1" == "-v" && "$2" == "sudo" ]]; then
+      return 0
+    fi
+    builtin command "$@"
+  }
+  sudo() { return 1; }
+
+  run is_sudo_usable
+
+  [ "$status" -ne 0 ]
+}

@@ -1,5 +1,5 @@
 source_input="${args[source]}"
-explicit_name="${args[name]:-}"
+explicit_name="${args[--name]:-}"
 
 mode="$(resolve_bin_mode)" || return 1
 temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
@@ -21,4 +21,4 @@ target_path="${bin_root}/${target_name}"
 install_file "$temp_file" "$target_path" 755 || return 1
 
 rm -f "$temp_file"
-printf "installed: %s\n" "$target_path"
+printf "%s: %s\n" "$(bold installed)" "$target_path"

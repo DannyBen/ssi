@@ -10,7 +10,8 @@ commands:
   args: &install_args
   - name: source
     help: URL to download from or '-' to read from stdin
-    default: "-"
+    required: true
+
   flags:
   - long: --name
     arg: name

@@ -55,7 +55,7 @@ ssi_bin_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi bin [SOURCE] [OPTIONS]\n"
+  printf "  ssi bin SOURCE [OPTIONS]\n"
   printf "  ssi bin --help | -h\n"
   echo
 
@@ -81,7 +81,6 @@ ssi_bin_usage() {
     # :argument.usage
     printf "  %s\n" "$(green "SOURCE")"
     printf "    URL to download from or '-' to read from stdin\n"
-    printf "    %s\n" "Default: -"
     echo
 
   fi
@@ -94,7 +93,7 @@ ssi_man_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi man [SOURCE]\n"
+  printf "  ssi man SOURCE\n"
   printf "  ssi man --help | -h\n"
   echo
 
@@ -114,7 +113,6 @@ ssi_man_usage() {
     # :argument.usage
     printf "  %s\n" "$(green "SOURCE")"
     printf "    URL to download from or '-' to read from stdin\n"
-    printf "    %s\n" "Default: -"
     echo
 
   fi
@@ -127,7 +125,7 @@ ssi_completion_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi completion [SOURCE]\n"
+  printf "  ssi completion SOURCE\n"
   printf "  ssi completion --help | -h\n"
   echo
 
@@ -147,7 +145,6 @@ ssi_completion_usage() {
     # :argument.usage
     printf "  %s\n" "$(green "SOURCE")"
     printf "    URL to download from or '-' to read from stdin\n"
-    printf "    %s\n" "Default: -"
     echo
 
   fi
@@ -816,7 +813,7 @@ ssi_bin_command() {
 
   # src/commands/bin.sh
   source_input="${args[source]}"
-  explicit_name="${args[name]:-}"
+  explicit_name="${args[--name]:-}"
 
   mode="$(resolve_bin_mode)" || return 1
   temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
@@ -838,7 +835,7 @@ ssi_bin_command() {
   install_file "$temp_file" "$target_path" 755 || return 1
 
   rm -f "$temp_file"
-  printf "installed: %s\n" "$target_path"
+  printf "%s: %s\n" "$(bold installed)" "$target_path"
 
 }
 
@@ -1086,8 +1083,12 @@ ssi_bin_parse_requirements() {
     esac
   done
 
-  # :command.default_assignments
-  [[ -n ${args['source']:-} ]] || args['source']="-"
+  # :command.required_args_filter
+  if [[ -z ${args['source']+x} ]]; then
+    printf "missing required argument: SOURCE\nusage: ssi bin SOURCE [OPTIONS]\n" >&2
+
+    exit 1
+  fi
 
 }
 
@@ -1142,8 +1143,12 @@ ssi_man_parse_requirements() {
     esac
   done
 
-  # :command.default_assignments
-  [[ -n ${args['source']:-} ]] || args['source']="-"
+  # :command.required_args_filter
+  if [[ -z ${args['source']+x} ]]; then
+    printf "missing required argument: SOURCE\nusage: ssi man SOURCE\n" >&2
+
+    exit 1
+  fi
 
 }
 
@@ -1198,8 +1203,12 @@ ssi_completion_parse_requirements() {
     esac
   done
 
-  # :command.default_assignments
-  [[ -n ${args['source']:-} ]] || args['source']="-"
+  # :command.required_args_filter
+  if [[ -z ${args['source']+x} ]]; then
+    printf "missing required argument: SOURCE\nusage: ssi completion SOURCE\n" >&2
+
+    exit 1
+  fi
 
 }
 

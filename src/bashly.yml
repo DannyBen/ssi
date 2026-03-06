@@ -33,7 +33,7 @@ commands:
   args: *install_args
   flags:
   - *name_flag
-  - &shell_flah
+  - &shell_flag
     long: --shell
     arg: shell
     help: Shell type
@@ -45,7 +45,7 @@ commands:
   args: *install_args
   flags:
   - *name_flag
-  - *shell_flah
+  - *shell_flag
 
 - name: uninstall
   alias: [u, rm, remove]
@@ -59,6 +59,7 @@ commands:
     args: &uninstall_args
     - name: name
       help: File name to uninstall
+      required: true
 
   - name: man
     alias: doc
@@ -70,15 +71,13 @@ commands:
     help: Uninstall completion script
     args: *uninstall_args
     flags:
-    - long: --shell
-      arg: shell
-      help: Shell type
-      default: bash
-      allowed: [bash, zsh, fish]
+    - *shell_flag
 
   - name: startup
     help: Uninstall startup script
     args: *uninstall_args
+    flags:
+    - *shell_flag
 
 - name: log
   help: Send a log message

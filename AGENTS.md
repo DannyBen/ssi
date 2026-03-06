@@ -30,6 +30,8 @@
 - Use `log info` for user-facing success/info output and `log warn` for warnings so output styling stays consistent. `fail` remains `log error` + return 1.
 - Prefer small, deterministic functions and unit tests before command integration.
 - Favor readability and explicit branching over compact but opaque Bash.
+- Do not set default values for args in command handlers; rely on Bashly defaults.
+- Do not add manual "required arg" validation in command handlers; use Bashly `required: true`.
 - Only use a directory as a domain when its name matches the function name prefix (e.g., `resolve_*` in `src/lib/resolve/`). Otherwise, place the function at `src/lib/<name>.sh`.
 - For command tests that assert CLI output, set `NO_COLOR=1` for deterministic output.
 

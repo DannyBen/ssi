@@ -1,5 +1,37 @@
-echo "# This file is located at 'src/commands/uninstall/startup.sh'."
-echo "# It contains the implementation for the 'ssi uninstall startup' command."
-echo "# The code you write here will be wrapped by a function named 'ssi_uninstall_startup_command()'."
-echo "# Feel free to edit this file; your changes will persist when regenerating."
-inspect_args
+name="${args[name]}"
+shell="${args[--shell]}"
+status=0
+
+case "$shell" in
+  bash)
+    if startup_uninstall_bash "$name"; then
+      status=0
+    else
+      status=$?
+    fi
+    ;;
+  zsh)
+    if startup_uninstall_zsh "$name"; then
+      status=0
+    else
+      status=$?
+    fi
+    ;;
+  fish)
+    if startup_uninstall_fish "$name"; then
+      status=0
+    else
+      status=$?
+    fi
+    ;;
+  *)
+    fail "Unknown shell: $shell"
+    return 1
+    ;;
+esac
+
+case "$status" in
+  0) ;;
+  2) log warn "Not found: $name" ;;
+  *) return 1 ;;
+esac

@@ -70,3 +70,17 @@ commands:
       help: Shell type
       default: bash
       allowed: [bash, zsh, fish]
+
+- name: log
+  help: Send a log message
+
+  args:
+  - name: level
+    help: Message log level
+    required: true
+    allowed: [debug, info, warn, error]
+
+  - name: message
+    help: Message to send
+    required: true
+    repeatable: true

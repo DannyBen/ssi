@@ -30,6 +30,7 @@ ssi_usage() {
   printf "  %s   Install man page\n" "$(green "man")       "
   printf "  %s   Install completion script\n" "$(green "completion")"
   printf "  %s   Uninstall files\n" "$(green "uninstall") "
+  printf "  %s   Send a log message\n" "$(green "log")       "
   echo
 
   # :command.long_usage
@@ -308,6 +309,42 @@ ssi_uninstall_completion_usage() {
     # :argument.usage
     printf "  %s\n" "$(green "NAME")"
     printf "    File name to uninstall\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_log_usage() {
+  printf "ssi log - Send a log message\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi log LEVEL MESSAGE...\n"
+  printf "  ssi log --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "Arguments:")"
+
+    # :argument.usage
+    printf "  %s\n" "$(green "LEVEL")"
+    printf "    Message log level\n"
+    printf "    %s\n" "Allowed: debug, info, warn, error"
+    echo
+
+    # :argument.usage
+    printf "  %s\n" "$(green "MESSAGE...")"
+    printf "    Message to send\n"
     echo
 
   fi
@@ -1079,6 +1116,17 @@ ssi_uninstall_completion_command() {
 
 }
 
+# :command.function
+ssi_log_command() {
+
+  # src/commands/log.sh
+  level="${args[level]}"
+  eval "message=(${args[message]})"
+
+  log "$level" "${message[@]}"
+
+}
+
 # :command.parse_requirements
 parse_requirements() {
   local key
@@ -1155,6 +1203,13 @@ parse_requirements() {
       action="uninstall"
       shift
       ssi_uninstall_parse_requirements "$@"
+      shift $#
+      ;;
+
+    log)
+      action="log"
+      shift
+      ssi_log_parse_requirements "$@"
       shift $#
       ;;
 
@@ -1701,6 +1756,83 @@ ssi_uninstall_completion_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+ssi_log_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_log_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="log"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_repeatable
+        # :argument.case_repeatable
+        escaped="$(printf '%q' "$1")"
+        if [[ -z ${args['level']+x} ]]; then
+          args['level']="$1"
+
+        # :argument.case_repeatable
+        elif [[ -z ${args['message']+x} ]]; then
+          args['message']="$escaped"
+        else
+          args['message']="${args['message']} $escaped"
+
+        fi
+        shift
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['level']+x} ]]; then
+    printf "missing required argument: LEVEL\nusage: ssi log LEVEL MESSAGE...\n" >&2
+
+    exit 1
+  fi
+
+  if [[ -z ${args['message']+x} ]]; then
+    printf "missing required argument: MESSAGE\nusage: ssi log LEVEL MESSAGE...\n" >&2
+
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ -n ${args['level']:-} ]] && [[ ! ${args['level']:-} =~ ^(debug|info|warn|error)$ ]]; then
+    printf "%s\n" "level must be one of: debug, info, warn, error" >&2
+    exit 1
+  fi
+
+}
+
 # :command.initialize
 initialize() {
   declare -g version="0.1.0"
@@ -1739,6 +1871,7 @@ run() {
     "uninstall bin") ssi_uninstall_bin_command ;;
     "uninstall man") ssi_uninstall_man_command ;;
     "uninstall completion") ssi_uninstall_completion_command ;;
+    "log") ssi_log_command ;;
   esac
 }
 

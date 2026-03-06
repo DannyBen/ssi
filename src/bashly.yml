@@ -11,11 +11,12 @@ commands:
 
   args: &install_args
   - name: source
-    help: URL to download from or '-' to read from stdin
+    help: URL to download from, path to file, or '-' to read from stdin
     required: true
 
   flags:
-  - long: --name
+  - &name_flag
+    long: --name
     arg: name
     help: Explicit target file name (required for stdin or ambiguous sources)
 
@@ -23,24 +24,28 @@ commands:
   alias: doc
   help: Install man page
   args: *install_args
-  flags:
-  - long: --name
-    arg: name
-    help: Explicit target file name (required for stdin or ambiguous sources)
+  flags: 
+  - *name_flag
 
 - name: completion
   alias: comp
   help: Install completion script
   args: *install_args
   flags:
-  - long: --name
-    arg: name
-    help: Explicit target file name (required for stdin or ambiguous sources)
-  - long: --shell
+  - *name_flag
+  - &shell_flah
+    long: --shell
     arg: shell
     help: Shell type
     default: bash
     allowed: [bash, zsh, fish]
+
+- name: startup
+  help: Install startup script
+  args: *install_args
+  flags:
+  - *name_flag
+  - *shell_flah
 
 - name: uninstall
   alias: [u, rm, remove]
@@ -71,15 +76,17 @@ commands:
       default: bash
       allowed: [bash, zsh, fish]
 
+  - name: startup
+    help: Uninstall startup script
+    args: *uninstall_args
+
 - name: log
   help: Send a log message
-
   args:
   - name: level
     help: Message log level
     required: true
     allowed: [debug, info, warn, error]
-
   - name: message
     help: Message to send
     required: true

@@ -29,6 +29,7 @@ ssi_usage() {
   printf "  %s   Install executable file\n" "$(green "bin")       "
   printf "  %s   Install man page\n" "$(green "man")       "
   printf "  %s   Install completion script\n" "$(green "completion")"
+  printf "  %s   Install startup script\n" "$(green "startup")   "
   printf "  %s   Uninstall files\n" "$(green "uninstall") "
   printf "  %s   Send a log message\n" "$(green "log")       "
   echo
@@ -91,7 +92,7 @@ ssi_bin_usage() {
 
     # :argument.usage
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    URL to download from or '-' to read from stdin\n"
+    printf "    URL to download from, path to file, or '-' to read from stdin\n"
     echo
 
   fi
@@ -129,7 +130,7 @@ ssi_man_usage() {
 
     # :argument.usage
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    URL to download from or '-' to read from stdin\n"
+    printf "    URL to download from, path to file, or '-' to read from stdin\n"
     echo
 
   fi
@@ -174,7 +175,50 @@ ssi_completion_usage() {
 
     # :argument.usage
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    URL to download from or '-' to read from stdin\n"
+    printf "    URL to download from, path to file, or '-' to read from stdin\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_startup_usage() {
+  printf "ssi startup - Install startup script\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi startup SOURCE [OPTIONS]\n"
+  printf "  ssi startup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--name NAME")"
+    printf "    Explicit target file name (required for stdin or ambiguous sources)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(green "--shell SHELL")"
+    printf "    Shell type\n"
+    printf "    %s\n" "Allowed: bash, zsh, fish"
+    printf "    %s\n" "Default: bash"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "Arguments:")"
+
+    # :argument.usage
+    printf "  %s\n" "$(green "SOURCE")"
+    printf "    URL to download from, path to file, or '-' to read from stdin\n"
     echo
 
   fi
@@ -195,6 +239,7 @@ ssi_uninstall_usage() {
   printf "  %s   Uninstall executable file\n" "$(green "bin")       "
   printf "  %s   Uninstall man page\n" "$(green "man")       "
   printf "  %s   Uninstall completion script\n" "$(green "completion")"
+  printf "  %s   Uninstall startup script\n" "$(green "startup")   "
   echo
 
   # :command.long_usage
@@ -297,6 +342,36 @@ ssi_uninstall_completion_usage() {
     printf "    %s\n" "Allowed: bash, zsh, fish"
     printf "    %s\n" "Default: bash"
     echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "Arguments:")"
+
+    # :argument.usage
+    printf "  %s\n" "$(green "NAME")"
+    printf "    File name to uninstall\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_uninstall_startup_usage() {
+  printf "ssi uninstall startup - Uninstall startup script\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi uninstall startup [NAME]\n"
+  printf "  ssi uninstall startup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(green "--help, -h")"
@@ -921,6 +996,109 @@ resolve_target_name_from_source() {
   printf "%s" "$(basename "$source_input")"
 }
 
+# src/lib/startup/install.sh
+startup_install() {
+  local source="${1:-}"
+  local name="${2:-}"
+  local installed=0
+
+  if [[ -z "$source" || -z "$name" ]]; then
+    fail "Missing source or name for startup install"
+    return 1
+  fi
+
+  startup_install_bash "$source" "$name"
+  case $? in
+    0) installed=1 ;;
+    2) ;;
+    *) return 1 ;;
+  esac
+
+  startup_install_zsh "$source" "$name"
+  case $? in
+    0) installed=1 ;;
+    2) ;;
+    *) return 1 ;;
+  esac
+
+  startup_install_fish "$source" "$name"
+  case $? in
+    0) installed=1 ;;
+    2) ;;
+    *) return 1 ;;
+  esac
+
+  if [[ "$installed" -eq 0 ]]; then
+    fail "No startup targets found"
+    return 1
+  fi
+}
+
+# src/lib/startup/install_bash.sh
+startup_install_bash() {
+  local source="${1:-}"
+  local name="${2:-}"
+  local bash_rc="$HOME/.bashrc"
+  local bash_dir="$HOME/.bashrc.d"
+
+  if [[ ! -f "$bash_rc" && ! -d "$bash_dir" ]]; then
+    return 2
+  fi
+
+  create_dir "$bash_dir" || return 1
+  install_file "$source" "$bash_dir/$name" 644 || return 1
+
+  if [[ -f "$bash_rc" ]] && ! grep -Fq "$bash_dir" "$bash_rc"; then
+    log warn "Bash startup configuration incomplete; add this to $bash_rc:"
+    log warn 'for f in ~/.bashrc.d/*; do . "$f"; done'
+  elif [[ ! -f "$bash_rc" ]]; then
+    log warn "file not found: $bash_rc; ensure $bash_dir is sourced"
+  fi
+
+  return 0
+}
+
+# src/lib/startup/install_fish.sh
+startup_install_fish() {
+  local source="${1:-}"
+  local name="${2:-}"
+  local fish_root="${XDG_CONFIG_HOME:-$HOME/.config}/fish"
+  local fish_rc="$fish_root/config.fish"
+  local fish_dir="$fish_root/conf.d"
+
+  if [[ ! -f "$fish_rc" && ! -d "$fish_dir" ]]; then
+    return 2
+  fi
+
+  create_dir "$fish_dir" || return 1
+  install_file "$source" "$fish_dir/$name" 644 || return 1
+}
+
+# src/lib/startup/install_zsh.sh
+startup_install_zsh() {
+  local source="${1:-}"
+  local name="${2:-}"
+  local zsh_root="${ZDOTDIR:-$HOME}"
+  local zsh_rc="$zsh_root/.zshrc"
+  local zsh_dir="$zsh_root/.zshrc.d"
+
+  if [[ ! -f "$zsh_rc" && ! -d "$zsh_dir" ]]; then
+    return 2
+  fi
+
+  create_dir "$zsh_dir" || return 1
+  install_file "$source" "$zsh_dir/$name" 644 || return 1
+
+  if [[ -f "$zsh_rc" ]] && ! grep -Fq "$zsh_dir" "$zsh_rc"; then
+    log warn "Zsh startup configuration incomplete; add this to $zsh_rc:"
+    log warn 'for f in ~/.zshrc.d/*; do . "$f"; done'
+  elif [[ ! -f "$zsh_rc" ]]; then
+    log warn "file not found: $zsh_rc; ensure $zsh_dir is sourced"
+  fi
+
+  return 0
+}
+
 # :command.command_functions
 # :command.function
 ssi_bin_command() {
@@ -1021,6 +1199,33 @@ ssi_completion_command() {
 }
 
 # :command.function
+ssi_startup_command() {
+
+  # src/commands/startup.sh
+  source_input="${args[source]}"
+  explicit_name="${args[--name]:-}"
+
+  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
+    return 1
+  fi
+
+  startup_install "$temp_file" "$target_name" || return 1
+
+  rm -f "$temp_file"
+  log info "Installed startup: $target_name"
+
+}
+
+# :command.function
 ssi_uninstall_bin_command() {
 
   # src/commands/uninstall/bin.sh
@@ -1117,6 +1322,18 @@ ssi_uninstall_completion_command() {
 }
 
 # :command.function
+ssi_uninstall_startup_command() {
+
+  # src/commands/uninstall/startup.sh
+  echo "# This file is located at 'src/commands/uninstall/startup.sh'."
+  echo "# It contains the implementation for the 'ssi uninstall startup' command."
+  echo "# The code you write here will be wrapped by a function named 'ssi_uninstall_startup_command()'."
+  echo "# Feel free to edit this file; your changes will persist when regenerating."
+  inspect_args
+
+}
+
+# :command.function
 ssi_log_command() {
 
   # src/commands/log.sh
@@ -1196,6 +1413,13 @@ parse_requirements() {
       action="completion"
       shift
       ssi_completion_parse_requirements "$@"
+      shift $#
+      ;;
+
+    startup)
+      action="startup"
+      shift
+      ssi_startup_parse_requirements "$@"
       shift $#
       ;;
 
@@ -1492,6 +1716,102 @@ ssi_completion_parse_requirements() {
 }
 
 # :command.parse_requirements
+ssi_startup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_startup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="startup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --shell)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--shell']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--shell requires an argument: --shell SHELL" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['source']+x} ]]; then
+          args['source']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['source']+x} ]]; then
+    printf "missing required argument: SOURCE\nusage: ssi startup SOURCE [OPTIONS]\n" >&2
+
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--shell']:-} ]] || args['--shell']="bash"
+
+  # :command.whitelist_filter
+  if [[ ${args['--shell']:-} ]] && [[ ! ${args['--shell']:-} =~ ^(bash|zsh|fish)$ ]]; then
+    printf "%s\n" "--shell must be one of: bash, zsh, fish" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 ssi_uninstall_parse_requirements() {
   local key
 
@@ -1536,6 +1856,13 @@ ssi_uninstall_parse_requirements() {
       action="completion"
       shift
       ssi_uninstall_completion_parse_requirements "$@"
+      shift $#
+      ;;
+
+    startup)
+      action="startup"
+      shift
+      ssi_uninstall_startup_parse_requirements "$@"
       shift $#
       ;;
 
@@ -1757,6 +2084,59 @@ ssi_uninstall_completion_parse_requirements() {
 }
 
 # :command.parse_requirements
+ssi_uninstall_startup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_uninstall_startup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="uninstall startup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 ssi_log_parse_requirements() {
   local key
 
@@ -1867,10 +2247,12 @@ run() {
     "bin") ssi_bin_command ;;
     "man") ssi_man_command ;;
     "completion") ssi_completion_command ;;
+    "startup") ssi_startup_command ;;
     "uninstall") ssi_uninstall_command ;;
     "uninstall bin") ssi_uninstall_bin_command ;;
     "uninstall man") ssi_uninstall_man_command ;;
     "uninstall completion") ssi_uninstall_completion_command ;;
+    "uninstall startup") ssi_uninstall_startup_command ;;
     "log") ssi_log_command ;;
   esac
 }

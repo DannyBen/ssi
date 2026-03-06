@@ -15,4 +15,4 @@ jobs:
     - name: Run shellcheck tests
       run: shellcheck ssi
     - name: Run tests
-      run: bats -r test
+      run: bats --recursive --print-output-on-failure test

@@ -2,7 +2,7 @@
 
 setup() {
   source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/bash_completion_root.sh"
-  export SSI_SYSTEM_BASH_COMPLETION_ROOT="/tmp/ssi-system-bash-completions"
+  export SSI_SYSTEM_BASH_COMPLETION_ROOT="/usr/local/share/bash-completion/completions"
   export IS_DIR_MATCH=""
   export IS_COMMAND_BREW=""
   export BREW_PREFIX="/opt/homebrew"
@@ -21,6 +21,15 @@ teardown() {
 
   [ "$status" -eq 0 ]
   [ "$output" = "/usr/share/bash-completion/completions" ]
+}
+
+@test "resolve_bash_completion_root honors custom SSI_SYSTEM_BASH_COMPLETION_ROOT" {
+  SSI_SYSTEM_BASH_COMPLETION_ROOT="/custom/bash-completions"
+  IS_DIR_MATCH="/usr/share/bash-completion/completions"
+  run resolve_bash_completion_root
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "/custom/bash-completions" ]
 }
 
 @test "resolve_bash_completion_root prefers /usr/local/etc/bash_completion.d when /usr/share is missing" {
@@ -44,5 +53,5 @@ teardown() {
   run resolve_bash_completion_root
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/tmp/ssi-system-bash-completions" ]
+  [ "$output" = "/usr/local/share/bash-completion/completions" ]
 }

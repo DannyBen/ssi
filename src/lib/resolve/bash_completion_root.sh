@@ -1,6 +1,12 @@
 resolve_bash_completion_root() {
+  local default_root="/usr/local/share/bash-completion/completions"
   local brew_prefix
   local brew_root
+
+  if [[ -n "$SSI_SYSTEM_BASH_COMPLETION_ROOT" && "$SSI_SYSTEM_BASH_COMPLETION_ROOT" != "$default_root" ]]; then
+    printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
+    return 0
+  fi
 
   if is_dir "/usr/share/bash-completion/completions"; then
     printf "%s" "/usr/share/bash-completion/completions"

@@ -1020,7 +1020,7 @@ startup_install_bash() {
 
   if [[ -f "$bash_rc" ]] && ! grep -Fq "$bash_dir" "$bash_rc"; then
     log warn "Bash startup configuration incomplete; add this to $bash_rc:"
-    log warn 'for f in ~/.bashrc.d/*; do . "$f"; done'
+    log warn "for f in ~/.bashrc.d/*; do . \"\$f\"; done"
   elif [[ ! -f "$bash_rc" ]]; then
     log warn "file not found: $bash_rc; ensure $bash_dir is sourced"
   fi
@@ -1061,7 +1061,7 @@ startup_install_zsh() {
 
   if [[ -f "$zsh_rc" ]] && ! grep -Fq "$zsh_dir" "$zsh_rc"; then
     log warn "Zsh startup configuration incomplete; add this to $zsh_rc:"
-    log warn 'for f in ~/.zshrc.d/*; do . "$f"; done'
+    log warn "for f in ~/.zshrc.d/*; do . \"\$f\"; done"
   elif [[ ! -f "$zsh_rc" ]]; then
     log warn "file not found: $zsh_rc; ensure $zsh_dir is sourced"
   fi

@@ -14,7 +14,7 @@ startup_install_zsh() {
 
   if [[ -f "$zsh_rc" ]] && ! grep -Fq "$zsh_dir" "$zsh_rc"; then
     log warn "Zsh startup configuration incomplete; add this to $zsh_rc:"
-    log warn 'for f in ~/.zshrc.d/*; do . "$f"; done'
+    log warn "for f in ~/.zshrc.d/*; do . \"\$f\"; done"
   elif [[ ! -f "$zsh_rc" ]]; then
     log warn "file not found: $zsh_rc; ensure $zsh_dir is sourced"
   fi

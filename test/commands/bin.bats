@@ -9,8 +9,8 @@ setup() {
   export PATH="$fakebin:$PATH"
   export NO_COLOR=1
   export SSI_USER_BIN_ROOT="$tmp_root/user-bin"
-  export SSI_SYSTEM_BIN_ROOT="$tmp_root/system-bin"
-  mkdir -p "$SSI_USER_BIN_ROOT" "$SSI_SYSTEM_BIN_ROOT"
+  export SSI_SYSTEM_BIN_ROOT="/root/ssi-system-bin"
+  mkdir -p "$SSI_USER_BIN_ROOT"
 }
 
 teardown() {

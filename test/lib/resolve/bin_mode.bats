@@ -3,6 +3,7 @@
 setup() {
   source "$BATS_TEST_DIRNAME/../../../src/lib/log.sh"
   source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/bin_mode.sh"
+  export SSI_SYSTEM_BIN_ROOT="/tmp/ssi-system-bin"
 }
 
 @test "resolve_bin_mode returns explicit system mode" {
@@ -37,9 +38,24 @@ setup() {
   [ "$output" = "system" ]
 }
 
-@test "resolve_bin_mode auto resolves to system when /usr/local/bin is writable" {
+@test "resolve_bin_mode auto resolves to system when system bin root is writable" {
   is_root() { return 1; }
-  is_writable_dir() { return 0; }
+  is_writable_dir() {
+    [[ "$1" == "$SSI_SYSTEM_BIN_ROOT" ]]
+  }
+  is_sudo_usable() { return 1; }
+
+  run resolve_bin_mode auto
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "system" ]
+}
+
+@test "resolve_bin_mode auto resolves to system when parent is writable" {
+  is_root() { return 1; }
+  is_writable_dir() {
+    [[ "$1" == "$(dirname "$SSI_SYSTEM_BIN_ROOT")" ]]
+  }
   is_sudo_usable() { return 1; }
 
   run resolve_bin_mode auto

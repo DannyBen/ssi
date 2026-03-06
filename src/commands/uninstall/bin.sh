@@ -1,6 +1,6 @@
 name="${args[name]}"
-user_root="${SSI_USER_BIN_ROOT:-$HOME/.local/bin}"
-system_root="${SSI_SYSTEM_BIN_ROOT:-/usr/local/bin}"
+user_root="${SSI_USER_BIN_ROOT}"
+system_root="${SSI_SYSTEM_BIN_ROOT}"
 user_path="$user_root/$name"
 system_path="$system_root/$name"
 removed=0

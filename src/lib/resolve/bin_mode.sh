@@ -19,7 +19,7 @@ resolve_bin_mode() {
     return 0
   fi
 
-  if is_writable_dir "/usr/local/bin"; then
+  if is_writable_dir "$SSI_SYSTEM_BIN_ROOT"; then
     printf "system"
     return 0
   fi

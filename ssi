@@ -664,7 +664,7 @@ resolve_bin_mode() {
     return 0
   fi
 
-  if is_writable_dir "/usr/local/bin"; then
+  if is_writable_dir "$SSI_SYSTEM_BIN_ROOT"; then
     printf "system"
     return 0
   fi
@@ -988,8 +988,8 @@ ssi_uninstall_bin_command() {
 
   # src/commands/uninstall/bin.sh
   name="${args[name]}"
-  user_root="${SSI_USER_BIN_ROOT:-$HOME/.local/bin}"
-  system_root="${SSI_SYSTEM_BIN_ROOT:-/usr/local/bin}"
+  user_root="${SSI_USER_BIN_ROOT}"
+  system_root="${SSI_SYSTEM_BIN_ROOT}"
   user_path="$user_root/$name"
   system_path="$system_root/$name"
   removed=0

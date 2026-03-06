@@ -103,7 +103,7 @@ ssi_man_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi man SOURCE\n"
+  printf "  ssi man SOURCE [OPTIONS]\n"
   printf "  ssi man --help | -h\n"
   echo
 
@@ -111,6 +111,12 @@ ssi_man_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--name NAME")"
+    printf "    Explicit target file name (required for stdin or ambiguous sources)\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(green "--help, -h")"
@@ -808,6 +814,28 @@ resolve_man_path() {
   printf "%s/man%s" "$base_path" "$section"
 }
 
+# src/lib/resolve/man_target_from_name.sh
+resolve_man_target_from_name() {
+  local raw_name="${1:-}"
+  local base section filename
+
+  if [[ -z "$raw_name" ]]; then
+    fail "Missing man page name"
+    return 1
+  fi
+
+  base="$(basename "$raw_name")"
+  if [[ "$base" =~ \.([A-Za-z0-9]+)$ ]]; then
+    section="${BASH_REMATCH[1]}"
+    filename="$base"
+  else
+    section="1"
+    filename="${base}.1"
+  fi
+
+  printf "%s:%s" "$section" "$filename"
+}
+
 # src/lib/resolve/target_name_from_source.sh
 resolve_target_name_from_source() {
   local source_input="${1:-}"
@@ -869,11 +897,34 @@ ssi_bin_command() {
 ssi_man_command() {
 
   # src/commands/man.sh
-  echo "# This file is located at 'src/commands/man.sh'."
-  echo "# It contains the implementation for the 'ssi man' command."
-  echo "# The code you write here will be wrapped by a function named 'ssi_man_command()'."
-  echo "# Feel free to edit this file; your changes will persist when regenerating."
-  inspect_args
+  source_input="${args[source]}"
+  explicit_name="${args[--name]:-}"
+
+  mode="$(resolve_man_mode)" || return 1
+  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
+    return 1
+  fi
+
+  target_info="$(resolve_man_target_from_name "$target_name")" || return 1
+  section="${target_info%%:*}"
+  filename="${target_info#*:}"
+
+  man_dir="$(resolve_man_path "$section" "$mode")" || return 1
+  target_path="${man_dir}/${filename}"
+
+  install_file "$temp_file" "$target_path" 644 || return 1
+
+  rm -f "$temp_file"
+  log info "Installed: $target_path"
 
 }
 
@@ -922,11 +973,34 @@ ssi_uninstall_bin_command() {
 ssi_uninstall_man_command() {
 
   # src/commands/uninstall/man.sh
-  echo "# This file is located at 'src/commands/uninstall/man.sh'."
-  echo "# It contains the implementation for the 'ssi uninstall man' command."
-  echo "# The code you write here will be wrapped by a function named 'ssi_uninstall_man_command()'."
-  echo "# Feel free to edit this file; your changes will persist when regenerating."
-  inspect_args
+  name="${args[name]}"
+  removed=0
+
+  target_info="$(resolve_man_target_from_name "$name")" || return 1
+  section="${target_info%%:*}"
+  filename="${target_info#*:}"
+
+  user_dir="$(resolve_man_path "$section" user)" || return 1
+  system_dir="$(resolve_man_path "$section" system)" || return 1
+
+  user_path="${user_dir}/${filename}"
+  system_path="${system_dir}/${filename}"
+
+  if [[ -e "$user_path" ]]; then
+    remove_file "$user_path" || return 1
+    log info "Removed: $user_path"
+    removed=1
+  fi
+
+  if [[ -e "$system_path" ]]; then
+    remove_file "$system_path" || return 1
+    log info "Removed: $system_path"
+    removed=1
+  fi
+
+  if [[ "$removed" -eq 0 ]]; then
+    log warn "Not found: $name"
+  fi
 
 }
 
@@ -1158,6 +1232,19 @@ ssi_man_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -1183,7 +1270,7 @@ ssi_man_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['source']+x} ]]; then
-    printf "missing required argument: SOURCE\nusage: ssi man SOURCE\n" >&2
+    printf "missing required argument: SOURCE\nusage: ssi man SOURCE [OPTIONS]\n" >&2
 
     exit 1
   fi

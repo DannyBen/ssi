@@ -1,0 +1,48 @@
+#!/usr/bin/env bats
+
+setup() {
+  tmp_root="$(mktemp -d)"
+  fakebin="$tmp_root/bin"
+  mkdir -p "$fakebin"
+  export HOME="$tmp_root/home"
+  export PATH="$fakebin:$PATH"
+  export NO_COLOR=1
+  export SSI_USER_MAN_ROOT="$tmp_root/user-man"
+  export SSI_SYSTEM_MAN_ROOT="$tmp_root/system-man"
+  mkdir -p "$SSI_USER_MAN_ROOT" "$SSI_SYSTEM_MAN_ROOT"
+}
+
+teardown() {
+  rm -rf "$tmp_root"
+}
+
+@test "uninstall man removes user man page when present" {
+  file="$SSI_USER_MAN_ROOT/man1/tool.1"
+  mkdir -p "$(dirname "$file")"
+  printf "page" > "$file"
+
+  run ./ssi uninstall man tool
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "• info → Removed: $file" ]
+  [ ! -e "$file" ]
+}
+
+@test "uninstall man removes system man page when present" {
+  file="$SSI_SYSTEM_MAN_ROOT/man5/tool.5"
+  mkdir -p "$(dirname "$file")"
+  printf "page" > "$file"
+
+  run ./ssi uninstall man tool.5
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "• info → Removed: $file" ]
+  [ ! -e "$file" ]
+}
+
+@test "uninstall man reports not found when missing" {
+  run ./ssi uninstall man missing-tool
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "• warn → Not found: missing-tool" ]
+}

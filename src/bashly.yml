@@ -23,6 +23,10 @@ commands:
   alias: doc
   help: Install man page
   args: *install_args
+  flags:
+  - long: --name
+    arg: name
+    help: Explicit target file name (required for stdin or ambiguous sources)
 
 - name: completion
   alias: comp

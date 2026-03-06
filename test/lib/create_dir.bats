@@ -44,6 +44,7 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ -d "$dir" ]
+  unset -f sudo
 }
 
 @test "create_dir fails when mkdir fails and sudo unavailable" {

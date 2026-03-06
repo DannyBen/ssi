@@ -22,6 +22,7 @@ setup() {
   [ ! -e "$file" ]
 }
 
+# SUCCEEDS but cases bats to exit with code 1
 @test "remove_file uses sudo when rm fails and sudo is available" {
   is_sudo_usable() { return 0; }
   rm() { return 1; }
@@ -39,8 +40,11 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ ! -e "$file" ]
+
+  unset -f rm sudo
 }
 
+# SUCCEEDS but cases bats to exit with code 1
 @test "remove_file fails when rm fails and sudo unavailable" {
   is_sudo_usable() { return 1; }
   rm() { return 1; }
@@ -53,6 +57,8 @@ setup() {
   [ -n "$output" ]
   [ -e "$file" ]
   command rm -f "$file"
+  
+  unset -f rm
 }
 
 @test "remove_file fails on missing path" {

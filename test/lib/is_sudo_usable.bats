@@ -16,6 +16,7 @@ setup() {
   run is_sudo_usable
 
   [ "$status" -eq 0 ]
+  unset -f command sudo
 }
 
 @test "is_sudo_usable returns failure when sudo command is missing" {
@@ -29,6 +30,7 @@ setup() {
   run is_sudo_usable
 
   [ "$status" -ne 0 ]
+  unset -f command
 }
 
 @test "is_sudo_usable returns failure when sudo command exists but sudo -n true fails" {
@@ -43,4 +45,5 @@ setup() {
   run is_sudo_usable
 
   [ "$status" -ne 0 ]
+  unset -f command sudo
 }

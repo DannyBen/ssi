@@ -81,4 +81,5 @@ install_and_cat() {
 
   [ "$status" -eq 0 ]
   [ -f "$dest" ]
+  unset -f sudo
 }

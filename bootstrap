@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Minimal ssi bootstrap
+# Downloads ssi into the current directory and makes it executable.
+
+SSI_URL="https://get.dannyb.co/ssi"
+TARGET="./ssi"
+
+if command -v curl >/dev/null 2>&1; then
+  curl -fsSL "$SSI_URL" -o "$TARGET"
+elif command -v wget >/dev/null 2>&1; then
+  wget -qO "$TARGET" "$SSI_URL"
+else
+  echo "curl or wget is required" >&2
+  exit 1
+fi
+
+chmod +x "$TARGET"

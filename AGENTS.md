@@ -16,15 +16,17 @@
 - Run tests via `op test` (currently mapped to `bats -r test`).
 - When working on a specific test file, run that file directly (it has a shebang) instead of the full suite.
 - For CLI integration tests, run the generated `./ssi` binary with temp `HOME` and PATH stubs.
+- Whenever a test is updated, run that test (unless the user already ran it).
 
 ## Current Test Layout
-- Keep tests mirrored to source layout.
+- The test directory structure must always mirror `src`.
 - Use one function per source file and one matching test file when practical.
-- Preferred test location pattern: `test/lib/<domain>/<group>/<function>.bats`.
+- Preferred test location pattern: mirror the source path (e.g., `src/lib/resolve/bin_mode.sh` -> `test/lib/resolve/bin_mode.bats`).
 - Use `test/fixtures/` for reusable stub executables and fixtures.
 
 ## Coding Conventions
 - Keep resolver logic in `src/lib/resolve/...`.
+- When a domain has its own directory (e.g., `resolve/`), filenames inside it omit the domain prefix (e.g., `resolve/bin_mode.sh` for `resolve_bin_mode()`).
 - Prefer small, deterministic functions and unit tests before command integration.
 - Favor readability and explicit branching over compact but opaque Bash.
 - Only use a directory as a domain when its name matches the function name prefix (e.g., `resolve_*` in `src/lib/resolve/`). Otherwise, place the function at `src/lib/<name>.sh`.

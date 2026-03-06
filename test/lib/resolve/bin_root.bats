@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/resolve/bin/root.sh"
+  source "$BATS_TEST_DIRNAME/../../../src/lib/log.sh"
+  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/bin_root.sh"
 }
 
 @test "resolve_bin_root returns system bin root" {

@@ -1,10 +1,10 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/colors.sh"
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/is_command.sh"
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/fetch/download/to_file.sh"
+  source "$BATS_TEST_DIRNAME/../../src/lib/colors.sh"
+  source "$BATS_TEST_DIRNAME/../../src/lib/log.sh"
+  source "$BATS_TEST_DIRNAME/../../src/lib/is_command.sh"
+  source "$BATS_TEST_DIRNAME/../../src/lib/fetch_download_to_file.sh"
 }
 
 download_and_cat() {

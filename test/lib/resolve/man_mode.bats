@@ -2,7 +2,7 @@
 
 @test "resolve_man_mode returns explicit system mode" {
   run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/man/mode.sh"
+    source "/vagrant/bash/ssi/src/lib/resolve/man_mode.sh"
     resolve_man_mode system
   '
 
@@ -12,7 +12,7 @@
 
 @test "resolve_man_mode returns explicit user mode" {
   run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/man/mode.sh"
+    source "/vagrant/bash/ssi/src/lib/resolve/man_mode.sh"
     resolve_man_mode user
   '
 
@@ -22,7 +22,7 @@
 
 @test "resolve_man_mode fails on invalid mode" {
   run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/man/mode.sh"
+    source "/vagrant/bash/ssi/src/lib/resolve/man_mode.sh"
     resolve_man_mode nope
   '
 
@@ -32,7 +32,7 @@
 
 @test "resolve_man_mode auto resolves to system when sudo works" {
   run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/man/mode.sh"
+    source "/vagrant/bash/ssi/src/lib/resolve/man_mode.sh"
     sudo() { return 0; }
     resolve_man_mode auto
   '
@@ -43,7 +43,7 @@
 
 @test "resolve_man_mode auto resolves to user when sudo is unavailable" {
   run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/man/mode.sh"
+    source "/vagrant/bash/ssi/src/lib/resolve/man_mode.sh"
     sudo() { return 1; }
     resolve_man_mode auto
   '

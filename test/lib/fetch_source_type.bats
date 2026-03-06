@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/fetch/source/type.sh"
+  source "$BATS_TEST_DIRNAME/../../src/lib/log.sh"
+  source "$BATS_TEST_DIRNAME/../../src/lib/fetch_source_type.sh"
 }
 
 @test "fetch_source_type returns stdin for dash" {

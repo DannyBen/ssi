@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../../../src/lib/resolve/bin/mode.sh"
+  source "$BATS_TEST_DIRNAME/../../../src/lib/log.sh"
+  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/bin_mode.sh"
 }
 
 @test "resolve_bin_mode returns explicit system mode" {

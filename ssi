@@ -400,7 +400,7 @@ create_dir() {
   return 1
 }
 
-# src/lib/fetch/download/to_file.sh
+# src/lib/fetch_download_to_file.sh
 fetch_download_to_file() {
   local url="${1:-}"
   local destination="${2:-}"
@@ -426,7 +426,7 @@ fetch_download_to_file() {
   return 1
 }
 
-# src/lib/fetch/source/to_temp_file.sh
+# src/lib/fetch_source_to_temp_file.sh
 fetch_source_to_temp_file() {
   local source="${1:--}"
   local temp_root="${2:-${TMPDIR:-/tmp}}"
@@ -460,7 +460,7 @@ fetch_source_to_temp_file() {
   printf "%s" "$temp_file"
 }
 
-# src/lib/fetch/source/type.sh
+# src/lib/fetch_source_type.sh
 fetch_source_type() {
   local source="${1:--}"
 
@@ -578,7 +578,7 @@ fail() {
   return 1
 }
 
-# src/lib/resolve/bin/mode.sh
+# src/lib/resolve/bin_mode.sh
 resolve_bin_mode() {
   local mode="${1:-auto}"
 
@@ -613,7 +613,7 @@ resolve_bin_mode() {
   printf "user"
 }
 
-# src/lib/resolve/bin/root.sh
+# src/lib/resolve/bin_root.sh
 resolve_bin_root() {
   local mode
   mode="$(resolve_bin_mode "${1:-auto}")" || {
@@ -628,7 +628,7 @@ resolve_bin_root() {
   fi
 }
 
-# src/lib/resolve/completion/base_path.sh
+# src/lib/resolve/completion_base_path.sh
 resolve_completion_base_path() {
   local shell="${1:-}"
   local mode="${2:-auto}"
@@ -682,7 +682,7 @@ resolve_completion_base_path() {
   esac
 }
 
-# src/lib/resolve/completion/mode.sh
+# src/lib/resolve/completion_mode.sh
 resolve_completion_mode() {
   local mode="${1:-auto}"
 
@@ -721,7 +721,7 @@ resolve_completion_mode() {
   printf "user"
 }
 
-# src/lib/resolve/man/base_path.sh
+# src/lib/resolve/man_base_path.sh
 resolve_man_base_path() {
   local mode
   mode="$(resolve_man_mode "${1:-auto}")" || return 1
@@ -733,7 +733,7 @@ resolve_man_base_path() {
   fi
 }
 
-# src/lib/resolve/man/mode.sh
+# src/lib/resolve/man_mode.sh
 resolve_man_mode() {
   local mode="${1:-auto}"
 
@@ -772,7 +772,7 @@ resolve_man_mode() {
   printf "user"
 }
 
-# src/lib/resolve/man/path.sh
+# src/lib/resolve/man_path.sh
 resolve_man_path() {
   local section="${1:-1}"
   local mode="${2:-auto}"

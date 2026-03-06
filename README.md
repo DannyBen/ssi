@@ -61,3 +61,52 @@ You can do so programmatically by running something like this:
 wget https://github.com/DannyBen/ssi/blob/master/ssi
 sudo install -m 755 ssi /usr/local/bin/
 ```
+
+## Technical Details
+
+`ssi` has two sets of commands:
+
+- Install commands: bin, man, completion
+- Uninstall command with subcommands: uninstall bin, uninstall man, uninstall completion
+
+### Install Commands
+
+All install commands accept source in one of these forms:
+
+- URL
+- Local file
+- stdin
+
+#### `ssi bin` Install Targets
+
+- System target `/usr/local/bin` when running as root, when the system target is
+  writable, or when `sudo` is usable.
+- Otherwise user target `$HOME/.local/bin`.
+
+#### `ssi man` Install Targets
+
+- System target `/usr/local/share/man` when running as root, when the system
+  target is writable, when the system target parent directory is writable, or
+  when `sudo` is usable.
+- Otherwise user target `${XDG_DATA_HOME:-$HOME/.local/share}/man`.
+- The final install path is `<target>/man<section>` where section defaults to
+  `1` (for example `man1/tool.1`).
+
+#### `ssi completion` Install Targets
+
+- System target is selected when running as root, when the system target is
+  writable, when the system target parent directory is writable, or when `sudo`
+  is usable. It varies by shell:
+  - Bash: `/usr/local/share/bash-completion/completions`
+  - Zsh: `/usr/local/share/zsh/site-functions`
+  - Fish: `/usr/local/share/fish/vendor_completions.d`.
+- Otherwise user target is selected, and it also varies by shell:
+  - Bash: `${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions`
+  - Zsh: `${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions`
+  - Fish: `${XDG_DATA_HOME:-$HOME/.local/share}/fish/vendor_completions.d`
+
+### Uninstall Commands
+
+All uninstall commands assume ownership over all occurrences of the
+file they try to uninstall, so they attempt removal from both user
+directories and system directories.

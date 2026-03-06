@@ -7,7 +7,7 @@
 - `op generate` to regenerate the Bashly script.
 
 ## Project Intent (Condensed)
-- `ssi` is a lightweight Bash installer for binaries, man pages, and completions.
+- `ssi` is a lightweight Bash installer for binaries, man pages, completions, and startup snippets.
 - Supports installation from URL, local file, or stdin.
 - Should work for root vs. non-root targets with standard Linux paths.
 - Uninstall is stateless; no local manifest/database.
@@ -32,6 +32,7 @@
 - Favor readability and explicit branching over compact but opaque Bash.
 - Do not set default values for args in command handlers; rely on Bashly defaults.
 - Do not add manual "required arg" validation in command handlers; use Bashly `required: true`.
+- In tests, prefer sourcing real libs; stub only when required by the test scenario.
 - Only use a directory as a domain when its name matches the function name prefix (e.g., `resolve_*` in `src/lib/resolve/`). Otherwise, place the function at `src/lib/<name>.sh`.
 - For command tests that assert CLI output, set `NO_COLOR=1` for deterministic output.
 

@@ -27,6 +27,7 @@
 ## Coding Conventions
 - Keep resolver logic in `src/lib/resolve/...`.
 - When a domain has its own directory (e.g., `resolve/`), filenames inside it omit the domain prefix (e.g., `resolve/bin_mode.sh` for `resolve_bin_mode()`).
+- Use `say "Label" "message"` for success/info output and `warn "Label" "message"` for warnings (from `src/lib/output.sh`) so output styling stays consistent.
 - Prefer small, deterministic functions and unit tests before command integration.
 - Favor readability and explicit branching over compact but opaque Bash.
 - Only use a directory as a domain when its name matches the function name prefix (e.g., `resolve_*` in `src/lib/resolve/`). Otherwise, place the function at `src/lib/<name>.sh`.

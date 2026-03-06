@@ -21,4 +21,4 @@ target_path="${bin_root}/${target_name}"
 install_file "$temp_file" "$target_path" 755 || return 1
 
 rm -f "$temp_file"
-printf "%s: %s\n" "$(bold installed)" "$target_path"
+say "Installed" "$target_path"

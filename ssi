@@ -578,6 +578,46 @@ fail() {
   return 1
 }
 
+# src/lib/output.sh
+say() {
+  local label="$1"
+  shift
+  printf "%s: %s\n" "$(green_bold "$label")" "$*"
+}
+
+warn() {
+  local label="$1"
+  shift
+  printf "%s: %s\n" "$(yellow_bold "$label")" "$*"
+}
+
+# src/lib/remove_file.sh
+remove_file() {
+  local path="${1:-}"
+
+  if [[ -z "$path" ]]; then
+    fail "Missing file"
+    return 1
+  fi
+
+  if [[ ! -e "$path" ]]; then
+    return 0
+  fi
+
+  rm -f "$path" 2>/dev/null && return 0
+
+  if is_sudo_usable; then
+    sudo rm -f "$path" || {
+      fail "Could not remove file: $path"
+      return 1
+    }
+    return 0
+  fi
+
+  fail "Could not remove file: $path"
+  return 1
+}
+
 # src/lib/resolve/bin_mode.sh
 resolve_bin_mode() {
   local mode="${1:-auto}"
@@ -835,7 +875,7 @@ ssi_bin_command() {
   install_file "$temp_file" "$target_path" 755 || return 1
 
   rm -f "$temp_file"
-  printf "%s: %s\n" "$(bold installed)" "$target_path"
+  say "Installed" "$target_path"
 
 }
 
@@ -873,28 +913,19 @@ ssi_uninstall_bin_command() {
   removed=0
 
   if [[ -f "$user_path" ]]; then
-    rm -f "$user_path"
-    printf "removed: %s\n" "$user_path"
+    remove_file "$user_path" || return 1
+    say "Removed" "$user_path"
     removed=1
   fi
 
   if [[ -f "$system_path" ]]; then
-    if [[ "${EUID:-$(id -u)}" -eq 0 || -w "/usr/local/bin" ]]; then
-      rm -f "$system_path"
-      printf "removed: %s\n" "$system_path"
-      removed=1
-    elif command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
-      sudo rm -f "$system_path"
-      printf "removed: %s\n" "$system_path"
-      removed=1
-    else
-      printf "cannot remove (permission denied): %s\n" "$system_path" >&2
-      return 1
-    fi
+    remove_file "$system_path" || return 1
+    say "Removed" "$system_path"
+    removed=1
   fi
 
   if [[ "$removed" -eq 0 ]]; then
-    printf "not found: %s\n" "$name"
+    warn "Not found" "$name"
   fi
 
 }

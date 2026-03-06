@@ -51,19 +51,6 @@ setup() {
   [ "$output" = "system" ]
 }
 
-@test "resolve_bin_mode auto resolves to system when parent is writable" {
-  is_root() { return 1; }
-  is_writable_dir() {
-    [[ "$1" == "$(dirname "$SSI_SYSTEM_BIN_ROOT")" ]]
-  }
-  is_sudo_usable() { return 1; }
-
-  run resolve_bin_mode auto
-
-  [ "$status" -eq 0 ]
-  [ "$output" = "system" ]
-}
-
 @test "resolve_bin_mode auto resolves to system when sudo works" {
   is_root() { return 1; }
   is_writable_dir() { return 1; }

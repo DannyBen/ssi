@@ -3,10 +3,10 @@
 ![repocard](https://repocard.dannyben.com/svg/ssi.svg)
 
 Simple Script Installer (`ssi`) is a lightweight Bash installer for binaries,
-man pages, and shell completions. It is designed for script authors who want a
-simple, semantic setup script for their users, without re-implementing common
-installation decisions like target directories, root vs non-root behavior, or
-handling local vs remote sources.
+man pages, shell completions, and startup snippets. It is designed for script
+authors who want a simple, semantic setup script for their users, without
+re-implementing common installation decisions like target directories, root vs
+non-root behavior, or handling local vs remote sources.
 
 This README covers two usage patterns:
 
@@ -38,6 +38,7 @@ chmod +x ssi
 ./ssi bin https://anywhere.com/your-cli
 ./ssi man https://anywhere.com/docs/your-cli.1
 your-cli show-completion | ./ssi completion your-cli
+./ssi startup --shell bash https://anywhere.com/your-cli-startup.sh
 ```
 
 If you wish to pin your downloaded version of `ssi`, simply use the release tag:
@@ -64,10 +65,12 @@ sudo install -m 755 ssi /usr/local/bin/
 
 ## Technical Details
 
-`ssi` has two sets of commands:
+`ssi` has three sets of commands:
 
-- Install commands: bin, man, completion
-- Uninstall command with subcommands: uninstall bin, uninstall man, uninstall completion
+- Install commands: bin, man, completion, startup
+- Uninstall command with subcommands: uninstall bin, uninstall man,
+  uninstall completion, uninstall startup
+- Utility commands: log
 
 ### Install Commands
 
@@ -97,16 +100,30 @@ All install commands accept source in one of these forms:
 - System target is selected when running as root, when the system target is
   writable, when the system target parent directory is writable, or when `sudo`
   is usable. It varies by shell:
-  - Bash: `/usr/local/share/bash-completion/completions`
-  - Zsh: `/usr/local/share/zsh/site-functions`
-  - Fish: `/usr/local/share/fish/vendor_completions.d`.
+- System Bash: `/usr/local/share/bash-completion/completions`.
+- System Zsh: `/usr/local/share/zsh/site-functions`.
+- System Fish: `/usr/local/share/fish/vendor_completions.d`.
 - Otherwise user target is selected, and it also varies by shell:
-  - Bash: `${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions`
-  - Zsh: `${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions`
-  - Fish: `${XDG_DATA_HOME:-$HOME/.local/share}/fish/vendor_completions.d`
+- User Bash: `${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions`.
+- User Zsh: `${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions`.
+- User Fish: `${XDG_DATA_HOME:-$HOME/.local/share}/fish/vendor_completions.d`.
+
+#### `ssi startup` Install Targets
+
+- The `--shell` flag selects the target shell (default: `bash`).
+- Bash installs to `~/.bashrc.d`.
+- Zsh installs to `~/.zshrc.d` (or `$ZDOTDIR/.zshrc.d` when `ZDOTDIR` is set).
+- Fish installs to `${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d`.
+- `ssi` does not edit startup files; for Bash and Zsh, it warns if the `*.d`
+  directory does not appear to be sourced.
 
 ### Uninstall Commands
 
 All uninstall commands assume ownership over all occurrences of the
 file they try to uninstall, so they attempt removal from both user
 directories and system directories.
+
+### Utility Commands
+
+The `ssi log` command is provided as a helper to allow users to output messages
+in the same format as the internal `ssi` functions.

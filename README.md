@@ -125,8 +125,10 @@ directories and system directories.
 
 ### Utility Commands
 
-The `ssi log` command is provided as a helper to allow users to output messages
-in the same format as the internal `ssi` functions.
+- `ssi log` - use it to output messages in the same format as the internal
+  `ssi` functions.
+- `ssi bootstrap` - use it to output a sample scirpt that you can use for your
+  `setup` script.
 
 ## Examples
 

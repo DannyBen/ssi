@@ -32,6 +32,7 @@ ssi_usage() {
   printf "  %s   Install startup script\n" "$(green "startup")   "
   printf "  %s   Uninstall files\n" "$(green "uninstall") "
   printf "  %s   Send a log message\n" "$(green "log")       "
+  printf "  %s   Print bootstrap script\n" "$(green "bootstrap") "
   echo
 
   # :command.long_usage
@@ -428,6 +429,28 @@ ssi_log_usage() {
     # :argument.usage
     printf "  %s\n" "$(green "MESSAGE...")"
     printf "    Message to send\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_bootstrap_usage() {
+  printf "ssi bootstrap - Print bootstrap script\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi bootstrap\n"
+  printf "  ssi bootstrap --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -1462,6 +1485,45 @@ ssi_log_command() {
 
 }
 
+# :command.function
+ssi_bootstrap_command() {
+
+  # src/commands/bootstrap.sh
+  cat <<'BOOTSTRAP'
+#!/usr/bin/env bash
+set -euo pipefail
+
+# === Setup SSI ===
+
+echo "Initializing installer..."
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+cd "$tmpdir"
+
+if command -v wget >/dev/null 2>&1; then
+  wget -nv -O ssi https://github.com/DannyBen/ssi/releases/latest/download/ssi
+elif command -v curl >/dev/null 2>&1; then
+  curl -fsSL https://github.com/DannyBen/ssi/releases/latest/download/ssi -o ssi
+else
+  echo "Error: please install wget or curl, then try again" >&2
+  exit 1
+fi
+chmod +x ssi
+
+export PATH="$tmpdir:$PATH"
+
+# === Install ===
+
+# Example installation steps:
+# ssi log info "Installing <tool>"
+# ssi bin <url>
+# ssi man <url>
+# <tool> --completions | ssi completion --shell bash --name <tool> -
+# ssi log info "<tool> --version : $(<tool> --version)"
+BOOTSTRAP
+
+}
+
 # :command.parse_requirements
 parse_requirements() {
   local key
@@ -1552,6 +1614,13 @@ parse_requirements() {
       action="log"
       shift
       ssi_log_parse_requirements "$@"
+      shift $#
+      ;;
+
+    bootstrap)
+      action="bootstrap"
+      shift
+      ssi_bootstrap_parse_requirements "$@"
       shift $#
       ;;
 
@@ -2381,6 +2450,53 @@ ssi_log_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+ssi_bootstrap_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_bootstrap_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="bootstrap"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
 # :command.initialize
 initialize() {
   declare -g version="0.1.2"
@@ -2422,6 +2538,7 @@ run() {
     "uninstall completion") ssi_uninstall_completion_command ;;
     "uninstall startup") ssi_uninstall_startup_command ;;
     "log") ssi_log_command ;;
+    "bootstrap") ssi_bootstrap_command ;;
   esac
 }
 

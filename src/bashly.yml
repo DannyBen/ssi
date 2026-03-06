@@ -90,3 +90,6 @@ commands:
     help: Message to send
     required: true
     repeatable: true
+
+- name: bootstrap
+  help: Print bootstrap script

@@ -4,14 +4,6 @@ resolve_completion_base_path() {
   [[ -n "$shell" ]] || return 1
   mode="$(resolve_completion_mode "$mode")" || return 1
 
-  case "$shell" in
-    bash | zsh | fish)
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-
   if [[ "$mode" == "system" ]]; then
     case "$shell" in
       bash)
@@ -22,6 +14,9 @@ resolve_completion_base_path() {
         ;;
       fish)
         printf "%s" "$SSI_SYSTEM_FISH_COMPLETION_ROOT"
+        ;;
+      *)
+        return 1
         ;;
     esac
     return 0
@@ -36,6 +31,9 @@ resolve_completion_base_path() {
       ;;
     fish)
       printf "%s" "$SSI_USER_FISH_COMPLETION_ROOT"
+      ;;
+    *)
+      return 1
       ;;
   esac
 }

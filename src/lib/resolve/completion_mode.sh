@@ -1,5 +1,6 @@
 resolve_completion_mode() {
   local mode="${1:-auto}"
+  local system_parent
 
   case "$mode" in
     system | user)
@@ -13,22 +14,23 @@ resolve_completion_mode() {
       ;;
   esac
 
-  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+  if is_root; then
     printf "system"
     return 0
   fi
 
-  if [[ -d "/usr/local/share" && -w "/usr/local/share" ]]; then
+  if is_writable_dir "$SSI_SYSTEM_BASH_COMPLETION_ROOT"; then
     printf "system"
     return 0
   fi
 
-  if [[ -d "/usr/local/etc" && -w "/usr/local/etc" ]]; then
+  system_parent="$(dirname "$SSI_SYSTEM_BASH_COMPLETION_ROOT")"
+  if is_writable_dir "$system_parent"; then
     printf "system"
     return 0
   fi
 
-  if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+  if is_sudo_usable; then
     printf "system"
     return 0
   fi

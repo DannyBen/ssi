@@ -32,6 +32,15 @@ commands:
   alias: comp
   help: Install completion script
   args: *install_args
+  flags:
+  - long: --name
+    arg: name
+    help: Explicit target file name (required for stdin or ambiguous sources)
+  - long: --shell
+    arg: shell
+    help: Shell type
+    default: bash
+    allowed: [bash, zsh, fish]
 
 - name: uninstall
   alias: [u, rm, remove]
@@ -55,3 +64,9 @@ commands:
     alias: comp
     help: Uninstall completion script
     args: *uninstall_args
+    flags:
+    - long: --shell
+      arg: shell
+      help: Shell type
+      default: bash
+      allowed: [bash, zsh, fish]

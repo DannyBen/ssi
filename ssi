@@ -141,7 +141,7 @@ ssi_completion_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi completion SOURCE\n"
+  printf "  ssi completion SOURCE [OPTIONS]\n"
   printf "  ssi completion --help | -h\n"
   echo
 
@@ -149,6 +149,19 @@ ssi_completion_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--name NAME")"
+    printf "    Explicit target file name (required for stdin or ambiguous sources)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(green "--shell SHELL")"
+    printf "    Shell type\n"
+    printf "    %s\n" "Allowed: bash, zsh, fish"
+    printf "    %s\n" "Default: bash"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(green "--help, -h")"
@@ -267,7 +280,7 @@ ssi_uninstall_completion_usage() {
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi uninstall completion [NAME]\n"
+  printf "  ssi uninstall completion [NAME] [OPTIONS]\n"
   printf "  ssi uninstall completion --help | -h\n"
   echo
 
@@ -275,6 +288,14 @@ ssi_uninstall_completion_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--shell SHELL")"
+    printf "    Shell type\n"
+    printf "    %s\n" "Allowed: bash, zsh, fish"
+    printf "    %s\n" "Default: bash"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(green "--help, -h")"
@@ -678,14 +699,6 @@ resolve_completion_base_path() {
   [[ -n "$shell" ]] || return 1
   mode="$(resolve_completion_mode "$mode")" || return 1
 
-  case "$shell" in
-    bash | zsh | fish)
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-
   if [[ "$mode" == "system" ]]; then
     case "$shell" in
       bash)
@@ -696,6 +709,9 @@ resolve_completion_base_path() {
         ;;
       fish)
         printf "%s" "$SSI_SYSTEM_FISH_COMPLETION_ROOT"
+        ;;
+      *)
+        return 1
         ;;
     esac
     return 0
@@ -711,12 +727,16 @@ resolve_completion_base_path() {
     fish)
       printf "%s" "$SSI_USER_FISH_COMPLETION_ROOT"
       ;;
+    *)
+      return 1
+      ;;
   esac
 }
 
 # src/lib/resolve/completion_mode.sh
 resolve_completion_mode() {
   local mode="${1:-auto}"
+  local system_parent
 
   case "$mode" in
     system | user)
@@ -730,22 +750,23 @@ resolve_completion_mode() {
       ;;
   esac
 
-  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+  if is_root; then
     printf "system"
     return 0
   fi
 
-  if [[ -d "/usr/local/share" && -w "/usr/local/share" ]]; then
+  if is_writable_dir "$SSI_SYSTEM_BASH_COMPLETION_ROOT"; then
     printf "system"
     return 0
   fi
 
-  if [[ -d "/usr/local/etc" && -w "/usr/local/etc" ]]; then
+  system_parent="$(dirname "$SSI_SYSTEM_BASH_COMPLETION_ROOT")"
+  if is_writable_dir "$system_parent"; then
     printf "system"
     return 0
   fi
 
-  if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+  if is_sudo_usable; then
     printf "system"
     return 0
   fi
@@ -768,6 +789,7 @@ resolve_man_base_path() {
 # src/lib/resolve/man_mode.sh
 resolve_man_mode() {
   local mode="${1:-auto}"
+  local system_parent
 
   case "$mode" in
     system | user)
@@ -781,22 +803,23 @@ resolve_man_mode() {
       ;;
   esac
 
-  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+  if is_root; then
     printf "system"
     return 0
   fi
 
-  if [[ -d "/usr/local/share/man" && -w "/usr/local/share/man" ]]; then
+  if is_writable_dir "$SSI_SYSTEM_MAN_ROOT"; then
     printf "system"
     return 0
   fi
 
-  if [[ -d "/usr/local/share" && -w "/usr/local/share" ]]; then
+  system_parent="$(dirname "$SSI_SYSTEM_MAN_ROOT")"
+  if is_writable_dir "$system_parent"; then
     printf "system"
     return 0
   fi
 
-  if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+  if is_sudo_usable; then
     printf "system"
     return 0
   fi
@@ -932,11 +955,31 @@ ssi_man_command() {
 ssi_completion_command() {
 
   # src/commands/completion.sh
-  echo "# This file is located at 'src/commands/completion.sh'."
-  echo "# It contains the implementation for the 'ssi completion' command."
-  echo "# The code you write here will be wrapped by a function named 'ssi_completion_command()'."
-  echo "# Feel free to edit this file; your changes will persist when regenerating."
-  inspect_args
+  source_input="${args[source]}"
+  explicit_name="${args[--name]:-}"
+  shell="${args[--shell]}"
+
+  mode="$(resolve_completion_mode)" || return 1
+  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
+    return 1
+  fi
+
+  completion_root="$(resolve_completion_base_path "$shell" "$mode")" || return 1
+  target_path="${completion_root}/${target_name}"
+
+  install_file "$temp_file" "$target_path" 644 || return 1
+
+  rm -f "$temp_file"
+  log info "Installed: $target_path"
 
 }
 
@@ -1008,11 +1051,31 @@ ssi_uninstall_man_command() {
 ssi_uninstall_completion_command() {
 
   # src/commands/uninstall/completion.sh
-  echo "# This file is located at 'src/commands/uninstall/completion.sh'."
-  echo "# It contains the implementation for the 'ssi uninstall completion' command."
-  echo "# The code you write here will be wrapped by a function named 'ssi_uninstall_completion_command()'."
-  echo "# Feel free to edit this file; your changes will persist when regenerating."
-  inspect_args
+  name="${args[name]}"
+  shell="${args[--shell]}"
+  removed=0
+
+  user_root="$(resolve_completion_base_path "$shell" user)" || return 1
+  system_root="$(resolve_completion_base_path "$shell" system)" || return 1
+
+  user_path="${user_root}/${name}"
+  system_path="${system_root}/${name}"
+
+  if [[ -e "$user_path" ]]; then
+    remove_file "$user_path" || return 1
+    log info "Removed: $user_path"
+    removed=1
+  fi
+
+  if [[ -e "$system_path" ]]; then
+    remove_file "$system_path" || return 1
+    log info "Removed: $system_path"
+    removed=1
+  fi
+
+  if [[ "$removed" -eq 0 ]]; then
+    log warn "Not found: $name"
+  fi
 
 }
 
@@ -1305,6 +1368,33 @@ ssi_completion_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--name requires an argument: --name NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --shell)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--shell']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--shell requires an argument: --shell SHELL" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -1330,8 +1420,17 @@ ssi_completion_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['source']+x} ]]; then
-    printf "missing required argument: SOURCE\nusage: ssi completion SOURCE\n" >&2
+    printf "missing required argument: SOURCE\nusage: ssi completion SOURCE [OPTIONS]\n" >&2
 
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--shell']:-} ]] || args['--shell']="bash"
+
+  # :command.whitelist_filter
+  if [[ ${args['--shell']:-} ]] && [[ ! ${args['--shell']:-} =~ ^(bash|zsh|fish)$ ]]; then
+    printf "%s\n" "--shell must be one of: bash, zsh, fish" >&2
     exit 1
   fi
 
@@ -1555,6 +1654,19 @@ ssi_uninstall_completion_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --shell)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--shell']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--shell requires an argument: --shell SHELL" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -1577,6 +1689,15 @@ ssi_uninstall_completion_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--shell']:-} ]] || args['--shell']="bash"
+
+  # :command.whitelist_filter
+  if [[ ${args['--shell']:-} ]] && [[ ! ${args['--shell']:-} =~ ^(bash|zsh|fish)$ ]]; then
+    printf "%s\n" "--shell must be one of: bash, zsh, fish" >&2
+    exit 1
+  fi
 
 }
 

@@ -1,5 +1,25 @@
-echo "# This file is located at 'src/commands/uninstall/completion.sh'."
-echo "# It contains the implementation for the 'ssi uninstall completion' command."
-echo "# The code you write here will be wrapped by a function named 'ssi_uninstall_completion_command()'."
-echo "# Feel free to edit this file; your changes will persist when regenerating."
-inspect_args
+name="${args[name]}"
+shell="${args[--shell]}"
+removed=0
+
+user_root="$(resolve_completion_base_path "$shell" user)" || return 1
+system_root="$(resolve_completion_base_path "$shell" system)" || return 1
+
+user_path="${user_root}/${name}"
+system_path="${system_root}/${name}"
+
+if [[ -e "$user_path" ]]; then
+  remove_file "$user_path" || return 1
+  log info "Removed: $user_path"
+  removed=1
+fi
+
+if [[ -e "$system_path" ]]; then
+  remove_file "$system_path" || return 1
+  log info "Removed: $system_path"
+  removed=1
+fi
+
+if [[ "$removed" -eq 0 ]]; then
+  log warn "Not found: $name"
+fi

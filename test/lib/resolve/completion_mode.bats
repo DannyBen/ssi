@@ -1,52 +1,88 @@
 #!/usr/bin/env bats
 
+setup() {
+  source "$BATS_TEST_DIRNAME/../../../src/lib/is_root.sh"
+  source "$BATS_TEST_DIRNAME/../../../src/lib/is_writable_dir.sh"
+  source "$BATS_TEST_DIRNAME/../../../src/lib/is_sudo_usable.sh"
+  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/completion_mode.sh"
+  export SSI_SYSTEM_BASH_COMPLETION_ROOT="/tmp/ssi-system-bash-completions"
+}
+
 @test "resolve_completion_mode returns explicit system mode" {
-  run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/completion_mode.sh"
-    resolve_completion_mode system
-  '
+  run resolve_completion_mode system
 
   [ "$status" -eq 0 ]
   [ "$output" = "system" ]
 }
 
 @test "resolve_completion_mode returns explicit user mode" {
-  run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/completion_mode.sh"
-    resolve_completion_mode user
-  '
+  run resolve_completion_mode user
 
   [ "$status" -eq 0 ]
   [ "$output" = "user" ]
 }
 
 @test "resolve_completion_mode fails on invalid mode" {
-  run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/completion_mode.sh"
-    resolve_completion_mode nope
-  '
+  run resolve_completion_mode nope
 
   [ "$status" -eq 1 ]
   [ -z "$output" ]
 }
 
+@test "resolve_completion_mode auto resolves to system when root" {
+  is_root() { return 0; }
+  is_writable_dir() { return 1; }
+  is_sudo_usable() { return 1; }
+
+  run resolve_completion_mode auto
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "system" ]
+}
+
+@test "resolve_completion_mode auto resolves to system when completion root is writable" {
+  is_root() { return 1; }
+  is_writable_dir() {
+    [[ "$1" == "$SSI_SYSTEM_BASH_COMPLETION_ROOT" ]]
+  }
+  is_sudo_usable() { return 1; }
+
+  run resolve_completion_mode auto
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "system" ]
+}
+
+@test "resolve_completion_mode auto resolves to system when parent is writable" {
+  is_root() { return 1; }
+  is_writable_dir() {
+    [[ "$1" == "$(dirname "$SSI_SYSTEM_BASH_COMPLETION_ROOT")" ]]
+  }
+  is_sudo_usable() { return 1; }
+
+  run resolve_completion_mode auto
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "system" ]
+}
+
 @test "resolve_completion_mode auto resolves to system when sudo works" {
-  run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/completion_mode.sh"
-    sudo() { return 0; }
-    resolve_completion_mode auto
-  '
+  is_root() { return 1; }
+  is_writable_dir() { return 1; }
+  is_sudo_usable() { return 0; }
+
+  run resolve_completion_mode auto
 
   [ "$status" -eq 0 ]
   [ "$output" = "system" ]
 }
 
 @test "resolve_completion_mode auto resolves to user when sudo is unavailable" {
-  run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/completion_mode.sh"
-    sudo() { return 1; }
-    resolve_completion_mode auto
-  '
+  is_root() { return 1; }
+  is_writable_dir() { return 1; }
+  is_sudo_usable() { return 1; }
+
+  run resolve_completion_mode auto
 
   [ "$status" -eq 0 ]
   [ "$output" = "user" ]

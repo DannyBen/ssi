@@ -29,10 +29,12 @@ set -euo pipefail
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
+# Download ssi to a new temp dir
 cd "$tmpdir"
 wget https://github.com/DannyBen/ssi/blob/master/ssi
 chmod +x ssi
 
+# Use it to download and install files
 ./ssi bin https://github.com/You/YourRepo/blob/master/your-cli
 ./ssi man https://github.com/You/YourRepo/blob/master/docs/your-cli.1
 your-cli show-completion | ./ssi completion your-cli
@@ -43,6 +45,12 @@ ref:
 
 ```bash
 wget https://raw.githubusercontent.com/DannyBen/ssi/refs/tags/v0.1.0/ssi
+```
+
+or, from the immutable release tag:
+
+```bash
+wget https://github.com/DannyBen/ssi/releases/download/v0.1.0/ssi
 ```
 
 

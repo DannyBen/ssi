@@ -1,40 +1,56 @@
 #!/usr/bin/env bats
 
-@test "resolve_completion_base_path returns user bash completion path with HOME fallback" {
+setup() {
+  export SSI_USER_BASH_COMPLETION_ROOT="/tmp/ssi-user-bash-completions"
+  export SSI_SYSTEM_BASH_COMPLETION_ROOT="/tmp/ssi-system-bash-completions"
+  export SSI_USER_ZSH_COMPLETION_ROOT="/tmp/ssi-user-zsh-completions"
+  export SSI_SYSTEM_ZSH_COMPLETION_ROOT="/tmp/ssi-system-zsh-completions"
+  export SSI_USER_FISH_COMPLETION_ROOT="/tmp/ssi-user-fish-completions"
+  export SSI_SYSTEM_FISH_COMPLETION_ROOT="/tmp/ssi-system-fish-completions"
+}
+
+@test "resolve_completion_base_path returns user bash completion path" {
   run bash -lc '
     source "/vagrant/bash/ssi/src/lib/resolve/completion_base_path.sh"
     resolve_completion_mode() { printf "user"; }
-    HOME="/tmp/ssi-home"
-    XDG_DATA_HOME=""
     resolve_completion_base_path bash
   '
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/tmp/ssi-home/.local/share/bash-completion/completions" ]
+  [ "$output" = "/tmp/ssi-user-bash-completions" ]
 }
 
-@test "resolve_completion_base_path returns user zsh completion path from XDG_DATA_HOME" {
+@test "resolve_completion_base_path returns user zsh completion path" {
   run bash -lc '
     source "/vagrant/bash/ssi/src/lib/resolve/completion_base_path.sh"
     resolve_completion_mode() { printf "user"; }
-    XDG_DATA_HOME="/tmp/xdg-data"
     resolve_completion_base_path zsh
   '
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/tmp/xdg-data/zsh/site-functions" ]
+  [ "$output" = "/tmp/ssi-user-zsh-completions" ]
 }
 
-@test "resolve_completion_base_path returns user fish completion path from XDG_DATA_HOME" {
+@test "resolve_completion_base_path returns user fish completion path" {
   run bash -lc '
     source "/vagrant/bash/ssi/src/lib/resolve/completion_base_path.sh"
     resolve_completion_mode() { printf "user"; }
-    XDG_DATA_HOME="/tmp/xdg-data"
     resolve_completion_base_path fish
   '
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/tmp/xdg-data/fish/vendor_completions.d" ]
+  [ "$output" = "/tmp/ssi-user-fish-completions" ]
+}
+
+@test "resolve_completion_base_path returns system bash completion path" {
+  run bash -lc '
+    source "/vagrant/bash/ssi/src/lib/resolve/completion_base_path.sh"
+    resolve_completion_mode() { printf "system"; }
+    resolve_completion_base_path bash
+  '
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "/tmp/ssi-system-bash-completions" ]
 }
 
 @test "resolve_completion_base_path returns system zsh path" {
@@ -45,7 +61,7 @@
   '
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/usr/local/share/zsh/site-functions" ]
+  [ "$output" = "/tmp/ssi-system-zsh-completions" ]
 }
 
 @test "resolve_completion_base_path returns system fish path" {
@@ -56,20 +72,7 @@
   '
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/usr/local/share/fish/vendor_completions.d" ]
-}
-
-@test "resolve_completion_base_path returns a valid system bash completion path" {
-  run bash -lc '
-    source "/vagrant/bash/ssi/src/lib/resolve/completion_base_path.sh"
-    resolve_completion_mode() { printf "system"; }
-    resolve_completion_base_path bash
-  '
-
-  [ "$status" -eq 0 ]
-  [[ "$output" = "/usr/local/share/bash-completion/completions" || \
-     "$output" = "/usr/local/etc/bash_completion.d" || \
-     "$output" = "/usr/share/bash-completion/completions" ]]
+  [ "$output" = "/tmp/ssi-system-fish-completions" ]
 }
 
 @test "resolve_completion_base_path fails on invalid shell" {

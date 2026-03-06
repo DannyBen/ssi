@@ -1,8 +1,6 @@
 resolve_completion_base_path() {
   local shell="${1:-}"
   local mode="${2:-auto}"
-  local data_home
-
   [[ -n "$shell" ]] || return 1
   mode="$(resolve_completion_mode "$mode")" || return 1
 
@@ -17,36 +15,27 @@ resolve_completion_base_path() {
   if [[ "$mode" == "system" ]]; then
     case "$shell" in
       bash)
-        if [[ -d "/usr/local/share/bash-completion/completions" ]]; then
-          printf "/usr/local/share/bash-completion/completions"
-        elif [[ -d "/usr/local/etc/bash_completion.d" ]]; then
-          printf "/usr/local/etc/bash_completion.d"
-        elif [[ -d "/usr/share/bash-completion/completions" ]]; then
-          printf "/usr/share/bash-completion/completions"
-        else
-          printf "/usr/local/share/bash-completion/completions"
-        fi
+        printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
         ;;
       zsh)
-        printf "/usr/local/share/zsh/site-functions"
+        printf "%s" "$SSI_SYSTEM_ZSH_COMPLETION_ROOT"
         ;;
       fish)
-        printf "/usr/local/share/fish/vendor_completions.d"
+        printf "%s" "$SSI_SYSTEM_FISH_COMPLETION_ROOT"
         ;;
     esac
     return 0
   fi
 
-  data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
   case "$shell" in
     bash)
-      printf "%s/bash-completion/completions" "$data_home"
+      printf "%s" "$SSI_USER_BASH_COMPLETION_ROOT"
       ;;
     zsh)
-      printf "%s/zsh/site-functions" "$data_home"
+      printf "%s" "$SSI_USER_ZSH_COMPLETION_ROOT"
       ;;
     fish)
-      printf "%s/fish/vendor_completions.d" "$data_home"
+      printf "%s" "$SSI_USER_FISH_COMPLETION_ROOT"
       ;;
   esac
 }

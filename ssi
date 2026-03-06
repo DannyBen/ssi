@@ -45,6 +45,16 @@ ssi_usage() {
     printf "    Show version number\n"
     echo
 
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(green "SSI_LOG_LEVEL")"
+    printf "    Log level\n"
+    printf "    %s\n" "Allowed: debug, info, warn, error"
+    printf "    %s\n" "Default: info"
+    echo
+
   fi
 }
 
@@ -558,7 +568,7 @@ log() {
   color_func="cyan"
   case "$level" in
     debug) color_func="magenta" ;;
-    info) color_func="green" ;;
+    info) color_func="green_bold" ;;
     warn) color_func="yellow_bold" ;;
     error) color_func="red_bold" ;;
   esac
@@ -576,19 +586,6 @@ log() {
 fail() {
   log error "$*"
   return 1
-}
-
-# src/lib/output.sh
-say() {
-  local label="$1"
-  shift
-  printf "%s: %s\n" "$(green_bold "$label")" "$*"
-}
-
-warn() {
-  local label="$1"
-  shift
-  printf "%s: %s\n" "$(yellow_bold "$label")" "$*"
 }
 
 # src/lib/remove_file.sh
@@ -662,9 +659,9 @@ resolve_bin_root() {
   }
 
   if [[ "$mode" == "system" ]]; then
-    printf "/usr/local/bin"
+    printf "%s" "$SSI_SYSTEM_BIN_ROOT"
   else
-    printf "%s/.local/bin" "$HOME"
+    printf "%s" "$SSI_USER_BIN_ROOT"
   fi
 }
 
@@ -672,8 +669,6 @@ resolve_bin_root() {
 resolve_completion_base_path() {
   local shell="${1:-}"
   local mode="${2:-auto}"
-  local data_home
-
   [[ -n "$shell" ]] || return 1
   mode="$(resolve_completion_mode "$mode")" || return 1
 
@@ -688,36 +683,27 @@ resolve_completion_base_path() {
   if [[ "$mode" == "system" ]]; then
     case "$shell" in
       bash)
-        if [[ -d "/usr/local/share/bash-completion/completions" ]]; then
-          printf "/usr/local/share/bash-completion/completions"
-        elif [[ -d "/usr/local/etc/bash_completion.d" ]]; then
-          printf "/usr/local/etc/bash_completion.d"
-        elif [[ -d "/usr/share/bash-completion/completions" ]]; then
-          printf "/usr/share/bash-completion/completions"
-        else
-          printf "/usr/local/share/bash-completion/completions"
-        fi
+        printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
         ;;
       zsh)
-        printf "/usr/local/share/zsh/site-functions"
+        printf "%s" "$SSI_SYSTEM_ZSH_COMPLETION_ROOT"
         ;;
       fish)
-        printf "/usr/local/share/fish/vendor_completions.d"
+        printf "%s" "$SSI_SYSTEM_FISH_COMPLETION_ROOT"
         ;;
     esac
     return 0
   fi
 
-  data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
   case "$shell" in
     bash)
-      printf "%s/bash-completion/completions" "$data_home"
+      printf "%s" "$SSI_USER_BASH_COMPLETION_ROOT"
       ;;
     zsh)
-      printf "%s/zsh/site-functions" "$data_home"
+      printf "%s" "$SSI_USER_ZSH_COMPLETION_ROOT"
       ;;
     fish)
-      printf "%s/fish/vendor_completions.d" "$data_home"
+      printf "%s" "$SSI_USER_FISH_COMPLETION_ROOT"
       ;;
   esac
 }
@@ -767,9 +753,9 @@ resolve_man_base_path() {
   mode="$(resolve_man_mode "${1:-auto}")" || return 1
 
   if [[ "$mode" == "system" ]]; then
-    printf "/usr/local/share/man"
+    printf "%s" "$SSI_SYSTEM_MAN_ROOT"
   else
-    printf "%s/man" "${XDG_DATA_HOME:-$HOME/.local/share}"
+    printf "%s" "$SSI_USER_MAN_ROOT"
   fi
 }
 
@@ -875,7 +861,7 @@ ssi_bin_command() {
   install_file "$temp_file" "$target_path" 755 || return 1
 
   rm -f "$temp_file"
-  say "Installed" "$target_path"
+  log info "Installed: $target_path"
 
 }
 
@@ -908,24 +894,26 @@ ssi_uninstall_bin_command() {
 
   # src/commands/uninstall/bin.sh
   name="${args[name]}"
-  user_path="$HOME/.local/bin/$name"
-  system_path="/usr/local/bin/$name"
+  user_root="${SSI_USER_BIN_ROOT:-$HOME/.local/bin}"
+  system_root="${SSI_SYSTEM_BIN_ROOT:-/usr/local/bin}"
+  user_path="$user_root/$name"
+  system_path="$system_root/$name"
   removed=0
 
   if [[ -f "$user_path" ]]; then
     remove_file "$user_path" || return 1
-    say "Removed" "$user_path"
+    log info "Removed: $user_path"
     removed=1
   fi
 
   if [[ -f "$system_path" ]]; then
     remove_file "$system_path" || return 1
-    say "Removed" "$system_path"
+    log info "Removed: $system_path"
     removed=1
   fi
 
   if [[ "$removed" -eq 0 ]]; then
-    warn "Not found" "$name"
+    log warn "Not found: $name"
   fi
 
 }
@@ -979,6 +967,25 @@ parse_requirements() {
 
     esac
   done
+
+  # :command.environment_variables_filter
+  # :command.environment_variables_default
+  export SSI_LOG_LEVEL="${SSI_LOG_LEVEL:-info}"
+  export SSI_USER_BIN_ROOT="${SSI_USER_BIN_ROOT:-$HOME/.local/bin}"
+  export SSI_SYSTEM_BIN_ROOT="${SSI_SYSTEM_BIN_ROOT:-/usr/local/bin}"
+  export SSI_USER_MAN_ROOT="${SSI_USER_MAN_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/man}"
+  export SSI_SYSTEM_MAN_ROOT="${SSI_SYSTEM_MAN_ROOT:-/usr/local/share/man}"
+  export SSI_USER_BASH_COMPLETION_ROOT="${SSI_USER_BASH_COMPLETION_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions}"
+  export SSI_SYSTEM_BASH_COMPLETION_ROOT="${SSI_SYSTEM_BASH_COMPLETION_ROOT:-/usr/local/share/bash-completion/completions}"
+  export SSI_USER_ZSH_COMPLETION_ROOT="${SSI_USER_ZSH_COMPLETION_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions}"
+  export SSI_SYSTEM_ZSH_COMPLETION_ROOT="${SSI_SYSTEM_ZSH_COMPLETION_ROOT:-/usr/local/share/zsh/site-functions}"
+  export SSI_USER_FISH_COMPLETION_ROOT="${SSI_USER_FISH_COMPLETION_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/fish/vendor_completions.d}"
+  export SSI_SYSTEM_FISH_COMPLETION_ROOT="${SSI_SYSTEM_FISH_COMPLETION_ROOT:-/usr/local/share/fish/vendor_completions.d}"
+
+  if [[ -n "${SSI_LOG_LEVEL:-}" ]] && [[ ! ${SSI_LOG_LEVEL:-} =~ ^(debug|info|warn|error)$ ]]; then
+    printf "%s\n" "SSI_LOG_LEVEL environment variable must be one of: debug, info, warn, error" >&2
+    exit 1
+  fi
 
   # :command.command_filter
   action=${1:-}
@@ -1490,6 +1497,19 @@ ssi_uninstall_completion_parse_requirements() {
 initialize() {
   declare -g version="0.1.0"
   set -eo pipefail
+
+  # :command.environment_variables_default
+  export SSI_LOG_LEVEL="${SSI_LOG_LEVEL:-info}"
+  export SSI_USER_BIN_ROOT="${SSI_USER_BIN_ROOT:-$HOME/.local/bin}"
+  export SSI_SYSTEM_BIN_ROOT="${SSI_SYSTEM_BIN_ROOT:-/usr/local/bin}"
+  export SSI_USER_MAN_ROOT="${SSI_USER_MAN_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/man}"
+  export SSI_SYSTEM_MAN_ROOT="${SSI_SYSTEM_MAN_ROOT:-/usr/local/share/man}"
+  export SSI_USER_BASH_COMPLETION_ROOT="${SSI_USER_BASH_COMPLETION_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions}"
+  export SSI_SYSTEM_BASH_COMPLETION_ROOT="${SSI_SYSTEM_BASH_COMPLETION_ROOT:-/usr/local/share/bash-completion/completions}"
+  export SSI_USER_ZSH_COMPLETION_ROOT="${SSI_USER_ZSH_COMPLETION_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions}"
+  export SSI_SYSTEM_ZSH_COMPLETION_ROOT="${SSI_SYSTEM_ZSH_COMPLETION_ROOT:-/usr/local/share/zsh/site-functions}"
+  export SSI_USER_FISH_COMPLETION_ROOT="${SSI_USER_FISH_COMPLETION_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/fish/vendor_completions.d}"
+  export SSI_SYSTEM_FISH_COMPLETION_ROOT="${SSI_SYSTEM_FISH_COMPLETION_ROOT:-/usr/local/share/fish/vendor_completions.d}"
 
 }
 

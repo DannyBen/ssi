@@ -6,8 +6,8 @@ resolve_bin_root() {
   }
 
   if [[ "$mode" == "system" ]]; then
-    printf "/usr/local/bin"
+    printf "%s" "$SSI_SYSTEM_BIN_ROOT"
   else
-    printf "%s/.local/bin" "$HOME"
+    printf "%s" "$SSI_USER_BIN_ROOT"
   fi
 }

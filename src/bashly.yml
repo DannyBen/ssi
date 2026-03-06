@@ -2,6 +2,8 @@ name: ssi
 help: Simple Script Installer
 version: 0.1.0
 
+import: src/env_vars.yml
+
 commands:
 - name: bin
   alias: exec

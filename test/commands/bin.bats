@@ -8,6 +8,9 @@ setup() {
   mkdir -p "$HOME"
   export PATH="$fakebin:$PATH"
   export NO_COLOR=1
+  export SSI_USER_BIN_ROOT="$tmp_root/user-bin"
+  export SSI_SYSTEM_BIN_ROOT="$tmp_root/system-bin"
+  mkdir -p "$SSI_USER_BIN_ROOT" "$SSI_SYSTEM_BIN_ROOT"
 }
 
 teardown() {
@@ -22,9 +25,9 @@ teardown() {
   run ./ssi bin "https://example.com/tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "installed: $HOME/.local/bin/tool" ]
-  [ -f "$HOME/.local/bin/tool" ]
-  [ "$(cat "$HOME/.local/bin/tool")" = "downloaded:https://example.com/tool" ]
+  [ "$output" = "• info → Installed: $SSI_USER_BIN_ROOT/tool" ]
+  [ -f "$SSI_USER_BIN_ROOT/tool" ]
+  [ "$(cat "$SSI_USER_BIN_ROOT/tool")" = "downloaded:https://example.com/tool" ]
 }
 
 @test "bin installs from stdin when explicit name is provided" {
@@ -34,9 +37,9 @@ teardown() {
   run ./ssi bin - --name stdin-tool <<< "from-stdin"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "installed: $HOME/.local/bin/stdin-tool" ]
-  [ -f "$HOME/.local/bin/stdin-tool" ]
-  [ "$(cat "$HOME/.local/bin/stdin-tool")" = "from-stdin" ]
+  [ "$output" = "• info → Installed: $SSI_USER_BIN_ROOT/stdin-tool" ]
+  [ -f "$SSI_USER_BIN_ROOT/stdin-tool" ]
+  [ "$(cat "$SSI_USER_BIN_ROOT/stdin-tool")" = "from-stdin" ]
 }
 
 @test "bin fails when target name cannot be determined and no explicit name provided" {

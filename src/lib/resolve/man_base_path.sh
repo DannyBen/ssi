@@ -3,8 +3,8 @@ resolve_man_base_path() {
   mode="$(resolve_man_mode "${1:-auto}")" || return 1
 
   if [[ "$mode" == "system" ]]; then
-    printf "/usr/local/share/man"
+    printf "%s" "$SSI_SYSTEM_MAN_ROOT"
   else
-    printf "%s/man" "${XDG_DATA_HOME:-$HOME/.local/share}"
+    printf "%s" "$SSI_USER_MAN_ROOT"
   fi
 }

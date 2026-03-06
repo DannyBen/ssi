@@ -1,0 +1,45 @@
+environment_variables:
+  - name: ssi_log_level
+    help: Log level
+    default: info
+    allowed: [debug, info, warn, error]
+  - name: ssi_user_bin_root
+    help: Path to user's bin directory
+    default: "$HOME/.local/bin"
+    private: true
+  - name: ssi_system_bin_root
+    help: Path to system bin directory
+    default: /usr/local/bin
+    private: true
+  - name: ssi_user_man_root
+    help: Path to user's man directory
+    default: "${XDG_DATA_HOME:-$HOME/.local/share}/man"
+    private: true
+  - name: ssi_system_man_root
+    help: Path to system man directory
+    default: /usr/local/share/man
+    private: true
+  - name: ssi_user_bash_completion_root
+    help: Path to user's bash completion directory
+    default: "${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion/completions"
+    private: true
+  - name: ssi_system_bash_completion_root
+    help: Path to system bash completion directory
+    default: /usr/local/share/bash-completion/completions
+    private: true
+  - name: ssi_user_zsh_completion_root
+    help: Path to user's zsh completion directory
+    default: "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions"
+    private: true
+  - name: ssi_system_zsh_completion_root
+    help: Path to system zsh completion directory
+    default: /usr/local/share/zsh/site-functions
+    private: true
+  - name: ssi_user_fish_completion_root
+    help: Path to user's fish completion directory
+    default: "${XDG_DATA_HOME:-$HOME/.local/share}/fish/vendor_completions.d"
+    private: true
+  - name: ssi_system_fish_completion_root
+    help: Path to system fish completion directory
+    default: /usr/local/share/fish/vendor_completions.d
+    private: true

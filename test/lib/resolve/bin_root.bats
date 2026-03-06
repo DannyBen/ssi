@@ -3,6 +3,8 @@
 setup() {
   source "$BATS_TEST_DIRNAME/../../../src/lib/log.sh"
   source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/bin_root.sh"
+  export SSI_SYSTEM_BIN_ROOT="/tmp/ssi-system-bin"
+  export SSI_USER_BIN_ROOT="/tmp/ssi-user-bin"
 }
 
 @test "resolve_bin_root returns system bin root" {
@@ -11,7 +13,7 @@ setup() {
   run resolve_bin_root
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/usr/local/bin" ]
+  [ "$output" = "/tmp/ssi-system-bin" ]
 }
 
 @test "resolve_bin_root returns user bin root" {
@@ -21,7 +23,7 @@ setup() {
   run resolve_bin_root
 
   [ "$status" -eq 0 ]
-  [ "$output" = "/tmp/ssi-home/.local/bin" ]
+  [ "$output" = "/tmp/ssi-user-bin" ]
 }
 
 @test "resolve_bin_root propagates mode resolution error" {

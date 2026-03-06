@@ -6,6 +6,7 @@ setup() {
   source "$BATS_TEST_DIRNAME/../../../src/lib/is_sudo_usable.sh"
   source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/completion_mode.sh"
   export SSI_SYSTEM_BASH_COMPLETION_ROOT="/tmp/ssi-system-bash-completions"
+  resolve_bash_completion_root() { printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"; }
 }
 
 @test "resolve_completion_mode returns explicit system mode" {

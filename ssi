@@ -667,6 +667,12 @@ is_command() {
   [[ -n "$name" ]] && command -v "$name" >/dev/null 2>&1
 }
 
+# src/lib/is_dir.sh
+is_dir() {
+  local dir="${1:-}"
+  [[ -n "$dir" && -d "$dir" ]]
+}
+
 # src/lib/is_root.sh
 is_root() {
   [ "$(id -u)" -eq 0 ]
@@ -762,6 +768,33 @@ remove_file() {
   return 1
 }
 
+# src/lib/resolve/bash_completion_root.sh
+resolve_bash_completion_root() {
+  local brew_prefix
+  local brew_root
+
+  if is_dir "/usr/share/bash-completion/completions"; then
+    printf "%s" "/usr/share/bash-completion/completions"
+    return 0
+  fi
+
+  if is_dir "/usr/local/etc/bash_completion.d"; then
+    printf "%s" "/usr/local/etc/bash_completion.d"
+    return 0
+  fi
+
+  if is_command brew; then
+    brew_prefix="$(brew --prefix 2>/dev/null)"
+    brew_root="${brew_prefix}/etc/bash_completion.d"
+    if [[ -n "$brew_prefix" ]] && is_dir "$brew_root"; then
+      printf "%s" "$brew_root"
+      return 0
+    fi
+  fi
+
+  printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
+}
+
 # src/lib/resolve/bin_mode.sh
 resolve_bin_mode() {
   local mode="${1:-auto}"
@@ -822,7 +855,7 @@ resolve_completion_base_path() {
   if [[ "$mode" == "system" ]]; then
     case "$shell" in
       bash)
-        printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
+        resolve_bash_completion_root
         ;;
       zsh)
         printf "%s" "$SSI_SYSTEM_ZSH_COMPLETION_ROOT"
@@ -875,12 +908,12 @@ resolve_completion_mode() {
     return 0
   fi
 
-  if is_writable_dir "$SSI_SYSTEM_BASH_COMPLETION_ROOT"; then
+  if is_writable_dir "$(resolve_bash_completion_root)"; then
     printf "system"
     return 0
   fi
 
-  system_parent="$(dirname "$SSI_SYSTEM_BASH_COMPLETION_ROOT")"
+  system_parent="$(dirname "$(resolve_bash_completion_root)")"
   if is_writable_dir "$system_parent"; then
     printf "system"
     return 0

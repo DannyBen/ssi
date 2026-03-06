@@ -7,7 +7,7 @@ resolve_completion_base_path() {
   if [[ "$mode" == "system" ]]; then
     case "$shell" in
       bash)
-        printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
+        resolve_bash_completion_root
         ;;
       zsh)
         printf "%s" "$SSI_SYSTEM_ZSH_COMPLETION_ROOT"

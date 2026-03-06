@@ -19,12 +19,12 @@ resolve_completion_mode() {
     return 0
   fi
 
-  if is_writable_dir "$SSI_SYSTEM_BASH_COMPLETION_ROOT"; then
+  if is_writable_dir "$(resolve_bash_completion_root)"; then
     printf "system"
     return 0
   fi
 
-  system_parent="$(dirname "$SSI_SYSTEM_BASH_COMPLETION_ROOT")"
+  system_parent="$(dirname "$(resolve_bash_completion_root)")"
   if is_writable_dir "$system_parent"; then
     printf "system"
     return 0

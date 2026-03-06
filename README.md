@@ -38,6 +38,13 @@ chmod +x ssi
 your-cli show-completion | ./ssi completion your-cli
 ```
 
+If you wish to pin your downloaded version of `ssi`, simply use a tagged git
+ref:
+
+```bash
+wget https://raw.githubusercontent.com/DannyBen/ssi/refs/tags/v0.1.0/ssi
+```
+
 
 ## Usage for Users
 

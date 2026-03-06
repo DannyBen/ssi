@@ -31,27 +31,22 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 # Download ssi to a new temp dir
 cd "$tmpdir"
-wget https://github.com/DannyBen/ssi/blob/master/ssi
+wget https://github.com/DannyBen/ssi/releases/latest/download/ssi
 chmod +x ssi
 
 # Use it to download and install files
-./ssi bin https://github.com/You/YourRepo/blob/master/your-cli
-./ssi man https://github.com/You/YourRepo/blob/master/docs/your-cli.1
+./ssi bin https://anywhere.com/your-cli
+./ssi man https://anywhere.com/docs/your-cli.1
 your-cli show-completion | ./ssi completion your-cli
 ```
 
-If you wish to pin your downloaded version of `ssi`, simply use a tagged git
-ref:
-
-```bash
-wget https://raw.githubusercontent.com/DannyBen/ssi/refs/tags/v0.1.0/ssi
-```
-
-or, from the immutable release tag:
+If you wish to pin your downloaded version of `ssi`, simply use the release tag:
 
 ```bash
 wget https://github.com/DannyBen/ssi/releases/download/v0.1.0/ssi
 ```
+
+Releases are immutable.
 
 
 ## Usage for Users

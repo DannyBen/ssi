@@ -1,5 +1,7 @@
 # Simple Script Installer
 
+![repocard](https://repocard.dannyben.com/svg/ssi.svg)
+
 Simple Script Installer (`ssi`) is a lightweight Bash installer for binaries,
 man pages, and shell completions. It is designed for script authors who want a
 simple, semantic setup script for their users, without re-implementing common

@@ -127,3 +127,12 @@ directories and system directories.
 
 The `ssi log` command is provided as a helper to allow users to output messages
 in the same format as the internal `ssi` functions.
+
+## Examples
+
+| Repository                                                          | Setup Script                                                         | Uninstall Script                                                             |
+|:--------------------------------------------------------------------|:---------------------------------------------------------------------|:-----------------------------------------------------------------------------|
+| [DannyBen/git-changelog](https://github.com/DannyBen/git-changelog) | [setup](https://github.com/DannyBen/git-changelog/blob/master/setup) | [uninstall](https://github.com/DannyBen/git-changelog/blob/master/uninstall) |
+| [DannyBen/opcode](https://github.com/DannyBen/opcode)               | [setup](https://github.com/DannyBen/opcode/blob/master/setup)        | [uninstall](https://github.com/DannyBen/opcode/blob/master/uninstall)        |
+| [DannyBen/repli](https://github.com/DannyBen/repli)                 | [setup](https://github.com/DannyBen/repli/blob/master/setup)         | [uninstall](https://github.com/DannyBen/repli/blob/master/uninstall)         |
+

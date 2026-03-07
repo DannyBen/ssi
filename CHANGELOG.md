@@ -1,6 +1,17 @@
 Changelog
 ========================================
 
+v0.1.4 - 2026-03-07
+----------------------------------------
+
+- Fix bootstrap examples [`791803b`](https://github.com/DannyBen/ssi/commit/791803b)
+- Add bash completions for `ssi` itself [`f799f15`](https://github.com/DannyBen/ssi/commit/f799f15)
+- Update bootstrap template with pinned release URLs [`fa13afd`](https://github.com/DannyBen/ssi/commit/fa13afd)
+- Update bootstrap template [`729c50d`](https://github.com/DannyBen/ssi/commit/729c50d)
+- Fix startup functions silent errors [`33803ef`](https://github.com/DannyBen/ssi/commit/33803ef)
+- Compare [`v0.1.3..v0.1.4`](https://github.com/dannyben/ssi/compare/v0.1.3..v0.1.4)
+
+
 v0.1.3 - 2026-03-07
 ----------------------------------------
 

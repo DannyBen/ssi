@@ -69,7 +69,7 @@ If you want completions for `ssi` itself, you can use `ssi` itself to download
 and install its own bash completion script:
 
 ```shell
-ssi install completion https://raw.githubusercontent.com/DannyBen/ssi/master/completions/ssi --shell bash
+ssi install completion https://raw.githubusercontent.com/DannyBen/ssi/refs/tags/v$(ssi --version)/completions/ssi --shell bash
 ```
 
 ## Technical Details

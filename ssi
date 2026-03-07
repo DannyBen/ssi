@@ -418,7 +418,7 @@ ssi_uninstall_startup_usage() {
 # :command.usage
 ssi_test_usage() {
   printf "ssi test - Check if files are installed\n\n"
-  printf "Alias: t\n"
+  printf "Alias: t, check\n"
   echo
 
   printf "%s\n" "$(bold "Usage:")"
@@ -451,7 +451,7 @@ ssi_test_bin_usage() {
   printf "ssi test bin - Check executable file\n\n"
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi test bin NAME\n"
+  printf "  ssi test bin NAME [OPTIONS]\n"
   printf "  ssi test bin --help | -h\n"
   echo
 
@@ -459,6 +459,12 @@ ssi_test_bin_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--all, -a")"
+    printf "    Check all possible paths\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(green "--help, -h")"
@@ -481,7 +487,7 @@ ssi_test_man_usage() {
   printf "ssi test man - Check man page\n\n"
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi test man NAME\n"
+  printf "  ssi test man NAME [OPTIONS]\n"
   printf "  ssi test man --help | -h\n"
   echo
 
@@ -489,6 +495,12 @@ ssi_test_man_usage() {
   if [[ -n "$long_usage" ]]; then
     # :command.usage_options
     printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--all, -a")"
+    printf "    Check all possible paths\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(green "--help, -h")"
@@ -521,6 +533,11 @@ ssi_test_completion_usage() {
     printf "%s\n" "$(bold "Options:")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--all, -a")"
+    printf "    Check all possible paths\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(green "--shell SHELL")"
     printf "    Shell type\n"
@@ -560,10 +577,17 @@ ssi_test_startup_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    printf "  %s\n" "$(green "--all, -a")"
+    printf "    Check all shell startup paths\n"
+    printf "    %s\n" "Conflicts: --shell"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(green "--shell SHELL")"
     printf "    Shell type\n"
     printf "    %s\n" "Allowed: bash, zsh, fish"
     printf "    %s\n" "Default: bash"
+    printf "    %s\n" "Conflicts: --all"
     echo
 
     # :command.usage_fixed_flags
@@ -1058,6 +1082,11 @@ resolve_bin_root() {
   fi
 }
 
+# src/lib/resolve/bin_roots.sh
+resolve_bin_roots() {
+  printf "%s\n%s\n" "$SSI_SYSTEM_BIN_ROOT" "$SSI_USER_BIN_ROOT"
+}
+
 # src/lib/resolve/completion_base_path.sh
 resolve_completion_base_path() {
   local shell="${1:-}"
@@ -1140,6 +1169,16 @@ resolve_completion_mode() {
   printf "user"
 }
 
+# src/lib/resolve/completion_paths.sh
+resolve_completion_paths() {
+  local shell="${1:-}"
+  [[ -n "$shell" ]] || return 1
+
+  printf "%s\n%s\n" \
+    "$(resolve_completion_base_path "$shell" system)" \
+    "$(resolve_completion_base_path "$shell" user)"
+}
+
 # src/lib/resolve/man_base_path.sh
 resolve_man_base_path() {
   local mode
@@ -1203,6 +1242,15 @@ resolve_man_path() {
   printf "%s/man%s" "$base_path" "$section"
 }
 
+# src/lib/resolve/man_paths.sh
+resolve_man_paths() {
+  local section="${1:-1}"
+
+  printf "%s\n%s\n" \
+    "$(resolve_man_path "$section" system)" \
+    "$(resolve_man_path "$section" user)"
+}
+
 # src/lib/resolve/man_target_from_name.sh
 resolve_man_target_from_name() {
   local raw_name="${1:-}"
@@ -1223,6 +1271,31 @@ resolve_man_target_from_name() {
   fi
 
   printf "%s:%s" "$section" "$filename"
+}
+
+# src/lib/resolve/startup_paths.sh
+resolve_startup_paths() {
+  local shell="${1:-}"
+
+  case "$shell" in
+    bash)
+      printf "%s\n" "$HOME/.bashrc.d"
+      ;;
+    zsh)
+      printf "%s\n" "${ZDOTDIR:-$HOME}/.zshrc.d"
+      ;;
+    fish)
+      printf "%s\n" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
+      ;;
+    all)
+      printf "%s\n" "$HOME/.bashrc.d"
+      printf "%s\n" "${ZDOTDIR:-$HOME}/.zshrc.d"
+      printf "%s\n" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 # src/lib/resolve/target_name_from_source.sh
@@ -1664,6 +1737,32 @@ ssi_test_bin_command() {
 
   # src/commands/test/bin.sh
   target_name="${args[name]}"
+  check_all="${args[--all]:-}"
+
+  if [[ -n "$check_all" ]]; then
+    found=0
+    while IFS= read -r bin_root; do
+      [[ -n "$bin_root" ]] || continue
+      target_path="${bin_root}/${target_name}"
+      if [[ -x "$target_path" ]]; then
+        if [[ "$found" -eq 0 ]]; then
+          log info "Found: $target_path"
+        else
+          log warn "Duplicate: $target_path"
+        fi
+        found=$((found + 1))
+      else
+        log info "Not found: $target_path"
+      fi
+    done < <(resolve_bin_roots)
+
+    if [[ "$found" -gt 0 ]]; then
+      return 0
+    fi
+
+    fail "Not found in any path: $target_name"
+    return 1
+  fi
 
   mode="$(resolve_bin_mode)" || return 1
   bin_root="$(resolve_bin_root "$mode")" || return 1
@@ -1684,12 +1783,38 @@ ssi_test_man_command() {
 
   # src/commands/test/man.sh
   target_name="${args[name]}"
+  check_all="${args[--all]:-}"
 
-  mode="$(resolve_man_mode)" || return 1
   target_info="$(resolve_man_target_from_name "$target_name")" || return 1
   section="${target_info%%:*}"
   filename="${target_info#*:}"
 
+  if [[ -n "$check_all" ]]; then
+    found=0
+    while IFS= read -r man_dir; do
+      [[ -n "$man_dir" ]] || continue
+      target_path="${man_dir}/${filename}"
+      if [[ -f "$target_path" ]]; then
+        if [[ "$found" -eq 0 ]]; then
+          log info "Found: $target_path"
+        else
+          log warn "Duplicate: $target_path"
+        fi
+        found=$((found + 1))
+      else
+        log info "Not found: $target_path"
+      fi
+    done < <(resolve_man_paths "$section")
+
+    if [[ "$found" -gt 0 ]]; then
+      return 0
+    fi
+
+    fail "Not found in any path: $filename"
+    return 1
+  fi
+
+  mode="$(resolve_man_mode)" || return 1
   man_dir="$(resolve_man_path "$section" "$mode")" || return 1
   target_path="${man_dir}/${filename}"
 
@@ -1709,6 +1834,32 @@ ssi_test_completion_command() {
   # src/commands/test/completion.sh
   target_name="${args[name]}"
   shell="${args[--shell]}"
+  check_all="${args[--all]:-}"
+
+  if [[ -n "$check_all" ]]; then
+    found=0
+    while IFS= read -r completion_root; do
+      [[ -n "$completion_root" ]] || continue
+      target_path="${completion_root}/${target_name}"
+      if [[ -f "$target_path" ]]; then
+        if [[ "$found" -eq 0 ]]; then
+          log info "Found: $target_path"
+        else
+          log warn "Duplicate: $target_path"
+        fi
+        found=$((found + 1))
+      else
+        log info "Not found: $target_path"
+      fi
+    done < <(resolve_completion_paths "$shell")
+
+    if [[ "$found" -gt 0 ]]; then
+      return 0
+    fi
+
+    fail "Not found in any path: $target_name"
+    return 1
+  fi
 
   mode="$(resolve_completion_mode)" || return 1
   completion_root="$(resolve_completion_base_path "$shell" "$mode")" || return 1
@@ -1730,16 +1881,37 @@ ssi_test_startup_command() {
   # src/commands/test/startup.sh
   name="${args[name]}"
   shell="${args[--shell]}"
+  check_all="${args[--all]:-}"
+
+  if [[ -n "$check_all" ]]; then
+    found=0
+    while IFS= read -r startup_root; do
+      [[ -n "$startup_root" ]] || continue
+      target="${startup_root}/${name}"
+      if [[ -f "$target" ]]; then
+        if [[ "$found" -eq 0 ]]; then
+          log info "Found: $target"
+        else
+          log warn "Duplicate: $target"
+        fi
+        found=$((found + 1))
+      else
+        log info "Not found: $target"
+      fi
+    done < <(resolve_startup_paths all)
+
+    if [[ "$found" -gt 0 ]]; then
+      return 0
+    fi
+
+    fail "Not found in any path: $name"
+    return 1
+  fi
 
   case "$shell" in
-    bash)
-      target="$HOME/.bashrc.d/$name"
-      ;;
-    zsh)
-      target="${ZDOTDIR:-$HOME}/.zshrc.d/$name"
-      ;;
-    fish)
-      target="${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d/$name"
+    bash|zsh|fish)
+      startup_root="$(resolve_startup_paths "$shell")" || return 1
+      target="${startup_root}/${name}"
       ;;
     *)
       fail "Unknown shell: $shell"
@@ -1872,7 +2044,7 @@ parse_requirements() {
       shift $#
       ;;
 
-    test | t)
+    test | t | check)
       action="test"
       shift
       ssi_test_parse_requirements "$@"
@@ -2852,6 +3024,13 @@ ssi_test_bin_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --all | -a)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -2877,7 +3056,7 @@ ssi_test_bin_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['name']+x} ]]; then
-    printf "missing required argument: NAME\nusage: ssi test bin NAME\n" >&2
+    printf "missing required argument: NAME\nusage: ssi test bin NAME [OPTIONS]\n" >&2
 
     exit 1
   fi
@@ -2912,6 +3091,13 @@ ssi_test_man_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --all | -a)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -2937,7 +3123,7 @@ ssi_test_man_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['name']+x} ]]; then
-    printf "missing required argument: NAME\nusage: ssi test man NAME\n" >&2
+    printf "missing required argument: NAME\nusage: ssi test man NAME [OPTIONS]\n" >&2
 
     exit 1
   fi
@@ -2972,6 +3158,14 @@ ssi_test_completion_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --all | -a)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
+
       # :flag.case
       --shell)
 
@@ -3055,7 +3249,25 @@ ssi_test_startup_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --all | -a)
+        # :flag.conflicts
+        if [[ -n "${args['--shell']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--shell" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
       --shell)
+        # :flag.conflicts
+        if [[ -n "${args['--all']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--all" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then

@@ -40,7 +40,10 @@ commands:
       arg: shell
       help: Shell type
       default: bash
-      allowed: [bash, zsh, fish]
+      allowed: &shells
+      - bash
+      - zsh
+      - fish
 
   - name: startup
     help: Install startup script
@@ -79,7 +82,7 @@ commands:
     - *shell_flag
 
 - name: test
-  alias: [t]
+  alias: [t, check]
   help: Check if files are installed
 
   commands:
@@ -91,21 +94,39 @@ commands:
       help: Target file name to check
       required: true
 
+    flags:
+    - &all_flag
+      long: --all
+      short: -a
+      help: Check all possible paths
+
   - name: man
     help: Check man page
     args: *test_args
+    flags:
+    - *all_flag
 
   - name: completion
     help: Check completion script
     args: *test_args
     flags:
+    - *all_flag
     - *shell_flag
 
   - name: startup
     help: Check startup script
     args: *test_args
     flags:
-    - *shell_flag
+    - long: --all
+      short: -a
+      help: Check all shell startup paths
+      conflicts: [--shell]
+    - long: --shell
+      arg: shell
+      help: Shell type
+      default: bash
+      allowed: *shells
+      conflicts: [--all]
 
 - name: log
   help: Send a log message

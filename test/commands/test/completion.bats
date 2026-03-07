@@ -41,3 +41,15 @@ teardown() {
   [ "$status" -ne 0 ]
   [ "$output" = "• error → Not found: $SSI_USER_ZSH_COMPLETION_ROOT/op" ]
 }
+
+@test "test completion --all reports all paths and succeeds if any found" {
+  export SSI_SYSTEM_ZSH_COMPLETION_ROOT="$tmp_root/system-zsh"
+  export SSI_USER_ZSH_COMPLETION_ROOT="$tmp_root/user-zsh"
+  mkdir -p "$SSI_SYSTEM_ZSH_COMPLETION_ROOT" "$SSI_USER_ZSH_COMPLETION_ROOT"
+  printf "completion" > "$SSI_SYSTEM_ZSH_COMPLETION_ROOT/op"
+
+  run ./ssi test completion op --shell zsh --all
+
+  [ "$status" -eq 0 ]
+  [ "$output" = $'• info → Found: '"$SSI_SYSTEM_ZSH_COMPLETION_ROOT"$'/op\n• info → Not found: '"$SSI_USER_ZSH_COMPLETION_ROOT"$'/op' ]
+}

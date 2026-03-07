@@ -40,3 +40,15 @@ teardown() {
   [ "$status" -eq 0 ]
   [ "$output" = "• info → Found: $SSI_USER_MAN_ROOT/man7/op.7" ]
 }
+
+@test "test man --all reports all paths and succeeds if any found" {
+  export SSI_SYSTEM_MAN_ROOT="$tmp_root/system-man"
+  export SSI_USER_MAN_ROOT="$tmp_root/user-man"
+  mkdir -p "$SSI_SYSTEM_MAN_ROOT/man1" "$SSI_USER_MAN_ROOT/man1"
+  printf "manpage" > "$SSI_SYSTEM_MAN_ROOT/man1/op.1"
+
+  run ./ssi test man op --all
+
+  [ "$status" -eq 0 ]
+  [ "$output" = $'• info → Found: '"$SSI_SYSTEM_MAN_ROOT"$'/man1/op.1\n• info → Not found: '"$SSI_USER_MAN_ROOT"$'/man1/op.1' ]
+}

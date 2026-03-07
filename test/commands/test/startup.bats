@@ -40,3 +40,16 @@ teardown() {
   [ "$status" -ne 0 ]
   [ "$output" = "• error → Not found: $XDG_CONFIG_HOME/fish/conf.d/op" ]
 }
+
+@test "test startup --all checks all shells" {
+  export ZDOTDIR="$tmp_root/zsh"
+  export XDG_CONFIG_HOME="$tmp_root/config"
+  mkdir -p "$HOME/.bashrc.d"
+  mkdir -p "$ZDOTDIR/.zshrc.d"
+  printf "startup" > "$ZDOTDIR/.zshrc.d/op"
+
+  run ./ssi test startup op --all
+
+  [ "$status" -eq 0 ]
+  [ "$output" = $'• info → Not found: '"$HOME"$'/.bashrc.d/op\n• info → Found: '"$ZDOTDIR"$'/.zshrc.d/op\n• info → Not found: '"$XDG_CONFIG_HOME"$'/fish/conf.d/op' ]
+}

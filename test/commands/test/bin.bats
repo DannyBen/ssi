@@ -37,3 +37,16 @@ teardown() {
   [ "$status" -ne 0 ]
   [ "$output" = "• error → Not found: $SSI_USER_BIN_ROOT/missing" ]
 }
+
+@test "test bin --all reports all paths and succeeds if any found" {
+  export SSI_SYSTEM_BIN_ROOT="$tmp_root/system-bin"
+  export SSI_USER_BIN_ROOT="$tmp_root/user-bin"
+  mkdir -p "$SSI_SYSTEM_BIN_ROOT" "$SSI_USER_BIN_ROOT"
+  printf "#!/usr/bin/env bash\n" > "$SSI_SYSTEM_BIN_ROOT/op"
+  chmod +x "$SSI_SYSTEM_BIN_ROOT/op"
+
+  run ./ssi test bin op --all
+
+  [ "$status" -eq 0 ]
+  [ "$output" = $'• info → Found: '"$SSI_SYSTEM_BIN_ROOT"$'/op\n• info → Not found: '"$SSI_USER_BIN_ROOT"$'/op' ]
+}

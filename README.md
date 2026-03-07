@@ -65,11 +65,14 @@ sudo install -m 755 ssi /usr/local/bin/
 
 ## Technical Details
 
-`ssi` has three sets of commands:
+`ssi` has four sets of commands:
 
-- Install command with subcommands: bin, man, completion, startup
-- Uninstall command with subcommands: bin, man, completion, startup
-- Utility commands: log, bootstrap
+| Command Group   | Purpose                                                                                     |
+|:----------------|:--------------------------------------------------------------------------------------------|
+| `install`       | Installing executables, man pages, completion scripts and startup scripts                   |
+| `uninstall`     | Uninstalling executables, man pages, completion scripts and startup scripts                 |
+| `test`          | Checking for the presence of executables, man pages, completion scripts and startup scripts |
+| Other Utilities | Logging, Bootstrapping of `setup` scripts.                                                  |
 
 ### Install Commands
 
@@ -121,6 +124,20 @@ All install commands accept source in one of these forms:
 All uninstall commands assume ownership over all occurrences of the
 file they try to uninstall, so they attempt removal from both user
 directories and system directories.
+
+### Test Commands
+
+Test commands check if a target is installed. By default, they check the
+single path that install would choose in the current environment.
+
+Use `--all` to check all possible install paths and report each one. The
+command succeeds if any path contains the target, and warns if duplicates
+are found.
+
+The primary use cases for this command are:
+
+- Run setup validation tests in CI
+- Check if a file is installed in more than one path
 
 ### Utility Commands
 

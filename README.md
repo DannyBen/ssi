@@ -35,10 +35,10 @@ wget https://github.com/DannyBen/ssi/releases/latest/download/ssi
 chmod +x ssi
 
 # Use it to download and install files
-./ssi bin https://anywhere.com/your-cli
-./ssi man https://anywhere.com/docs/your-cli.1
-your-cli show-completion | ./ssi completion your-cli
-./ssi startup --shell bash https://anywhere.com/your-cli-startup.sh
+./ssi install bin https://anywhere.com/your-cli
+./ssi install man https://anywhere.com/docs/your-cli.1
+your-cli show-completion | ./ssi install completion your-cli
+./ssi install startup --shell bash https://anywhere.com/your-cli-startup.sh
 ```
 
 If you wish to pin your downloaded version of `ssi`, simply use the release tag:
@@ -67,10 +67,9 @@ sudo install -m 755 ssi /usr/local/bin/
 
 `ssi` has three sets of commands:
 
-- Install commands: bin, man, completion, startup
-- Uninstall command with subcommands: uninstall bin, uninstall man,
-  uninstall completion, uninstall startup
-- Utility commands: log
+- Install command with subcommands: bin, man, completion, startup
+- Uninstall command with subcommands: bin, man, completion, startup
+- Utility commands: log, bootstrap
 
 ### Install Commands
 
@@ -80,13 +79,13 @@ All install commands accept source in one of these forms:
 - Local file
 - stdin
 
-#### `ssi bin` Install Targets
+#### `ssi install bin` Install Targets
 
 - System target `/usr/local/bin` when running as root, when the system target is
   writable, or when `sudo` is usable.
 - Otherwise user target `$HOME/.local/bin`.
 
-#### `ssi man` Install Targets
+#### `ssi install man` Install Targets
 
 - System target `/usr/local/share/man` when running as root, when the system
   target is writable, when the system target parent directory is writable, or
@@ -95,7 +94,7 @@ All install commands accept source in one of these forms:
 - The final install path is `<target>/man<section>` where section defaults to
   `1` (for example `man1/tool.1`).
 
-#### `ssi completion` Install Targets
+#### `ssi install completion` Install Targets
 
 - System target is selected when running as root, when the system target is
   writable, when the system target parent directory is writable, or when `sudo`
@@ -108,7 +107,7 @@ All install commands accept source in one of these forms:
 - User Zsh: `${XDG_DATA_HOME:-$HOME/.local/share}/zsh/site-functions`.
 - User Fish: `${XDG_DATA_HOME:-$HOME/.local/share}/fish/vendor_completions.d`.
 
-#### `ssi startup` Install Targets
+#### `ssi install startup` Install Targets
 
 - The `--shell` flag selects the target shell (default: `bash`).
 - Bash installs to `~/.bashrc.d`.
@@ -137,4 +136,3 @@ directories and system directories.
 | [DannyBen/git-changelog](https://github.com/DannyBen/git-changelog) | [setup](https://github.com/DannyBen/git-changelog/blob/master/setup) | [uninstall](https://github.com/DannyBen/git-changelog/blob/master/uninstall) |
 | [DannyBen/opcode](https://github.com/DannyBen/opcode)               | [setup](https://github.com/DannyBen/opcode/blob/master/setup)        | [uninstall](https://github.com/DannyBen/opcode/blob/master/uninstall)        |
 | [DannyBen/repli](https://github.com/DannyBen/repli)                 | [setup](https://github.com/DannyBen/repli/blob/master/setup)         | [uninstall](https://github.com/DannyBen/repli/blob/master/uninstall)         |
-

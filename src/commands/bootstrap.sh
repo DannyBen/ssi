@@ -5,16 +5,15 @@ set -euo pipefail
 
 # === Setup SSI ===
 
-echo "Initializing installer..."
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 cd "$tmpdir"
 export PATH="$tmpdir:$PATH"
 
 if command -v wget >/dev/null 2>&1; then
-  wget -nv -O ssi https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi
+  wget -q -O ssi https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi
 elif command -v curl >/dev/null 2>&1; then
-  curl -fsSL https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi -o ssi
+  curl -fSsL https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi -o ssi
 else
   echo "Error: please install wget or curl, then try again" >&2
   exit 1

@@ -26,13 +26,10 @@ ssi_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Commands:")"
-  printf "  %s   Install executable file\n" "$(green "bin")       "
-  printf "  %s   Install man page\n" "$(green "man")       "
-  printf "  %s   Install completion script\n" "$(green "completion")"
-  printf "  %s   Install startup script\n" "$(green "startup")   "
-  printf "  %s   Uninstall files\n" "$(green "uninstall") "
-  printf "  %s   Send a log message\n" "$(green "log")       "
-  printf "  %s   Print bootstrap script\n" "$(green "bootstrap") "
+  printf "  %s   Install files\n" "$(green "install")  "
+  printf "  %s   Uninstall files\n" "$(green "uninstall")"
+  printf "  %s   Send a log message\n" "$(green "log")      "
+  printf "  %s   Print bootstrap script\n" "$(green "bootstrap")"
   echo
 
   # :command.long_usage
@@ -62,14 +59,45 @@ ssi_usage() {
 }
 
 # :command.usage
-ssi_bin_usage() {
-  printf "ssi bin - Install executable file\n\n"
+ssi_install_usage() {
+  printf "ssi install - Install files\n\n"
+  printf "Alias: i, add\n"
+  echo
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi install COMMAND\n"
+  printf "  ssi install [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Commands:")"
+  printf "  %s   Install executable file\n" "$(green "bin")       "
+  printf "  %s   Install man page\n" "$(green "man")       "
+  printf "  %s   Install completion script\n" "$(green "completion")"
+  printf "  %s   Install startup script\n" "$(green "startup")   "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_install_bin_usage() {
+  printf "ssi install bin - Install executable file\n\n"
   printf "Alias: exec\n"
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi bin SOURCE [OPTIONS]\n"
-  printf "  ssi bin --help | -h\n"
+  printf "  ssi install bin SOURCE [OPTIONS]\n"
+  printf "  ssi install bin --help | -h\n"
   echo
 
   # :command.long_usage
@@ -100,14 +128,14 @@ ssi_bin_usage() {
 }
 
 # :command.usage
-ssi_man_usage() {
-  printf "ssi man - Install man page\n\n"
+ssi_install_man_usage() {
+  printf "ssi install man - Install man page\n\n"
   printf "Alias: doc\n"
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi man SOURCE [OPTIONS]\n"
-  printf "  ssi man --help | -h\n"
+  printf "  ssi install man SOURCE [OPTIONS]\n"
+  printf "  ssi install man --help | -h\n"
   echo
 
   # :command.long_usage
@@ -138,14 +166,14 @@ ssi_man_usage() {
 }
 
 # :command.usage
-ssi_completion_usage() {
-  printf "ssi completion - Install completion script\n\n"
+ssi_install_completion_usage() {
+  printf "ssi install completion - Install completion script\n\n"
   printf "Alias: comp\n"
   echo
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi completion SOURCE [OPTIONS]\n"
-  printf "  ssi completion --help | -h\n"
+  printf "  ssi install completion SOURCE [OPTIONS]\n"
+  printf "  ssi install completion --help | -h\n"
   echo
 
   # :command.long_usage
@@ -183,12 +211,12 @@ ssi_completion_usage() {
 }
 
 # :command.usage
-ssi_startup_usage() {
-  printf "ssi startup - Install startup script\n\n"
+ssi_install_startup_usage() {
+  printf "ssi install startup - Install startup script\n\n"
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi startup SOURCE [OPTIONS]\n"
-  printf "  ssi startup --help | -h\n"
+  printf "  ssi install startup SOURCE [OPTIONS]\n"
+  printf "  ssi install startup --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1194,10 +1222,11 @@ startup_uninstall_zsh() {
 }
 
 # :command.command_functions
-# :command.function
-ssi_bin_command() {
 
-  # src/commands/bin.sh
+# :command.function
+ssi_install_bin_command() {
+
+  # src/commands/install/bin.sh
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
 
@@ -1226,9 +1255,9 @@ ssi_bin_command() {
 }
 
 # :command.function
-ssi_man_command() {
+ssi_install_man_command() {
 
-  # src/commands/man.sh
+  # src/commands/install/man.sh
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
 
@@ -1261,9 +1290,9 @@ ssi_man_command() {
 }
 
 # :command.function
-ssi_completion_command() {
+ssi_install_completion_command() {
 
-  # src/commands/completion.sh
+  # src/commands/install/completion.sh
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
   shell="${args[--shell]}"
@@ -1293,9 +1322,9 @@ ssi_completion_command() {
 }
 
 # :command.function
-ssi_startup_command() {
+ssi_install_startup_command() {
 
-  # src/commands/startup.sh
+  # src/commands/install/startup.sh
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
   shell="${args[--shell]}"
@@ -1575,31 +1604,10 @@ parse_requirements() {
   case $action in
     -*) ;;
 
-    bin | exec)
-      action="bin"
+    install | i | add)
+      action="install"
       shift
-      ssi_bin_parse_requirements "$@"
-      shift $#
-      ;;
-
-    man | doc)
-      action="man"
-      shift
-      ssi_man_parse_requirements "$@"
-      shift $#
-      ;;
-
-    completion | comp)
-      action="completion"
-      shift
-      ssi_completion_parse_requirements "$@"
-      shift $#
-      ;;
-
-    startup)
-      action="startup"
-      shift
-      ssi_startup_parse_requirements "$@"
+      ssi_install_parse_requirements "$@"
       shift $#
       ;;
 
@@ -1661,7 +1669,7 @@ parse_requirements() {
 }
 
 # :command.parse_requirements
-ssi_bin_parse_requirements() {
+ssi_install_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -1670,7 +1678,7 @@ ssi_bin_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        ssi_bin_usage
+        ssi_install_usage
         exit
         ;;
 
@@ -1682,7 +1690,98 @@ ssi_bin_parse_requirements() {
   done
 
   # :command.command_filter
-  action="bin"
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    bin | exec)
+      action="bin"
+      shift
+      ssi_install_bin_parse_requirements "$@"
+      shift $#
+      ;;
+
+    man | doc)
+      action="man"
+      shift
+      ssi_install_man_parse_requirements "$@"
+      shift $#
+      ;;
+
+    completion | comp)
+      action="completion"
+      shift
+      ssi_install_completion_parse_requirements "$@"
+      shift $#
+      ;;
+
+    startup)
+      action="startup"
+      shift
+      ssi_install_startup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      ssi_install_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+ssi_install_bin_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_install_bin_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="install bin"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -1726,7 +1825,7 @@ ssi_bin_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['source']+x} ]]; then
-    printf "missing required argument: SOURCE\nusage: ssi bin SOURCE [OPTIONS]\n" >&2
+    printf "missing required argument: SOURCE\nusage: ssi install bin SOURCE [OPTIONS]\n" >&2
 
     exit 1
   fi
@@ -1734,7 +1833,7 @@ ssi_bin_parse_requirements() {
 }
 
 # :command.parse_requirements
-ssi_man_parse_requirements() {
+ssi_install_man_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -1743,7 +1842,7 @@ ssi_man_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        ssi_man_usage
+        ssi_install_man_usage
         exit
         ;;
 
@@ -1755,7 +1854,7 @@ ssi_man_parse_requirements() {
   done
 
   # :command.command_filter
-  action="man"
+  action="install man"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -1799,7 +1898,7 @@ ssi_man_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['source']+x} ]]; then
-    printf "missing required argument: SOURCE\nusage: ssi man SOURCE [OPTIONS]\n" >&2
+    printf "missing required argument: SOURCE\nusage: ssi install man SOURCE [OPTIONS]\n" >&2
 
     exit 1
   fi
@@ -1807,7 +1906,7 @@ ssi_man_parse_requirements() {
 }
 
 # :command.parse_requirements
-ssi_completion_parse_requirements() {
+ssi_install_completion_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -1816,7 +1915,7 @@ ssi_completion_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        ssi_completion_usage
+        ssi_install_completion_usage
         exit
         ;;
 
@@ -1828,7 +1927,7 @@ ssi_completion_parse_requirements() {
   done
 
   # :command.command_filter
-  action="completion"
+  action="install completion"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -1886,7 +1985,7 @@ ssi_completion_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['source']+x} ]]; then
-    printf "missing required argument: SOURCE\nusage: ssi completion SOURCE [OPTIONS]\n" >&2
+    printf "missing required argument: SOURCE\nusage: ssi install completion SOURCE [OPTIONS]\n" >&2
 
     exit 1
   fi
@@ -1903,7 +2002,7 @@ ssi_completion_parse_requirements() {
 }
 
 # :command.parse_requirements
-ssi_startup_parse_requirements() {
+ssi_install_startup_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -1912,7 +2011,7 @@ ssi_startup_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        ssi_startup_usage
+        ssi_install_startup_usage
         exit
         ;;
 
@@ -1924,7 +2023,7 @@ ssi_startup_parse_requirements() {
   done
 
   # :command.command_filter
-  action="startup"
+  action="install startup"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -1982,7 +2081,7 @@ ssi_startup_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['source']+x} ]]; then
-    printf "missing required argument: SOURCE\nusage: ssi startup SOURCE [OPTIONS]\n" >&2
+    printf "missing required argument: SOURCE\nusage: ssi install startup SOURCE [OPTIONS]\n" >&2
 
     exit 1
   fi
@@ -2528,10 +2627,11 @@ run() {
   parse_requirements "${input[@]}"
 
   case "$action" in
-    "bin") ssi_bin_command ;;
-    "man") ssi_man_command ;;
-    "completion") ssi_completion_command ;;
-    "startup") ssi_startup_command ;;
+    "install") ssi_install_command ;;
+    "install bin") ssi_install_bin_command ;;
+    "install man") ssi_install_man_command ;;
+    "install completion") ssi_install_completion_command ;;
+    "install startup") ssi_install_startup_command ;;
     "uninstall") ssi_uninstall_command ;;
     "uninstall bin") ssi_uninstall_bin_command ;;
     "uninstall man") ssi_uninstall_man_command ;;

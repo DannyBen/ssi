@@ -17,12 +17,12 @@ teardown() {
   rm -rf "$tmp_root"
 }
 
-@test "bin installs from url into user bin when sudo is unusable" {
-  cp "$BATS_TEST_DIRNAME/../fixtures/bin/curl" "$fakebin/curl"
-  cp "$BATS_TEST_DIRNAME/../fixtures/bin/sudo" "$fakebin/sudo"
+@test "install bin installs from url into user bin when sudo is unusable" {
+  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/curl" "$fakebin/curl"
+  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/curl" "$fakebin/sudo"
 
-  run ./ssi bin "https://example.com/tool"
+  run ./ssi install bin "https://example.com/tool"
 
   [ "$status" -eq 0 ]
   [ "$output" = "• info → Installed: $SSI_USER_BIN_ROOT/tool" ]
@@ -30,11 +30,11 @@ teardown() {
   [ "$(cat "$SSI_USER_BIN_ROOT/tool")" = "downloaded:https://example.com/tool" ]
 }
 
-@test "bin installs from stdin when explicit name is provided" {
-  cp "$BATS_TEST_DIRNAME/../fixtures/bin/sudo" "$fakebin/sudo"
+@test "install bin installs from stdin when explicit name is provided" {
+  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/sudo"
 
-  run ./ssi bin - --name stdin-tool <<< "from-stdin"
+  run ./ssi install bin - --name stdin-tool <<< "from-stdin"
 
   [ "$status" -eq 0 ]
   [ "$output" = "• info → Installed: $SSI_USER_BIN_ROOT/stdin-tool" ]
@@ -42,12 +42,12 @@ teardown() {
   [ "$(cat "$SSI_USER_BIN_ROOT/stdin-tool")" = "from-stdin" ]
 }
 
-@test "bin fails when target name cannot be determined and no explicit name provided" {
-  cp "$BATS_TEST_DIRNAME/../fixtures/bin/curl" "$fakebin/curl"
-  cp "$BATS_TEST_DIRNAME/../fixtures/bin/sudo" "$fakebin/sudo"
+@test "install bin fails when target name cannot be determined and no explicit name provided" {
+  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/curl" "$fakebin/curl"
+  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/curl" "$fakebin/sudo"
 
-  run ./ssi bin "https://example.com/tools/"
+  run ./ssi install bin "https://example.com/tools/"
 
   [ "$status" -ne 0 ]
   [[ "$output" == *"Could not determine target name; use --name"* ]]

@@ -11,10 +11,10 @@ teardown() {
   rm -rf "$tmp_root"
 }
 
-@test "startup installs to bashrc.d when shell is bash" {
+@test "install startup installs to bashrc.d when shell is bash" {
   printf "source %s\n" "$HOME/.bashrc.d" > "$HOME/.bashrc"
 
-  run ./ssi startup --shell bash - --name tool <<< "content"
+  run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
   [ "$output" = "• info → Installed startup: tool" ]
@@ -22,10 +22,10 @@ teardown() {
   [ "$(cat "$HOME/.bashrc.d/tool")" = "content" ]
 }
 
-@test "startup warns when bashrc.d is not sourced" {
+@test "install startup warns when bashrc.d is not sourced" {
   printf "# bashrc\n" > "$HOME/.bashrc"
 
-  run ./ssi startup --shell bash - --name tool <<< "content"
+  run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"Bash startup configuration incomplete"* ]]
@@ -33,12 +33,12 @@ teardown() {
   [ -f "$HOME/.bashrc.d/tool" ]
 }
 
-@test "startup installs to zshrc.d when shell is zsh" {
+@test "install startup installs to zshrc.d when shell is zsh" {
   export ZDOTDIR="$tmp_root/zsh"
   mkdir -p "$ZDOTDIR"
   printf "source %s\n" "$ZDOTDIR/.zshrc.d" > "$ZDOTDIR/.zshrc"
 
-  run ./ssi startup --shell zsh - --name tool <<< "content"
+  run ./ssi install startup --shell zsh - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
   [ "$output" = "• info → Installed startup: tool" ]
@@ -46,12 +46,12 @@ teardown() {
   [ "$(cat "$ZDOTDIR/.zshrc.d/tool")" = "content" ]
 }
 
-@test "startup installs to fish conf.d when shell is fish" {
+@test "install startup installs to fish conf.d when shell is fish" {
   export XDG_CONFIG_HOME="$tmp_root/config"
   mkdir -p "$XDG_CONFIG_HOME/fish"
   printf "# fishrc\n" > "$XDG_CONFIG_HOME/fish/config.fish"
 
-  run ./ssi startup --shell fish - --name tool.fish <<< "content"
+  run ./ssi install startup --shell fish - --name tool.fish <<< "content"
 
   [ "$status" -eq 0 ]
   [ "$output" = "• info → Installed startup: tool.fish" ]

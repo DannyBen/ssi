@@ -5,47 +5,52 @@ version: 0.1.2
 import: src/env_vars.yml
 
 commands:
-- name: bin
-  alias: exec
-  help: Install executable file
+- name: install
+  alias: [i, add]
+  help: Install files
 
-  args: &install_args
-  - name: source
-    help: URL to download from, path to file, or '-' to read from stdin
-    required: true
+  commands:
+  - name: bin
+    alias: exec
+    help: Install executable file
 
-  flags:
-  - &name_flag
-    long: --name
-    arg: name
-    help: Explicit target file name (required for stdin or ambiguous sources)
+    args: &install_args
+    - name: source
+      help: URL to download from, path to file, or '-' to read from stdin
+      required: true
 
-- name: man
-  alias: doc
-  help: Install man page
-  args: *install_args
-  flags: 
-  - *name_flag
+    flags:
+    - &name_flag
+      long: --name
+      arg: name
+      help: Explicit target file name (required for stdin or ambiguous sources)
 
-- name: completion
-  alias: comp
-  help: Install completion script
-  args: *install_args
-  flags:
-  - *name_flag
-  - &shell_flag
-    long: --shell
-    arg: shell
-    help: Shell type
-    default: bash
-    allowed: [bash, zsh, fish]
+  - name: man
+    alias: doc
+    help: Install man page
+    args: *install_args
+    flags: 
+    - *name_flag
 
-- name: startup
-  help: Install startup script
-  args: *install_args
-  flags:
-  - *name_flag
-  - *shell_flag
+  - name: completion
+    alias: comp
+    help: Install completion script
+    args: *install_args
+    flags:
+    - *name_flag
+    - &shell_flag
+      long: --shell
+      arg: shell
+      help: Shell type
+      default: bash
+      allowed: [bash, zsh, fish]
+
+  - name: startup
+    help: Install startup script
+    args: *install_args
+    flags:
+    - *name_flag
+    - *shell_flag
 
 - name: uninstall
   alias: [u, rm, remove]

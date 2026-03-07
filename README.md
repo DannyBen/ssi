@@ -63,6 +63,15 @@ wget https://github.com/DannyBen/ssi/blob/master/ssi
 sudo install -m 755 ssi /usr/local/bin/
 ```
 
+### Bash Completion for `ssi`
+
+If you want completions for `ssi` itself, you can use `ssi` itself to download
+and install its own bash completion script:
+
+```shell
+ssi install completion https://raw.githubusercontent.com/DannyBen/ssi/master/completions/ssi --shell bash
+```
+
 ## Technical Details
 
 `ssi` has four sets of commands:

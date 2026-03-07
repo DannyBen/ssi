@@ -25,8 +25,8 @@ export PATH="$tmpdir:$PATH"
 
 # Example installation steps:
 # ssi log info "Installing <tool>"
-# ssi bin <url>
-# ssi man <url>
-# <tool> --completions | ssi completion --shell bash --name <tool> -
+# ssi install bin <url>
+# ssi install man <url>
+# <tool> --completions | ssi install completion --shell bash --name <tool> -
 # ssi log info "<tool> --version : $(<tool> --version)"
 BOOTSTRAP

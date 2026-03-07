@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/target_name_from_source.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/log.sh"
+  source "$BASE/resolve/target_name_from_source.sh"
 }
 
 @test "resolve_target_name_from_source returns empty for stdin" {

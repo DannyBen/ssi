@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/man_base_path.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/resolve/man_base_path.sh"
   export SSI_SYSTEM_MAN_ROOT="/tmp/ssi-system-man"
   export SSI_USER_MAN_ROOT="/tmp/ssi-user-man"
 }

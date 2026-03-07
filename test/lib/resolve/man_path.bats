@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/man_path.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/resolve/man_path.sh"
 }
 
 @test "resolve_man_path defaults to section 1" {

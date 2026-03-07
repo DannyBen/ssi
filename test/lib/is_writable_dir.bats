@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../src/lib/is_writable_dir.sh"
+  BASE="$BATS_TEST_DIRNAME/../../src/lib"
+  source "$BASE/is_writable_dir.sh"
 }
 
 @test "is_writable_dir returns true for an existing writable directory" {

@@ -1,10 +1,11 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/is_root.sh"
-  source "$BATS_TEST_DIRNAME/../../../src/lib/is_writable_dir.sh"
-  source "$BATS_TEST_DIRNAME/../../../src/lib/is_sudo_usable.sh"
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/completion_mode.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/is_root.sh"
+  source "$BASE/is_writable_dir.sh"
+  source "$BASE/is_sudo_usable.sh"
+  source "$BASE/resolve/completion_mode.sh"
   export SSI_SYSTEM_BASH_COMPLETION_ROOT="/tmp/ssi-system-bash-completions"
   resolve_bash_completion_root() { printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"; }
 }

@@ -1,10 +1,11 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/fetch_source_type.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/fetch_download_to_file.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/fetch_source_to_temp_file.sh"
+  BASE="$BATS_TEST_DIRNAME/../../src/lib"
+  source "$BASE/log.sh"
+  source "$BASE/fetch_source_type.sh"
+  source "$BASE/fetch_download_to_file.sh"
+  source "$BASE/fetch_source_to_temp_file.sh"
 }
 
 @test "fetch_source_to_temp_file copies local file content" {

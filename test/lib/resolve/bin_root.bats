@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/bin_root.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/log.sh"
+  source "$BASE/resolve/bin_root.sh"
   export SSI_SYSTEM_BIN_ROOT="/tmp/ssi-system-bin"
   export SSI_USER_BIN_ROOT="/tmp/ssi-user-bin"
 }

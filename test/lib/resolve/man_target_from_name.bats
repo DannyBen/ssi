@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/man_target_from_name.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/log.sh"
+  source "$BASE/resolve/man_target_from_name.sh"
 }
 
 @test "resolve_man_target_from_name defaults to section 1" {

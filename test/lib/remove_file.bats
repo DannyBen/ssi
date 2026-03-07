@@ -1,10 +1,11 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../src/lib/colors.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/is_sudo_usable.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/remove_file.sh"
+  BASE="$BATS_TEST_DIRNAME/../../src/lib"
+  source "$BASE/colors.sh"
+  source "$BASE/log.sh"
+  source "$BASE/is_sudo_usable.sh"
+  source "$BASE/remove_file.sh"
 }
 
 @test "remove_file returns success when file is missing" {

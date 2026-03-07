@@ -11,6 +11,7 @@ setup() {
   export SSI_USER_MAN_ROOT="$tmp_root/user-man"
   export SSI_SYSTEM_MAN_ROOT="/root/ssi-system-man"
   mkdir -p "$SSI_USER_MAN_ROOT"
+  FIXTURES="$BATS_TEST_DIRNAME/../../fixtures"
 }
 
 teardown() {
@@ -18,8 +19,8 @@ teardown() {
 }
 
 @test "install man installs from url into user man root" {
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/curl" "$fakebin/curl"
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
+  cp "$FIXTURES/bin/curl" "$fakebin/curl"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/curl" "$fakebin/sudo"
 
   run ./ssi install man "https://example.com/tool.1"
@@ -31,7 +32,7 @@ teardown() {
 }
 
 @test "install man installs from stdin when explicit name is provided" {
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/sudo"
 
   run ./ssi install man - --name stdin-tool <<< "from-stdin"
@@ -43,8 +44,8 @@ teardown() {
 }
 
 @test "install man fails when target name cannot be determined and no explicit name provided" {
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/curl" "$fakebin/curl"
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
+  cp "$FIXTURES/bin/curl" "$fakebin/curl"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/curl" "$fakebin/sudo"
 
   run ./ssi install man "https://example.com/tools/"

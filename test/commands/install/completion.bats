@@ -14,6 +14,7 @@ setup() {
   export SSI_SYSTEM_ZSH_COMPLETION_ROOT="/root/ssi-system-zsh-completions"
   mkdir -p "$SSI_USER_BASH_COMPLETION_ROOT"
   mkdir -p "$SSI_USER_ZSH_COMPLETION_ROOT"
+  FIXTURES="$BATS_TEST_DIRNAME/../../fixtures"
 }
 
 teardown() {
@@ -21,8 +22,8 @@ teardown() {
 }
 
 @test "install completion installs from url into user completion root" {
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/curl" "$fakebin/curl"
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
+  cp "$FIXTURES/bin/curl" "$fakebin/curl"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/curl" "$fakebin/sudo"
 
   run ./ssi install completion "https://example.com/tool"
@@ -34,7 +35,7 @@ teardown() {
 }
 
 @test "install completion installs from stdin when explicit name is provided" {
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/sudo"
 
   run ./ssi install completion - --name stdin-tool <<< "from-stdin"
@@ -46,8 +47,8 @@ teardown() {
 }
 
 @test "install completion installs to zsh root when --shell zsh is provided" {
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/curl" "$fakebin/curl"
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
+  cp "$FIXTURES/bin/curl" "$fakebin/curl"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/curl" "$fakebin/sudo"
 
   run ./ssi install completion "https://example.com/_tool" --shell zsh
@@ -59,8 +60,8 @@ teardown() {
 }
 
 @test "install completion fails when target name cannot be determined and no explicit name provided" {
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/curl" "$fakebin/curl"
-  cp "$BATS_TEST_DIRNAME/../../fixtures/bin/sudo" "$fakebin/sudo"
+  cp "$FIXTURES/bin/curl" "$fakebin/curl"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
   chmod +x "$fakebin/curl" "$fakebin/sudo"
 
   run ./ssi install completion "https://example.com/tools/"

@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/bash_completion_root.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/resolve/bash_completion_root.sh"
   export SSI_SYSTEM_BASH_COMPLETION_ROOT="/usr/local/share/bash-completion/completions"
   export IS_DIR_MATCH=""
   export IS_COMMAND_BREW=""

@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../../src/lib/resolve/completion_base_path.sh"
+  BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/resolve/completion_base_path.sh"
   resolve_bash_completion_root() { printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"; }
   export SSI_USER_BASH_COMPLETION_ROOT="/tmp/ssi-user-bash-completions"
   export SSI_SYSTEM_BASH_COMPLETION_ROOT="/tmp/ssi-system-bash-completions"

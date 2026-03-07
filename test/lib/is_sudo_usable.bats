@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../src/lib/is_sudo_usable.sh"
+  BASE="$BATS_TEST_DIRNAME/../../src/lib"
+  source "$BASE/is_sudo_usable.sh"
 }
 
 @test "is_sudo_usable returns success when sudo command exists and sudo -n true passes" {

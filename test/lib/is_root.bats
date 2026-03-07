@@ -1,7 +1,8 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../src/lib/is_root.sh"
+  BASE="$BATS_TEST_DIRNAME/../../src/lib"
+  source "$BASE/is_root.sh"
 }
 
 @test "is_root returns true when root" {

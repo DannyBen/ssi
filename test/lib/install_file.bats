@@ -1,11 +1,12 @@
 #!/usr/bin/env bats
 
 setup() {
-  source "$BATS_TEST_DIRNAME/../../src/lib/colors.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/log.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/is_sudo_usable.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/create_dir.sh"
-  source "$BATS_TEST_DIRNAME/../../src/lib/install_file.sh"
+  BASE="$BATS_TEST_DIRNAME/../../src/lib"
+  source "$BASE/colors.sh"
+  source "$BASE/log.sh"
+  source "$BASE/is_sudo_usable.sh"
+  source "$BASE/create_dir.sh"
+  source "$BASE/install_file.sh"
 }
 
 install_and_cat() {

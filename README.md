@@ -163,3 +163,5 @@ The primary use cases for this command are:
 | [DannyBen/git-changelog](https://github.com/DannyBen/git-changelog) | [setup](https://github.com/DannyBen/git-changelog/blob/master/setup) | [uninstall](https://github.com/DannyBen/git-changelog/blob/master/uninstall) |
 | [DannyBen/opcode](https://github.com/DannyBen/opcode)               | [setup](https://github.com/DannyBen/opcode/blob/master/setup)        | [uninstall](https://github.com/DannyBen/opcode/blob/master/uninstall)        |
 | [DannyBen/repli](https://github.com/DannyBen/repli)                 | [setup](https://github.com/DannyBen/repli/blob/master/setup)         | [uninstall](https://github.com/DannyBen/repli/blob/master/uninstall)         |
+| [DannyBen/respec](https://github.com/DannyBen/respec)               | [setup](https://github.com/DannyBen/respec/blob/master/setup)        | [uninstall](https://github.com/DannyBen/respec/blob/master/uninstall)        |
+| [DannyBen/fuzzycd](https://github.com/DannyBen/fuzzycd)             | [setup](https://github.com/DannyBen/fuzzycd/blob/master/setup)       | [uninstall](https://github.com/DannyBen/fuzzycd/blob/master/uninstall)       |

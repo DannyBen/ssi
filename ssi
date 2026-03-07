@@ -28,6 +28,7 @@ ssi_usage() {
   printf "%s\n" "$(bold "Commands:")"
   printf "  %s   Install files\n" "$(green "install")  "
   printf "  %s   Uninstall files\n" "$(green "uninstall")"
+  printf "  %s   Check if files are installed\n" "$(green "test")     "
   printf "  %s   Send a log message\n" "$(green "log")      "
   printf "  %s   Print bootstrap script\n" "$(green "bootstrap")"
   echo
@@ -92,8 +93,6 @@ ssi_install_usage() {
 # :command.usage
 ssi_install_bin_usage() {
   printf "ssi install bin - Install executable file\n\n"
-  printf "Alias: exec\n"
-  echo
 
   printf "%s\n" "$(bold "Usage:")"
   printf "  ssi install bin SOURCE [OPTIONS]\n"
@@ -130,8 +129,6 @@ ssi_install_bin_usage() {
 # :command.usage
 ssi_install_man_usage() {
   printf "ssi install man - Install man page\n\n"
-  printf "Alias: doc\n"
-  echo
 
   printf "%s\n" "$(bold "Usage:")"
   printf "  ssi install man SOURCE [OPTIONS]\n"
@@ -168,8 +165,6 @@ ssi_install_man_usage() {
 # :command.usage
 ssi_install_completion_usage() {
   printf "ssi install completion - Install completion script\n\n"
-  printf "Alias: comp\n"
-  echo
 
   printf "%s\n" "$(bold "Usage:")"
   printf "  ssi install completion SOURCE [OPTIONS]\n"
@@ -287,8 +282,6 @@ ssi_uninstall_usage() {
 # :command.usage
 ssi_uninstall_bin_usage() {
   printf "ssi uninstall bin - Uninstall executable file\n\n"
-  printf "Alias: exec\n"
-  echo
 
   printf "%s\n" "$(bold "Usage:")"
   printf "  ssi uninstall bin NAME\n"
@@ -319,8 +312,6 @@ ssi_uninstall_bin_usage() {
 # :command.usage
 ssi_uninstall_man_usage() {
   printf "ssi uninstall man - Uninstall man page\n\n"
-  printf "Alias: doc\n"
-  echo
 
   printf "%s\n" "$(bold "Usage:")"
   printf "  ssi uninstall man NAME\n"
@@ -351,8 +342,6 @@ ssi_uninstall_man_usage() {
 # :command.usage
 ssi_uninstall_completion_usage() {
   printf "ssi uninstall completion - Uninstall completion script\n\n"
-  printf "Alias: comp\n"
-  echo
 
   printf "%s\n" "$(bold "Usage:")"
   printf "  ssi uninstall completion NAME [OPTIONS]\n"
@@ -421,6 +410,173 @@ ssi_uninstall_startup_usage() {
     # :argument.usage
     printf "  %s\n" "$(green "NAME")"
     printf "    File name to uninstall\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_test_usage() {
+  printf "ssi test - Check if files are installed\n\n"
+  printf "Alias: t\n"
+  echo
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi test COMMAND\n"
+  printf "  ssi test [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Commands:")"
+  printf "  %s   Check executable file\n" "$(green "bin")       "
+  printf "  %s   Check man page\n" "$(green "man")       "
+  printf "  %s   Check completion script\n" "$(green "completion")"
+  printf "  %s   Check startup script\n" "$(green "startup")   "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_test_bin_usage() {
+  printf "ssi test bin - Check executable file\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi test bin NAME\n"
+  printf "  ssi test bin --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "Arguments:")"
+
+    # :argument.usage
+    printf "  %s\n" "$(green "NAME")"
+    printf "    Target file name to check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_test_man_usage() {
+  printf "ssi test man - Check man page\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi test man NAME\n"
+  printf "  ssi test man --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "Arguments:")"
+
+    # :argument.usage
+    printf "  %s\n" "$(green "NAME")"
+    printf "    Target file name to check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_test_completion_usage() {
+  printf "ssi test completion - Check completion script\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi test completion NAME [OPTIONS]\n"
+  printf "  ssi test completion --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--shell SHELL")"
+    printf "    Shell type\n"
+    printf "    %s\n" "Allowed: bash, zsh, fish"
+    printf "    %s\n" "Default: bash"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "Arguments:")"
+
+    # :argument.usage
+    printf "  %s\n" "$(green "NAME")"
+    printf "    Target file name to check\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+ssi_test_startup_usage() {
+  printf "ssi test startup - Check startup script\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi test startup NAME [OPTIONS]\n"
+  printf "  ssi test startup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(green "--shell SHELL")"
+    printf "    Shell type\n"
+    printf "    %s\n" "Allowed: bash, zsh, fish"
+    printf "    %s\n" "Default: bash"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "Arguments:")"
+
+    # :argument.usage
+    printf "  %s\n" "$(green "NAME")"
+    printf "    Target file name to check\n"
     echo
 
   fi
@@ -1504,6 +1660,104 @@ ssi_uninstall_startup_command() {
 }
 
 # :command.function
+ssi_test_bin_command() {
+
+  # src/commands/test/bin.sh
+  target_name="${args[name]}"
+
+  mode="$(resolve_bin_mode)" || return 1
+  bin_root="$(resolve_bin_root "$mode")" || return 1
+  target_path="${bin_root}/${target_name}"
+
+  if [[ -x "$target_path" ]]; then
+    log info "Found: $target_path"
+    return 0
+  fi
+
+  fail "Not found: $target_path"
+  return 1
+
+}
+
+# :command.function
+ssi_test_man_command() {
+
+  # src/commands/test/man.sh
+  target_name="${args[name]}"
+
+  mode="$(resolve_man_mode)" || return 1
+  target_info="$(resolve_man_target_from_name "$target_name")" || return 1
+  section="${target_info%%:*}"
+  filename="${target_info#*:}"
+
+  man_dir="$(resolve_man_path "$section" "$mode")" || return 1
+  target_path="${man_dir}/${filename}"
+
+  if [[ -f "$target_path" ]]; then
+    log info "Found: $target_path"
+    return 0
+  fi
+
+  fail "Not found: $target_path"
+  return 1
+
+}
+
+# :command.function
+ssi_test_completion_command() {
+
+  # src/commands/test/completion.sh
+  target_name="${args[name]}"
+  shell="${args[--shell]}"
+
+  mode="$(resolve_completion_mode)" || return 1
+  completion_root="$(resolve_completion_base_path "$shell" "$mode")" || return 1
+  target_path="${completion_root}/${target_name}"
+
+  if [[ -f "$target_path" ]]; then
+    log info "Found: $target_path"
+    return 0
+  fi
+
+  fail "Not found: $target_path"
+  return 1
+
+}
+
+# :command.function
+ssi_test_startup_command() {
+
+  # src/commands/test/startup.sh
+  name="${args[name]}"
+  shell="${args[--shell]}"
+
+  case "$shell" in
+    bash)
+      target="$HOME/.bashrc.d/$name"
+      ;;
+    zsh)
+      target="${ZDOTDIR:-$HOME}/.zshrc.d/$name"
+      ;;
+    fish)
+      target="${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d/$name"
+      ;;
+    *)
+      fail "Unknown shell: $shell"
+      return 1
+      ;;
+  esac
+
+  if [[ -f "$target" ]]; then
+    log info "Found: $target"
+    return 0
+  fi
+
+  fail "Not found: $target"
+  return 1
+
+}
+
+# :command.function
 ssi_log_command() {
 
   # src/commands/log.sh
@@ -1618,6 +1872,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    test | t)
+      action="test"
+      shift
+      ssi_test_parse_requirements "$@"
+      shift $#
+      ;;
+
     log)
       action="log"
       shift
@@ -1695,21 +1956,21 @@ ssi_install_parse_requirements() {
   case $action in
     -*) ;;
 
-    bin | exec)
+    bin)
       action="bin"
       shift
       ssi_install_bin_parse_requirements "$@"
       shift $#
       ;;
 
-    man | doc)
+    man)
       action="man"
       shift
       ssi_install_man_parse_requirements "$@"
       shift $#
       ;;
 
-    completion | comp)
+    completion)
       action="completion"
       shift
       ssi_install_completion_parse_requirements "$@"
@@ -2124,21 +2385,21 @@ ssi_uninstall_parse_requirements() {
   case $action in
     -*) ;;
 
-    bin | exec)
+    bin)
       action="bin"
       shift
       ssi_uninstall_bin_parse_requirements "$@"
       shift $#
       ;;
 
-    man | doc)
+    man)
       action="man"
       shift
       ssi_uninstall_man_parse_requirements "$@"
       shift $#
       ;;
 
-    completion | comp)
+    completion)
       action="completion"
       shift
       ssi_uninstall_completion_parse_requirements "$@"
@@ -2473,6 +2734,381 @@ ssi_uninstall_startup_parse_requirements() {
 }
 
 # :command.parse_requirements
+ssi_test_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_test_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    bin)
+      action="bin"
+      shift
+      ssi_test_bin_parse_requirements "$@"
+      shift $#
+      ;;
+
+    man)
+      action="man"
+      shift
+      ssi_test_man_parse_requirements "$@"
+      shift $#
+      ;;
+
+    completion)
+      action="completion"
+      shift
+      ssi_test_completion_parse_requirements "$@"
+      shift $#
+      ;;
+
+    startup)
+      action="startup"
+      shift
+      ssi_test_startup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      ssi_test_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+ssi_test_bin_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_test_bin_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="test bin"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: ssi test bin NAME\n" >&2
+
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+ssi_test_man_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_test_man_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="test man"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: ssi test man NAME\n" >&2
+
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+ssi_test_completion_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_test_completion_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="test completion"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --shell)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--shell']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--shell requires an argument: --shell SHELL" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: ssi test completion NAME [OPTIONS]\n" >&2
+
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--shell']:-} ]] || args['--shell']="bash"
+
+  # :command.whitelist_filter
+  if [[ ${args['--shell']:-} ]] && [[ ! ${args['--shell']:-} =~ ^(bash|zsh|fish)$ ]]; then
+    printf "%s\n" "--shell must be one of: bash, zsh, fish" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+ssi_test_startup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_test_startup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="test startup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --shell)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--shell']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--shell requires an argument: --shell SHELL" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: ssi test startup NAME [OPTIONS]\n" >&2
+
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--shell']:-} ]] || args['--shell']="bash"
+
+  # :command.whitelist_filter
+  if [[ ${args['--shell']:-} ]] && [[ ! ${args['--shell']:-} =~ ^(bash|zsh|fish)$ ]]; then
+    printf "%s\n" "--shell must be one of: bash, zsh, fish" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 ssi_log_parse_requirements() {
   local key
 
@@ -2637,6 +3273,11 @@ run() {
     "uninstall man") ssi_uninstall_man_command ;;
     "uninstall completion") ssi_uninstall_completion_command ;;
     "uninstall startup") ssi_uninstall_startup_command ;;
+    "test") ssi_test_command ;;
+    "test bin") ssi_test_bin_command ;;
+    "test man") ssi_test_man_command ;;
+    "test completion") ssi_test_completion_command ;;
+    "test startup") ssi_test_startup_command ;;
     "log") ssi_log_command ;;
     "bootstrap") ssi_bootstrap_command ;;
   esac

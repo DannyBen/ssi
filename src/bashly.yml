@@ -11,7 +11,6 @@ commands:
 
   commands:
   - name: bin
-    alias: exec
     help: Install executable file
 
     args: &install_args
@@ -26,14 +25,12 @@ commands:
       help: Explicit target file name (required for stdin or ambiguous sources)
 
   - name: man
-    alias: doc
     help: Install man page
     args: *install_args
     flags: 
     - *name_flag
 
   - name: completion
-    alias: comp
     help: Install completion script
     args: *install_args
     flags:
@@ -58,7 +55,6 @@ commands:
 
   commands:
   - name: bin
-    alias: exec
     help: Uninstall executable file
 
     args: &uninstall_args
@@ -67,12 +63,10 @@ commands:
       required: true
 
   - name: man
-    alias: doc
     help: Uninstall man page
     args: *uninstall_args
 
   - name: completion
-    alias: comp
     help: Uninstall completion script
     args: *uninstall_args
     flags:
@@ -81,6 +75,35 @@ commands:
   - name: startup
     help: Uninstall startup script
     args: *uninstall_args
+    flags:
+    - *shell_flag
+
+- name: test
+  alias: [t]
+  help: Check if files are installed
+
+  commands:
+  - name: bin
+    help: Check executable file
+
+    args: &test_args
+    - name: name
+      help: Target file name to check
+      required: true
+
+  - name: man
+    help: Check man page
+    args: *test_args
+
+  - name: completion
+    help: Check completion script
+    args: *test_args
+    flags:
+    - *shell_flag
+
+  - name: startup
+    help: Check startup script
+    args: *test_args
     flags:
     - *shell_flag
 

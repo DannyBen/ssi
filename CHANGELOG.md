@@ -1,6 +1,16 @@
 Changelog
 ========================================
 
+v0.1.3 - 2026-03-07
+----------------------------------------
+
+- Add bootstrap command [`2283989`](https://github.com/DannyBen/ssi/commit/2283989)
+- BREAKING: Move all install commands under `install` subcommand [`7867ddc`](https://github.com/DannyBen/ssi/commit/7867ddc)
+- Add test command [`567eaa6`](https://github.com/DannyBen/ssi/commit/567eaa6)
+- Add `--all` flag to all test commands [`f541fde`](https://github.com/DannyBen/ssi/commit/f541fde)
+- Compare [`v0.1.2..v0.1.3`](https://github.com/dannyben/ssi/compare/v0.1.2..v0.1.3)
+
+
 v0.1.2 - 2026-03-06
 ----------------------------------------
 

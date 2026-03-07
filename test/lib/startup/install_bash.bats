@@ -11,15 +11,28 @@ setup() {
   export NO_COLOR=1
 }
 
-@test "startup_install_bash returns 2 when no bashrc or bashrc.d exists" {
+@test "startup_install_bash skips when no bashrc or bashrc.d exists" {
   tmp_root="$(mktemp -d)"
   export HOME="$tmp_root/home"
   mkdir -p "$HOME"
 
   run startup_install_bash "$tmp_root/source" "tool"
 
-  [ "$status" -eq 2 ]
-  [ -z "$output" ]
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Skip: Bash startup file not found"* ]]
+
+  rm -rf "$tmp_root"
+}
+
+@test "startup_install_bash fails in strict mode when no bashrc or bashrc.d exists" {
+  tmp_root="$(mktemp -d)"
+  export HOME="$tmp_root/home"
+  mkdir -p "$HOME"
+
+  run startup_install_bash "$tmp_root/source" "tool" "1"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Bash startup file not found"* ]]
 
   rm -rf "$tmp_root"
 }
@@ -35,6 +48,7 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ -f "$HOME/.bashrc.d/tool" ]
+  [[ "$output" == *"Installed startup file: $HOME/.bashrc.d/tool"* ]]
   [[ "$output" == *"Bash startup configuration incomplete"* ]]
   [[ "$output" == *'for f in ~/.bashrc.d/*; do . "$f"; done'* ]]
 
@@ -52,7 +66,7 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ -f "$HOME/.bashrc.d/tool" ]
-  [ -z "$output" ]
+  [[ "$output" == *"Installed startup file: $HOME/.bashrc.d/tool"* ]]
 
   rm -rf "$tmp_root"
 }

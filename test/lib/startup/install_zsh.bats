@@ -11,15 +11,28 @@ setup() {
   export NO_COLOR=1
 }
 
-@test "startup_install_zsh returns 2 when no zshrc or zshrc.d exists" {
+@test "startup_install_zsh skips when no zshrc or zshrc.d exists" {
   tmp_root="$(mktemp -d)"
   export ZDOTDIR="$tmp_root/zsh"
   mkdir -p "$ZDOTDIR"
 
   run startup_install_zsh "$tmp_root/source" "tool"
 
-  [ "$status" -eq 2 ]
-  [ -z "$output" ]
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Skip: Zsh startup file not found"* ]]
+
+  rm -rf "$tmp_root"
+}
+
+@test "startup_install_zsh fails in strict mode when no zshrc or zshrc.d exists" {
+  tmp_root="$(mktemp -d)"
+  export ZDOTDIR="$tmp_root/zsh"
+  mkdir -p "$ZDOTDIR"
+
+  run startup_install_zsh "$tmp_root/source" "tool" "1"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Zsh startup file not found"* ]]
 
   rm -rf "$tmp_root"
 }
@@ -35,6 +48,7 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ -f "$ZDOTDIR/.zshrc.d/tool" ]
+  [[ "$output" == *"Installed startup file: $ZDOTDIR/.zshrc.d/tool"* ]]
   [[ "$output" == *"Zsh startup configuration incomplete"* ]]
   [[ "$output" == *'for f in ~/.zshrc.d/*; do . "$f"; done'* ]]
 
@@ -52,7 +66,7 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ -f "$ZDOTDIR/.zshrc.d/tool" ]
-  [ -z "$output" ]
+  [[ "$output" == *"Installed startup file: $ZDOTDIR/.zshrc.d/tool"* ]]
 
   rm -rf "$tmp_root"
 }

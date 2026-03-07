@@ -10,15 +10,28 @@ setup() {
   export NO_COLOR=1
 }
 
-@test "startup_uninstall_fish returns 2 when file is missing" {
+@test "startup_uninstall_fish skips when file is missing" {
   tmp_root="$(mktemp -d)"
   export XDG_CONFIG_HOME="$tmp_root/config"
   mkdir -p "$XDG_CONFIG_HOME"
 
   run startup_uninstall_fish "tool.fish"
 
-  [ "$status" -eq 2 ]
-  [ -z "$output" ]
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Skip: Fish startup file not found"* ]]
+
+  rm -rf "$tmp_root"
+}
+
+@test "startup_uninstall_fish fails in strict mode when file is missing" {
+  tmp_root="$(mktemp -d)"
+  export XDG_CONFIG_HOME="$tmp_root/config"
+  mkdir -p "$XDG_CONFIG_HOME"
+
+  run startup_uninstall_fish "tool.fish" "1"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Fish startup file not found"* ]]
 
   rm -rf "$tmp_root"
 }
@@ -32,7 +45,7 @@ setup() {
   run startup_uninstall_fish "tool.fish"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed: $XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
+  [ "$output" = "• info → Removed startup file: $XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
   [ ! -f "$XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
 
   rm -rf "$tmp_root"

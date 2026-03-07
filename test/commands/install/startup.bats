@@ -17,7 +17,7 @@ teardown() {
   run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Installed startup: tool" ]
+  [ "$output" = "• info → Installed startup file: $HOME/.bashrc.d/tool" ]
   [ -f "$HOME/.bashrc.d/tool" ]
   [ "$(cat "$HOME/.bashrc.d/tool")" = "content" ]
 }
@@ -28,9 +28,17 @@ teardown() {
   run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
+  [[ "$output" == *"Installed startup file: $HOME/.bashrc.d/tool"* ]]
   [[ "$output" == *"Bash startup configuration incomplete"* ]]
   [[ "$output" == *'for f in ~/.bashrc.d/*; do . "$f"; done'* ]]
   [ -f "$HOME/.bashrc.d/tool" ]
+}
+
+@test "install startup fails in strict mode when bash startup is missing" {
+  run ./ssi install startup --shell bash --strict - --name tool <<< "content"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Bash startup file not found"* ]]
 }
 
 @test "install startup installs to zshrc.d when shell is zsh" {
@@ -41,7 +49,7 @@ teardown() {
   run ./ssi install startup --shell zsh - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Installed startup: tool" ]
+  [ "$output" = "• info → Installed startup file: $ZDOTDIR/.zshrc.d/tool" ]
   [ -f "$ZDOTDIR/.zshrc.d/tool" ]
   [ "$(cat "$ZDOTDIR/.zshrc.d/tool")" = "content" ]
 }
@@ -54,7 +62,7 @@ teardown() {
   run ./ssi install startup --shell fish - --name tool.fish <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Installed startup: tool.fish" ]
+  [ "$output" = "• info → Installed startup file: $XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
   [ -f "$XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
   [ "$(cat "$XDG_CONFIG_HOME/fish/conf.d/tool.fish")" = "content" ]
 }

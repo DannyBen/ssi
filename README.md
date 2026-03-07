@@ -122,6 +122,7 @@ All install commands accept source in one of these forms:
 #### `ssi install startup` Install Targets
 
 - The `--shell` flag selects the target shell (default: `bash`).
+- Use `--strict` to fail if the shell startup location is missing.
 - Bash installs to `~/.bashrc.d`.
 - Zsh installs to `~/.zshrc.d` (or `$ZDOTDIR/.zshrc.d` when `ZDOTDIR` is set).
 - Fish installs to `${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d`.

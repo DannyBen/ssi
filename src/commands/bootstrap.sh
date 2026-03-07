@@ -11,7 +11,7 @@ cd "$tmpdir"
 export PATH="$tmpdir:$PATH"
 
 if command -v wget >/dev/null 2>&1; then
-  wget -q -O ssi https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi
+  wget -nv -O ssi https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi
 elif command -v curl >/dev/null 2>&1; then
   curl -fSsL https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi -o ssi
 else

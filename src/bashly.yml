@@ -51,6 +51,8 @@ commands:
     flags:
     - *name_flag
     - *shell_flag
+    - long: --strict
+      help: Fail if the shell startup location is missing
 
 - name: uninstall
   alias: [u, rm, remove]
@@ -80,6 +82,8 @@ commands:
     args: *uninstall_args
     flags:
     - *shell_flag
+    - long: --strict
+      help: Fail if the startup file is missing
 
 - name: test
   alias: [t, check]

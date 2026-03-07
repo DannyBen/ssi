@@ -10,15 +10,28 @@ setup() {
   export NO_COLOR=1
 }
 
-@test "startup_uninstall_zsh returns 2 when file is missing" {
+@test "startup_uninstall_zsh skips when file is missing" {
   tmp_root="$(mktemp -d)"
   export ZDOTDIR="$tmp_root/zsh"
   mkdir -p "$ZDOTDIR"
 
   run startup_uninstall_zsh "tool"
 
-  [ "$status" -eq 2 ]
-  [ -z "$output" ]
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Skip: Zsh startup file not found"* ]]
+
+  rm -rf "$tmp_root"
+}
+
+@test "startup_uninstall_zsh fails in strict mode when file is missing" {
+  tmp_root="$(mktemp -d)"
+  export ZDOTDIR="$tmp_root/zsh"
+  mkdir -p "$ZDOTDIR"
+
+  run startup_uninstall_zsh "tool" "1"
+
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Zsh startup file not found"* ]]
 
   rm -rf "$tmp_root"
 }
@@ -32,7 +45,7 @@ setup() {
   run startup_uninstall_zsh "tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed: $ZDOTDIR/.zshrc.d/tool" ]
+  [ "$output" = "• info → Removed startup file: $ZDOTDIR/.zshrc.d/tool" ]
   [ ! -f "$ZDOTDIR/.zshrc.d/tool" ]
 
   rm -rf "$tmp_root"

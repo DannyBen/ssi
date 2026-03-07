@@ -193,6 +193,10 @@ ssi_install_startup_usage() {
     printf "    %s\n" "Default: bash"
     echo
 
+    printf "  %s\n" "$(green "--strict")"
+    printf "    Fail if the shell startup location is missing\n"
+    echo
+
     printf "  %s\n" "$(green "--help, -h")"
     printf "    Show this help\n"
     echo
@@ -331,6 +335,10 @@ ssi_uninstall_startup_usage() {
     printf "    Shell type\n"
     printf "    %s\n" "Allowed: bash, zsh, fish"
     printf "    %s\n" "Default: bash"
+    echo
+
+    printf "  %s\n" "$(green "--strict")"
+    printf "    Fail if the startup file is missing\n"
     echo
 
     printf "  %s\n" "$(green "--help, -h")"
@@ -1169,21 +1177,31 @@ resolve_target_name_from_source() {
 startup_install_bash() {
   local source="${1:-}"
   local name="${2:-}"
+  local strict="${3:-}"
   local bash_rc="$HOME/.bashrc"
   local bash_dir="$HOME/.bashrc.d"
+  local target=""
 
   if [[ ! -f "$bash_rc" && ! -d "$bash_dir" ]]; then
-    return 2
+    if [[ -n "$strict" ]]; then
+      fail "Bash startup file not found"
+      return 1
+    fi
+
+    log info "Skip: Bash startup file not found"
+    return 0
   fi
 
   create_dir "$bash_dir" || return 1
-  install_file "$source" "$bash_dir/$name" 644 || return 1
+  target="$bash_dir/$name"
+  install_file "$source" "$target" 644 || return 1
+  log info "Installed startup file: $target"
 
-  if [[ -f "$bash_rc" ]] && ! grep -Fq "$bash_dir" "$bash_rc"; then
+  if [[ -f "$bash_rc" ]] && ! grep -Fq ".bashrc.d" "$bash_rc"; then
     log warn "Bash startup configuration incomplete; add this to $bash_rc:"
     log warn "for f in ~/.bashrc.d/*; do . \"\$f\"; done"
   elif [[ ! -f "$bash_rc" ]]; then
-    log warn "file not found: $bash_rc; ensure $bash_dir is sourced"
+    log warn "Bash startup file (~/.bashrc) not found; ensure $bash_dir is sourced"
   fi
 
   return 0
@@ -1192,37 +1210,57 @@ startup_install_bash() {
 startup_install_fish() {
   local source="${1:-}"
   local name="${2:-}"
+  local strict="${3:-}"
   local fish_root="${XDG_CONFIG_HOME:-$HOME/.config}/fish"
   local fish_rc="$fish_root/config.fish"
   local fish_dir="$fish_root/conf.d"
+  local target=""
 
   if [[ ! -f "$fish_rc" && ! -d "$fish_dir" ]]; then
-    return 2
+    if [[ -n "$strict" ]]; then
+      fail "Fish startup file not found"
+      return 1
+    fi
+
+    log info "Skip: Fish startup file not found"
+    return 0
   fi
 
   create_dir "$fish_dir" || return 1
-  install_file "$source" "$fish_dir/$name" 644 || return 1
+  target="$fish_dir/$name"
+  install_file "$source" "$target" 644 || return 1
+  log info "Installed startup file: $target"
 }
 
 startup_install_zsh() {
   local source="${1:-}"
   local name="${2:-}"
+  local strict="${3:-}"
   local zsh_root="${ZDOTDIR:-$HOME}"
   local zsh_rc="$zsh_root/.zshrc"
   local zsh_dir="$zsh_root/.zshrc.d"
+  local target=""
 
   if [[ ! -f "$zsh_rc" && ! -d "$zsh_dir" ]]; then
-    return 2
+    if [[ -n "$strict" ]]; then
+      fail "Zsh startup file not found"
+      return 1
+    fi
+
+    log info "Skip: Zsh startup file not found"
+    return 0
   fi
 
   create_dir "$zsh_dir" || return 1
-  install_file "$source" "$zsh_dir/$name" 644 || return 1
+  target="$zsh_dir/$name"
+  install_file "$source" "$target" 644 || return 1
+  log info "Installed startup file: $target"
 
-  if [[ -f "$zsh_rc" ]] && ! grep -Fq "$zsh_dir" "$zsh_rc"; then
+  if [[ -f "$zsh_rc" ]] && ! grep -Fq ".zshrc.d" "$zsh_rc"; then
     log warn "Zsh startup configuration incomplete; add this to $zsh_rc:"
     log warn "for f in ~/.zshrc.d/*; do . \"\$f\"; done"
   elif [[ ! -f "$zsh_rc" ]]; then
-    log warn "file not found: $zsh_rc; ensure $zsh_dir is sourced"
+    log warn "Zsh startup file (~/.zshrc) not found; ensure $zsh_dir is sourced"
   fi
 
   return 0
@@ -1230,6 +1268,7 @@ startup_install_zsh() {
 
 startup_uninstall_bash() {
   local name="${1:-}"
+  local strict="${2:-}"
   local bash_dir="$HOME/.bashrc.d"
   local target="$bash_dir/$name"
 
@@ -1239,16 +1278,23 @@ startup_uninstall_bash() {
   fi
 
   if [[ ! -f "$target" ]]; then
-    return 2
+    if [[ -n "$strict" ]]; then
+      fail "Bash startup file not found"
+      return 1
+    fi
+
+    log info "Skip: Bash startup file not found"
+    return 0
   fi
 
   remove_file "$target" || return 1
-  log info "Removed: $target"
+  log info "Removed startup file: $target"
   return 0
 }
 
 startup_uninstall_fish() {
   local name="${1:-}"
+  local strict="${2:-}"
   local fish_root="${XDG_CONFIG_HOME:-$HOME/.config}/fish"
   local fish_dir="$fish_root/conf.d"
   local target="$fish_dir/$name"
@@ -1259,16 +1305,23 @@ startup_uninstall_fish() {
   fi
 
   if [[ ! -f "$target" ]]; then
-    return 2
+    if [[ -n "$strict" ]]; then
+      fail "Fish startup file not found"
+      return 1
+    fi
+
+    log info "Skip: Fish startup file not found"
+    return 0
   fi
 
   remove_file "$target" || return 1
-  log info "Removed: $target"
+  log info "Removed startup file: $target"
   return 0
 }
 
 startup_uninstall_zsh() {
   local name="${1:-}"
+  local strict="${2:-}"
   local zsh_root="${ZDOTDIR:-$HOME}"
   local zsh_dir="$zsh_root/.zshrc.d"
   local target="$zsh_dir/$name"
@@ -1279,11 +1332,17 @@ startup_uninstall_zsh() {
   fi
 
   if [[ ! -f "$target" ]]; then
-    return 2
+    if [[ -n "$strict" ]]; then
+      fail "Zsh startup file not found"
+      return 1
+    fi
+
+    log info "Skip: Zsh startup file not found"
+    return 0
   fi
 
   remove_file "$target" || return 1
-  log info "Removed: $target"
+  log info "Removed startup file: $target"
   return 0
 }
 
@@ -1384,8 +1443,10 @@ ssi_install_startup_command() {
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
   shell="${args[--shell]}"
+  strict="${args[--strict]:-}"
 
   temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+  trap 'rm -f "$temp_file"' RETURN
 
   if [[ -n "$explicit_name" ]]; then
     target_name="$explicit_name"
@@ -1400,22 +1461,19 @@ ssi_install_startup_command() {
 
   case "$shell" in
     bash)
-      startup_install_bash "$temp_file" "$target_name" || return 1
+      startup_install_bash "$temp_file" "$target_name" "$strict"
       ;;
     zsh)
-      startup_install_zsh "$temp_file" "$target_name" || return 1
+      startup_install_zsh "$temp_file" "$target_name" "$strict"
       ;;
     fish)
-      startup_install_fish "$temp_file" "$target_name" || return 1
+      startup_install_fish "$temp_file" "$target_name" "$strict"
       ;;
     *)
       fail "Unknown shell: $shell"
       return 1
       ;;
   esac
-
-  rm -f "$temp_file"
-  log info "Installed startup: $target_name"
 
 }
 
@@ -1513,40 +1571,22 @@ ssi_uninstall_startup_command() {
 
   name="${args[name]}"
   shell="${args[--shell]}"
-  status=0
+  strict="${args[--strict]:-}"
 
   case "$shell" in
     bash)
-      if startup_uninstall_bash "$name"; then
-        status=0
-      else
-        status=$?
-      fi
+      startup_uninstall_bash "$name" "$strict"
       ;;
     zsh)
-      if startup_uninstall_zsh "$name"; then
-        status=0
-      else
-        status=$?
-      fi
+      startup_uninstall_zsh "$name" "$strict"
       ;;
     fish)
-      if startup_uninstall_fish "$name"; then
-        status=0
-      else
-        status=$?
-      fi
+      startup_uninstall_fish "$name" "$strict"
       ;;
     *)
       fail "Unknown shell: $shell"
       return 1
       ;;
-  esac
-
-  case "$status" in
-    0) ;;
-    2) log warn "Not found: $name" ;;
-    *) return 1 ;;
   esac
 
 }
@@ -1764,7 +1804,7 @@ cd "$tmpdir"
 export PATH="$tmpdir:$PATH"
 
 if command -v wget >/dev/null 2>&1; then
-  wget -q -O ssi https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi
+  wget -nv -O ssi https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi
 elif command -v curl >/dev/null 2>&1; then
   curl -fSsL https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi -o ssi
 else
@@ -2248,6 +2288,12 @@ ssi_install_startup_parse_requirements() {
         fi
         ;;
 
+      --strict)
+
+        args['--strict']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -2581,6 +2627,12 @@ ssi_uninstall_startup_parse_requirements() {
           printf "%s\n" "--shell requires an argument: --shell SHELL" >&2
           exit 1
         fi
+        ;;
+
+      --strict)
+
+        args['--strict']=1
+        shift
         ;;
 
       -?*)

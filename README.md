@@ -31,7 +31,7 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 # Download ssi to a new temp dir
 cd "$tmpdir"
-wget https://github.com/DannyBen/ssi/releases/latest/download/ssi
+wget https://github.com/DannyBen/ssi/releases/download/v0.1.3/ssi
 chmod +x ssi
 
 # Use it to download and install files
@@ -41,10 +41,10 @@ your-cli show-completion | ./ssi install completion your-cli
 ./ssi install startup --shell bash https://anywhere.com/your-cli-startup.sh
 ```
 
-If you wish to pin your downloaded version of `ssi`, simply use the release tag:
+If you wish to download the latest version of `ssi`, use this URL:
 
 ```bash
-wget https://github.com/DannyBen/ssi/releases/download/v0.1.0/ssi
+wget https://github.com/DannyBen/ssi/releases/latest/download/ssi
 ```
 
 Releases are immutable.

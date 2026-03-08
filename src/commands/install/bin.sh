@@ -1,8 +1,9 @@
 source_input="${args[source]}"
 explicit_name="${args[--name]:-}"
 
+dry_run_message
+
 mode="$(resolve_bin_mode)" || return 1
-source_type="$(fetch_source_type "$source_input")" || return 1
 
 if [[ -n "$explicit_name" ]]; then
   target_name="$explicit_name"
@@ -15,17 +16,12 @@ if [[ -z "$target_name" ]]; then
   return 1
 fi
 
+temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+
 bin_root="$(resolve_bin_root "$mode")" || return 1
 target_path="${bin_root}/${target_name}"
 
-if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-  log info "[DRY] Installed: $target_path"
-  return 0
-fi
-
-temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
-
 install_file "$temp_file" "$target_path" 755 || return 1
 
-rm -f "$temp_file"
+remove_file "$temp_file"
 log info "Installed: $target_path"

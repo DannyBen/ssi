@@ -48,7 +48,7 @@ ssi_usage() {
     echo
 
     printf "  %s\n" "$(green "SSI_DRY_RUN")"
-    printf "    Prevent any and all changes to the file system\n"
+    printf "    Dry-run mode - skip all filesystem changes and downloads\n"
     echo
 
   fi
@@ -676,14 +676,29 @@ create_dir() {
   return 1
 }
 
+dry_run_message() {
+  if [[ -n "${SSI_DRY_RUN:-}" && -z "${_SSI_DRY_RUN_NOTED:-}" ]]; then
+    log warn "Dry-run enabled"
+    export _SSI_DRY_RUN_NOTED=1
+  fi
+}
+
 fetch_download_to_file() {
   local url="${1:-}"
   local destination="${2:-}"
+  local message
 
   if [[ -z "$url" || -z "$destination" ]]; then
     fail "Missing URL or destination for download"
     return 1
   fi
+
+  message="Downloading: $url -> $destination"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
 
   if is_command curl; then
     curl -fsSL "$url" -o "$destination" && return 0
@@ -707,6 +722,19 @@ fetch_source_to_temp_file() {
   local source_type temp_file
 
   source_type="$(fetch_source_type "$source")" || return 1
+
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    case "$source_type" in
+      stdin | url)
+        printf "%s" "/dev/null"
+        return 0
+        ;;
+      file)
+        printf "%s" "$source"
+        return 0
+        ;;
+    esac
+  fi
 
   temp_file="$(mktemp "${temp_root%/}/ssi.fetch.XXXXXX")" || {
     fail "Could not allocate temporary file"
@@ -1193,6 +1221,10 @@ resolve_target_name_from_source() {
   fi
 
   if [[ "$source_input" =~ ^https?:// ]]; then
+    if [[ "$source_input" =~ ^https?://[^/]+/?$ ]]; then
+      printf ""
+      return 0
+    fi
     name="${source_input##*/}"
     name="${name%%\?*}"
     printf "%s" "$name"
@@ -1379,8 +1411,9 @@ ssi_install_bin_command() {
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
 
+  dry_run_message
+
   mode="$(resolve_bin_mode)" || return 1
-  source_type="$(fetch_source_type "$source_input")" || return 1
 
   if [[ -n "$explicit_name" ]]; then
     target_name="$explicit_name"
@@ -1393,19 +1426,14 @@ ssi_install_bin_command() {
     return 1
   fi
 
+  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+
   bin_root="$(resolve_bin_root "$mode")" || return 1
   target_path="${bin_root}/${target_name}"
 
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log info "[DRY] Installed: $target_path"
-    return 0
-  fi
-
-  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
-
   install_file "$temp_file" "$target_path" 755 || return 1
 
-  rm -f "$temp_file"
+  remove_file "$temp_file"
   log info "Installed: $target_path"
 
 }
@@ -1414,6 +1442,8 @@ ssi_install_man_command() {
 
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
+
+  dry_run_message
 
   install_one() {
     local source="$1"
@@ -1438,16 +1468,11 @@ ssi_install_man_command() {
     man_dir="$(resolve_man_path "$section" "$mode")" || return 1
     target_path="${man_dir}/${filename}"
 
-    if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-      log info "[DRY] Installed: $target_path"
-      return 0
-    fi
-
     temp_file="$(fetch_source_to_temp_file "$source")" || return 1
 
     install_file "$temp_file" "$target_path" 644 || return 1
 
-    rm -f "$temp_file"
+    remove_file "$temp_file"
     log info "Installed: $target_path"
   }
 
@@ -1473,7 +1498,6 @@ ssi_install_man_command() {
       return 1
     fi
   else
-    source_type="$(fetch_source_type "$source_input")" || return 1
     install_one "$source_input" "$explicit_name" || return 1
   fi
 
@@ -1485,8 +1509,9 @@ ssi_install_completion_command() {
   explicit_name="${args[--name]:-}"
   shell="${args[--shell]}"
 
+  dry_run_message
+
   mode="$(resolve_completion_mode)" || return 1
-  source_type="$(fetch_source_type "$source_input")" || return 1
 
   if [[ -n "$explicit_name" ]]; then
     target_name="$explicit_name"
@@ -1502,16 +1527,11 @@ ssi_install_completion_command() {
   completion_root="$(resolve_completion_base_path "$shell" "$mode")" || return 1
   target_path="${completion_root}/${target_name}"
 
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log info "[DRY] Installed: $target_path"
-    return 0
-  fi
-
   temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
 
   install_file "$temp_file" "$target_path" 644 || return 1
 
-  rm -f "$temp_file"
+  remove_file "$temp_file"
   log info "Installed: $target_path"
 
 }
@@ -1523,8 +1543,7 @@ ssi_install_startup_command() {
   shell="${args[--shell]}"
   strict="${args[--strict]:-}"
 
-  source_type="$(fetch_source_type "$source_input")" || return 1
-  installer=""
+  dry_run_message
 
   if [[ -n "$explicit_name" ]]; then
     target_name="$explicit_name"
@@ -1537,34 +1556,24 @@ ssi_install_startup_command() {
     return 1
   fi
 
+  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
+  trap 'remove_file "$temp_file"' RETURN
+
   case "$shell" in
     bash)
-      installer="startup_install_bash"
-      startup_dir="$HOME/.bashrc.d"
+      startup_install_bash "$temp_file" "$target_name" "$strict"
       ;;
     zsh)
-      installer="startup_install_zsh"
-      startup_dir="${ZDOTDIR:-$HOME}/.zshrc.d"
+      startup_install_zsh "$temp_file" "$target_name" "$strict"
       ;;
     fish)
-      installer="startup_install_fish"
-      startup_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
+      startup_install_fish "$temp_file" "$target_name" "$strict"
       ;;
     *)
       fail "Unknown shell: $shell"
       return 1
       ;;
   esac
-
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log info "[DRY] Installed startup file: $startup_dir/$target_name"
-    return 0
-  fi
-
-  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
-  trap 'rm -f "$temp_file"' RETURN
-
-  "$installer" "$temp_file" "$target_name" "$strict"
 
 }
 
@@ -1576,6 +1585,8 @@ ssi_uninstall_bin_command() {
   user_path="$user_root/$name"
   system_path="$system_root/$name"
   removed=0
+
+  dry_run_message
 
   if [[ -f "$user_path" ]]; then
     remove_file "$user_path" || return 1
@@ -1599,6 +1610,8 @@ ssi_uninstall_man_command() {
 
   name="${args[name]}"
   removed=0
+
+  dry_run_message
 
   target_info="$(resolve_man_target_from_name "$name")" || return 1
   section="${target_info%%:*}"
@@ -1634,6 +1647,8 @@ ssi_uninstall_completion_command() {
   shell="${args[--shell]}"
   removed=0
 
+  dry_run_message
+
   user_root="$(resolve_completion_base_path "$shell" user)" || return 1
   system_root="$(resolve_completion_base_path "$shell" system)" || return 1
 
@@ -1663,6 +1678,8 @@ ssi_uninstall_startup_command() {
   name="${args[name]}"
   shell="${args[--shell]}"
   strict="${args[--strict]:-}"
+
+  dry_run_message
 
   case "$shell" in
     bash)

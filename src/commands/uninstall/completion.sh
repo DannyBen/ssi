@@ -2,6 +2,8 @@ name="${args[name]}"
 shell="${args[--shell]}"
 removed=0
 
+dry_run_message
+
 user_root="$(resolve_completion_base_path "$shell" user)" || return 1
 system_root="$(resolve_completion_base_path "$shell" system)" || return 1
 

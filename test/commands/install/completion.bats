@@ -78,7 +78,7 @@ teardown() {
   run ./ssi install completion "https://example.com/tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → [DRY] Installed: $SSI_USER_BASH_COMPLETION_ROOT/tool" ]
+  [ "$output" = $'• warn → Dry-run enabled\n• info → Installed: '"$SSI_USER_BASH_COMPLETION_ROOT"'/tool' ]
   [ ! -e "$SSI_USER_BASH_COMPLETION_ROOT/tool" ]
 
   unset -v SSI_DRY_RUN

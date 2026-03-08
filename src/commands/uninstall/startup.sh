@@ -2,6 +2,8 @@ name="${args[name]}"
 shell="${args[--shell]}"
 strict="${args[--strict]:-}"
 
+dry_run_message
+
 case "$shell" in
   bash)
     startup_uninstall_bash "$name" "$strict"

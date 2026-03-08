@@ -1,6 +1,8 @@
 name="${args[name]}"
 removed=0
 
+dry_run_message
+
 target_info="$(resolve_man_target_from_name "$name")" || return 1
 section="${target_info%%:*}"
 filename="${target_info#*:}"

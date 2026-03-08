@@ -13,6 +13,10 @@ resolve_target_name_from_source() {
   fi
 
   if [[ "$source_input" =~ ^https?:// ]]; then
+    if [[ "$source_input" =~ ^https?://[^/]+/?$ ]]; then
+      printf ""
+      return 0
+    fi
     name="${source_input##*/}"
     name="${name%%\?*}"
     printf "%s" "$name"

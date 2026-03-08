@@ -62,7 +62,7 @@ teardown() {
   run ./ssi install bin "https://example.com/tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → [DRY] Installed: $SSI_USER_BIN_ROOT/tool" ]
+  [ "$output" = $'• warn → Dry-run enabled\n• info → Installed: '"$SSI_USER_BIN_ROOT"'/tool' ]
   [ ! -e "$SSI_USER_BIN_ROOT/tool" ]
 
   unset -v SSI_DRY_RUN

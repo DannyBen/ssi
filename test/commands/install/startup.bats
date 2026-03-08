@@ -69,11 +69,12 @@ teardown() {
 
 @test "install startup is a no-op in dry run mode" {
   export SSI_DRY_RUN=1
+  printf "source %s\n" "$HOME/.bashrc.d" > "$HOME/.bashrc"
 
   run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → [DRY] Installed startup file: $HOME/.bashrc.d/tool" ]
+  [ "$output" = $'• warn → Dry-run enabled\n• info → Installed startup file: '"$HOME"'/.bashrc.d/tool' ]
   [ ! -e "$HOME/.bashrc.d/tool" ]
 
   unset -v SSI_DRY_RUN

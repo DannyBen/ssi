@@ -677,6 +677,7 @@ set -euo pipefail
 @PREPARE@
 
 # Example installation steps:
+# prepare_installer
 # ssi log info "Installing <tool>"
 # ssi install bin <url>
 # ssi install man <url>
@@ -3382,7 +3383,7 @@ ssi_bootstrap_parse_requirements() {
 }
 
 initialize() {
-  declare -g version="0.1.4"
+  declare -g version="0.1.5"
   set -eo pipefail
 
   export SSI_LOG_LEVEL="${SSI_LOG_LEVEL:-info}"

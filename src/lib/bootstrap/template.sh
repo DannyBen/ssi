@@ -9,6 +9,7 @@ set -euo pipefail
 @PREPARE@
 
 # Example installation steps:
+# prepare_installer
 # ssi log info "Installing <tool>"
 # ssi install bin <url>
 # ssi install man <url>

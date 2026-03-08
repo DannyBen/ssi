@@ -47,6 +47,10 @@ ssi_usage() {
     printf "    %s\n" "Default: info"
     echo
 
+    printf "  %s\n" "$(green "SSI_DRY_RUN")"
+    printf "    Prevent any and all changes to the file system\n"
+    echo
+
   fi
 }
 
@@ -641,12 +645,18 @@ white_underlined() { print_in_color "\e[4;37m" "$*"; }
 create_dir() {
   local dir="${1:-}"
 
+  # Mutator: creates directories on the filesystem.
   if [[ -z "$dir" ]]; then
     fail "Missing directory"
     return 1
   fi
 
   if [[ -d "$dir" ]]; then
+    return 0
+  fi
+
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log info "[DRY] Create directory: $dir"
     return 0
   fi
 

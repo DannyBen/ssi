@@ -23,6 +23,22 @@ setup() {
   [ ! -e "$file" ]
 }
 
+@test "remove_file is a no-op in dry run mode" {
+  export SSI_DRY_RUN=1
+  export SSI_LOG_LEVEL=debug
+
+  file="$(mktemp)"
+
+  run remove_file "$file"
+
+  [ "$status" -eq 0 ]
+  [ -e "$file" ]
+  [[ "$output" == *"[DRY] Removing file: $file"* ]]
+
+  rm -f "$file"
+  unset -v SSI_DRY_RUN SSI_LOG_LEVEL
+}
+
 # SUCCEEDS but cases bats to exit with code 1
 @test "remove_file uses sudo when rm fails and sudo is available" {
   is_sudo_usable() { return 0; }

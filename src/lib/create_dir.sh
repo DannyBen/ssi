@@ -1,5 +1,7 @@
+## Mutator: creates directories on the filesystem.
 create_dir() {
   local dir="${1:-}"
+  local message
 
   if [[ -z "$dir" ]]; then
     fail "Missing directory"
@@ -9,6 +11,13 @@ create_dir() {
   if [[ -d "$dir" ]]; then
     return 0
   fi
+
+  message="Creating directory: $dir"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
 
   mkdir -p "$dir" 2>/dev/null && return 0
 

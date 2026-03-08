@@ -1,8 +1,15 @@
 environment_variables:
+  # Public
+
   - name: ssi_log_level
     help: Log level
     default: info
     allowed: [debug, info, warn, error]
+  - name: ssi_dry_run
+    help: Prevent any and all changes to the file system
+
+  # Private
+
   - name: ssi_user_bin_root
     help: Path to user's bin directory
     default: "$HOME/.local/bin"

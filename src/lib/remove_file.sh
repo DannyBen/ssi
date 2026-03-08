@@ -1,5 +1,7 @@
+## Mutator: removes files from the filesystem.
 remove_file() {
   local path="${1:-}"
+  local message
 
   if [[ -z "$path" ]]; then
     fail "Missing file"
@@ -9,6 +11,13 @@ remove_file() {
   if [[ ! -e "$path" ]]; then
     return 0
   fi
+
+  message="Removing file: $path"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
 
   rm -f "$path" 2>/dev/null && return 0
 

@@ -1,8 +1,9 @@
+## Mutator: installs files on the filesystem.
 install_file() {
   local source="${1:-}"
   local destination="${2:-}"
   local mode="${3:-755}"
-  local destination_dir
+  local destination_dir message
 
   if [[ -z "$source" || -z "$destination" ]]; then
     fail "Missing source or destination for install"
@@ -10,6 +11,14 @@ install_file() {
   fi
 
   destination_dir="$(dirname "$destination")"
+
+  message="Installing file: $source -> $destination (mode $mode)"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
+
   create_dir "$destination_dir" || return 1
 
   install -m "$mode" "$source" "$destination" 2>/dev/null && return 0

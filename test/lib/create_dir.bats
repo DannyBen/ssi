@@ -27,6 +27,22 @@ setup() {
   [ -d "$dir" ]
 }
 
+@test "create_dir is a no-op in dry run mode" {
+  export SSI_DRY_RUN=1
+  export SSI_LOG_LEVEL=debug
+
+  dir="$(mktemp -d)"
+  rmdir "$dir"
+
+  run create_dir "$dir"
+
+  [ "$status" -eq 0 ]
+  [ ! -d "$dir" ]
+  [[ "$output" == *"[DRY] Creating directory: $dir"* ]]
+
+  unset -v SSI_DRY_RUN SSI_LOG_LEVEL
+}
+
 @test "create_dir uses sudo when mkdir fails and sudo is available" {
   is_sudo_usable() { return 0; }
   mkdir() { return 1; }

@@ -45,6 +45,25 @@ install_and_cat() {
   [ -f "$dest" ]
 }
 
+@test "install_file is a no-op in dry run mode" {
+  export SSI_DRY_RUN=1
+  export SSI_LOG_LEVEL=debug
+
+  src="$(mktemp)"
+  root="$(mktemp -d)"
+  dest="$root/deep/bin/rush"
+  printf "abc" > "$src"
+
+  run install_file "$src" "$dest" 755
+
+  [ "$status" -eq 0 ]
+  [ ! -e "$dest" ]
+  [ ! -d "$root/deep/bin" ]
+  [[ "$output" == *"[DRY] Installing file: $src -> $dest (mode 755)"* ]]
+
+  unset -v SSI_DRY_RUN SSI_LOG_LEVEL
+}
+
 @test "install_file fails when destination is not writable and sudo unavailable" {
   is_sudo_usable() { return 1; }
   install() { return 1; }

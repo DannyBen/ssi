@@ -1,6 +1,19 @@
 Changelog
 ========================================
 
+v0.1.5 - 2026-03-08
+----------------------------------------
+
+- Update bootstrap template to avoid download if ssi exists [`47042fc`](https://github.com/DannyBen/ssi/commit/47042fc)
+- Allow installing all man pages in a directory [`4cf0a28`](https://github.com/DannyBen/ssi/commit/4cf0a28)
+- Add SSI_DRY_RUN env var [`8be33fa`](https://github.com/DannyBen/ssi/commit/8be33fa)
+- Apply DRY_RUN behavior to all install oeprations [`4f9bca3`](https://github.com/DannyBen/ssi/commit/4f9bca3)
+- Allow uninstalling all man pages for a given tool [`4143a3a`](https://github.com/DannyBen/ssi/commit/4143a3a)
+- Add bootstrap patch functionality [`fa6fd59`](https://github.com/DannyBen/ssi/commit/fa6fd59)
+- Normalize log label width [`680ab0e`](https://github.com/DannyBen/ssi/commit/680ab0e)
+- Compare [`v0.1.4..v0.1.5`](https://github.com/dannyben/ssi/compare/v0.1.4..v0.1.5)
+
+
 v0.1.4 - 2026-03-07
 ----------------------------------------
 

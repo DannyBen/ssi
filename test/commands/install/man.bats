@@ -53,3 +53,29 @@ teardown() {
   [ "$status" -ne 0 ]
   [[ "$output" == *"Could not determine target name; use --name"* ]]
 }
+
+@test "install man installs all matching man pages from a directory" {
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
+  chmod +x "$fakebin/sudo"
+
+  doc_root="$tmp_root/docs"
+  mkdir -p "$doc_root"
+  printf "add" > "$doc_root/rush-add.1"
+  printf "list" > "$doc_root/rush-list.5"
+  printf "main" > "$doc_root/rush.1"
+  printf "ignore" > "$doc_root/rush.md"
+
+  run ./ssi install man "$doc_root"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"• info → Installed: $SSI_USER_MAN_ROOT/man1/rush-add.1"* ]]
+  [[ "$output" == *"• info → Installed: $SSI_USER_MAN_ROOT/man5/rush-list.5"* ]]
+  [[ "$output" == *"• info → Installed: $SSI_USER_MAN_ROOT/man1/rush.1"* ]]
+  [ -f "$SSI_USER_MAN_ROOT/man1/rush-add.1" ]
+  [ -f "$SSI_USER_MAN_ROOT/man5/rush-list.5" ]
+  [ -f "$SSI_USER_MAN_ROOT/man1/rush.1" ]
+  [ ! -e "$SSI_USER_MAN_ROOT/man1/rush.md" ]
+  [ "$(cat "$SSI_USER_MAN_ROOT/man1/rush-add.1")" = "add" ]
+  [ "$(cat "$SSI_USER_MAN_ROOT/man5/rush-list.5")" = "list" ]
+  [ "$(cat "$SSI_USER_MAN_ROOT/man1/rush.1")" = "main" ]
+}

@@ -15,7 +15,11 @@ commands:
 
     args: &install_args
     - name: source
-      help: URL to download from, path to file, or '-' to read from stdin
+      help: |
+        Source file. May be:
+        - URL to download from
+        - Path to file
+        - '-' to read from stdin
       required: true
 
     flags:
@@ -26,9 +30,22 @@ commands:
 
   - name: man
     help: Install man page
-    args: *install_args
+    args:
+    - name: source
+      help: |
+        Source file. May be:
+        - URL to download from
+        - Path to file
+        - Path to a directory
+        - '-' to read from stdin
+      required: true
+
     flags: 
-    - *name_flag
+    - long: --name
+      arg: name
+      help: |
+        Explicit target file name (required for stdin or ambiguous sources)
+        Not relevant when SOURCE is a directory
 
   - name: completion
     help: Install completion script

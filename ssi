@@ -101,7 +101,7 @@ ssi_install_bin_usage() {
     printf "%s\n" "$(bold "Arguments:")"
 
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    URL to download from, path to file, or '-' to read from stdin\n"
+    printf "    Source file. May be:\n    - URL to download from\n    - Path to file\n    - '-' to read from stdin\n"
     echo
 
   fi
@@ -120,7 +120,7 @@ ssi_install_man_usage() {
     printf "%s\n" "$(bold "Options:")"
 
     printf "  %s\n" "$(green "--name NAME")"
-    printf "    Explicit target file name (required for stdin or ambiguous sources)\n"
+    printf "    Explicit target file name (required for stdin or ambiguous sources)\n    Not relevant when SOURCE is a directory\n"
     echo
 
     printf "  %s\n" "$(green "--help, -h")"
@@ -130,7 +130,7 @@ ssi_install_man_usage() {
     printf "%s\n" "$(bold "Arguments:")"
 
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    URL to download from, path to file, or '-' to read from stdin\n"
+    printf "    Source file. May be:\n    - URL to download from\n    - Path to file\n    - Path to a directory\n    - '-' to read from stdin\n"
     echo
 
   fi
@@ -165,7 +165,7 @@ ssi_install_completion_usage() {
     printf "%s\n" "$(bold "Arguments:")"
 
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    URL to download from, path to file, or '-' to read from stdin\n"
+    printf "    Source file. May be:\n    - URL to download from\n    - Path to file\n    - '-' to read from stdin\n"
     echo
 
   fi
@@ -204,7 +204,7 @@ ssi_install_startup_usage() {
     printf "%s\n" "$(bold "Arguments:")"
 
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    URL to download from, path to file, or '-' to read from stdin\n"
+    printf "    Source file. May be:\n    - URL to download from\n    - Path to file\n    - '-' to read from stdin\n"
     echo
 
   fi
@@ -1380,31 +1380,61 @@ ssi_install_man_command() {
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
 
+  install_one() {
+    local source="$1"
+    local name_override="$2"
+    local temp_file target_name target_info section filename man_dir target_path
+
+    temp_file="$(fetch_source_to_temp_file "$source")" || return 1
+
+    if [[ -n "$name_override" ]]; then
+      target_name="$name_override"
+    else
+      target_name="$(resolve_target_name_from_source "$source")" || return 1
+    fi
+
+    if [[ -z "$target_name" ]]; then
+      fail "Could not determine target name; use --name"
+      return 1
+    fi
+
+    target_info="$(resolve_man_target_from_name "$target_name")" || return 1
+    section="${target_info%%:*}"
+    filename="${target_info#*:}"
+
+    man_dir="$(resolve_man_path "$section" "$mode")" || return 1
+    target_path="${man_dir}/${filename}"
+
+    install_file "$temp_file" "$target_path" 644 || return 1
+
+    rm -f "$temp_file"
+    log info "Installed: $target_path"
+  }
+
   mode="$(resolve_man_mode)" || return 1
-  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
 
-  if [[ -n "$explicit_name" ]]; then
-    target_name="$explicit_name"
+  if [[ -d "$source_input" ]]; then
+    if [[ -n "$explicit_name" ]]; then
+      fail "--name cannot be used with a directory source"
+      return 1
+    fi
+
+    matched=0
+    for file in "$source_input"/*; do
+      [[ -f "$file" ]] || continue
+      if [[ "$(basename "$file")" =~ \.([0-9][A-Za-z]{0,3})$ ]]; then
+        install_one "$file" "" || return 1
+        matched=1
+      fi
+    done
+
+    if [[ "$matched" -eq 0 ]]; then
+      fail "No matching man pages in directory: $source_input"
+      return 1
+    fi
   else
-    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
+    install_one "$source_input" "$explicit_name" || return 1
   fi
-
-  if [[ -z "$target_name" ]]; then
-    fail "Could not determine target name; use --name"
-    return 1
-  fi
-
-  target_info="$(resolve_man_target_from_name "$target_name")" || return 1
-  section="${target_info%%:*}"
-  filename="${target_info#*:}"
-
-  man_dir="$(resolve_man_path "$section" "$mode")" || return 1
-  target_path="${man_dir}/${filename}"
-
-  install_file "$temp_file" "$target_path" 644 || return 1
-
-  rm -f "$temp_file"
-  log info "Installed: $target_path"
 
 }
 

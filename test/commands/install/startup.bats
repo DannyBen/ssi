@@ -66,3 +66,15 @@ teardown() {
   [ -f "$XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
   [ "$(cat "$XDG_CONFIG_HOME/fish/conf.d/tool.fish")" = "content" ]
 }
+
+@test "install startup is a no-op in dry run mode" {
+  export SSI_DRY_RUN=1
+
+  run ./ssi install startup --shell bash - --name tool <<< "content"
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "• info → [DRY] Installed startup file: $HOME/.bashrc.d/tool" ]
+  [ ! -e "$HOME/.bashrc.d/tool" ]
+
+  unset -v SSI_DRY_RUN
+}

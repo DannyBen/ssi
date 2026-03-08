@@ -69,3 +69,17 @@ teardown() {
   [ "$status" -ne 0 ]
   [[ "$output" == *"Could not determine target name; use --name"* ]]
 }
+
+@test "install completion is a no-op in dry run mode" {
+  export SSI_DRY_RUN=1
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
+  chmod +x "$fakebin/sudo"
+
+  run ./ssi install completion "https://example.com/tool"
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "• info → [DRY] Installed: $SSI_USER_BASH_COMPLETION_ROOT/tool" ]
+  [ ! -e "$SSI_USER_BASH_COMPLETION_ROOT/tool" ]
+
+  unset -v SSI_DRY_RUN
+}

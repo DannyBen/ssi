@@ -79,3 +79,17 @@ teardown() {
   [ "$(cat "$SSI_USER_MAN_ROOT/man5/rush-list.5")" = "list" ]
   [ "$(cat "$SSI_USER_MAN_ROOT/man1/rush.1")" = "main" ]
 }
+
+@test "install man is a no-op in dry run mode" {
+  export SSI_DRY_RUN=1
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
+  chmod +x "$fakebin/sudo"
+
+  run ./ssi install man "https://example.com/tool.1"
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "• info → [DRY] Installed: $SSI_USER_MAN_ROOT/man1/tool.1" ]
+  [ ! -e "$SSI_USER_MAN_ROOT/man1/tool.1" ]
+
+  unset -v SSI_DRY_RUN
+}

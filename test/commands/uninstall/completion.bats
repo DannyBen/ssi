@@ -26,7 +26,7 @@ teardown() {
   run ./ssi uninstall completion tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed: $file" ]
+  [ "$output" = "• info  → Removed: $file" ]
   [ ! -e "$file" ]
 }
 
@@ -37,7 +37,7 @@ teardown() {
   run ./ssi uninstall completion system-tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed: $file" ]
+  [ "$output" = "• info  → Removed: $file" ]
   [ ! -e "$file" ]
 }
 
@@ -45,7 +45,7 @@ teardown() {
   run ./ssi uninstall completion missing-tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• warn → Not found: missing-tool" ]
+  [ "$output" = "• warn  → Not found: missing-tool" ]
 }
 
 @test "uninstall completion removes zsh completion when present" {
@@ -55,6 +55,6 @@ teardown() {
   run ./ssi uninstall completion _tool --shell zsh
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed: $file" ]
+  [ "$output" = "• info  → Removed: $file" ]
   [ ! -e "$file" ]
 }

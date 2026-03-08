@@ -8,5 +8,5 @@ setup() {
   run ./ssi log info installed version "1.2.3"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → installed version 1.2.3" ]
+  [ "$output" = "• info  → installed version 1.2.3" ]
 }

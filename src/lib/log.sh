@@ -5,7 +5,10 @@ log() {
   local level="$1"
   shift
   local msg="$*"
-  local caller color_func rank_req rank_cur
+  local caller color_func rank_req rank_cur padded_level
+
+  padded_level="${level}     "
+  padded_level="${padded_level:0:5}"
 
   case "$level" in
     debug) rank_req=10 ;;
@@ -38,10 +41,10 @@ log() {
   if [[ "$log_level" == "debug" ]]; then
     caller="${FUNCNAME[1]}"
     printf "$(green_bold "•") %s • %s $(green_bold →) %s\n" \
-      "$("$color_func" "$level")" "$(cyan "$caller")" "$msg" >&2
+      "$("$color_func" "$padded_level")" "$(cyan "$caller")" "$msg" >&2
   else
     printf "$(green_bold "•") %s $(green_bold →) %s\n" \
-      "$("$color_func" "$level")" "$msg" >&2
+      "$("$color_func" "$padded_level")" "$msg" >&2
   fi
 }
 

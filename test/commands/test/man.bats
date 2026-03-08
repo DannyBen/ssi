@@ -28,7 +28,7 @@ teardown() {
   run ./ssi test man op
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Found: $SSI_USER_MAN_ROOT/man1/op.1" ]
+  [ "$output" = "• info  → Found: $SSI_USER_MAN_ROOT/man1/op.1" ]
 }
 
 @test "test man uses provided section when extension exists" {
@@ -38,7 +38,7 @@ teardown() {
   run ./ssi test man op.7
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Found: $SSI_USER_MAN_ROOT/man7/op.7" ]
+  [ "$output" = "• info  → Found: $SSI_USER_MAN_ROOT/man7/op.7" ]
 }
 
 @test "test man --all reports all paths and succeeds if any found" {
@@ -50,5 +50,5 @@ teardown() {
   run ./ssi test man op --all
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info → Found: '"$SSI_SYSTEM_MAN_ROOT"$'/man1/op.1\n• info → Not found: '"$SSI_USER_MAN_ROOT"$'/man1/op.1' ]
+  [ "$output" = $'• info  → Found: '"$SSI_SYSTEM_MAN_ROOT"$'/man1/op.1\n• info  → Not found: '"$SSI_USER_MAN_ROOT"$'/man1/op.1' ]
 }

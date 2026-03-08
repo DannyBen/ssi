@@ -45,7 +45,7 @@ setup() {
   run startup_uninstall_fish "tool.fish"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed startup file: $XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
+  [ "$output" = "• info  → Removed startup file: $XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
   [ ! -f "$XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
 
   rm -rf "$tmp_root"

@@ -28,7 +28,7 @@ teardown() {
   run ./ssi test bin op
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Found: $SSI_USER_BIN_ROOT/op" ]
+  [ "$output" = "• info  → Found: $SSI_USER_BIN_ROOT/op" ]
 }
 
 @test "test bin fails when file does not exist" {
@@ -48,5 +48,5 @@ teardown() {
   run ./ssi test bin op --all
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info → Found: '"$SSI_SYSTEM_BIN_ROOT"$'/op\n• info → Not found: '"$SSI_USER_BIN_ROOT"$'/op' ]
+  [ "$output" = $'• info  → Found: '"$SSI_SYSTEM_BIN_ROOT"$'/op\n• info  → Not found: '"$SSI_USER_BIN_ROOT"$'/op' ]
 }

@@ -45,7 +45,7 @@ setup() {
   run startup_uninstall_bash "tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed startup file: $HOME/.bashrc.d/tool" ]
+  [ "$output" = "• info  → Removed startup file: $HOME/.bashrc.d/tool" ]
   [ ! -f "$HOME/.bashrc.d/tool" ]
 
   rm -rf "$tmp_root"

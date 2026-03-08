@@ -45,7 +45,7 @@ setup() {
   run startup_uninstall_zsh "tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info → Removed startup file: $ZDOTDIR/.zshrc.d/tool" ]
+  [ "$output" = "• info  → Removed startup file: $ZDOTDIR/.zshrc.d/tool" ]
   [ ! -f "$ZDOTDIR/.zshrc.d/tool" ]
 
   rm -rf "$tmp_root"

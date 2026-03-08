@@ -46,3 +46,31 @@ teardown() {
   [ "$status" -eq 0 ]
   [ "$output" = "• warn → Not found: missing-tool" ]
 }
+
+@test "uninstall man --all removes base and subcommand pages across sections" {
+  user_main="$SSI_USER_MAN_ROOT/man1/rush.1"
+  user_sub="$SSI_USER_MAN_ROOT/man5/rush-add.5"
+  system_sub="$SSI_SYSTEM_MAN_ROOT/man1/rush-add.1"
+  system_other="$SSI_SYSTEM_MAN_ROOT/man1/rushx.1"
+  user_other="$SSI_USER_MAN_ROOT/man1/rusher.1"
+
+  mkdir -p "$(dirname "$user_main")" "$(dirname "$user_sub")" \
+    "$(dirname "$system_sub")" "$(dirname "$system_other")"
+  printf "page" > "$user_main"
+  printf "page" > "$user_sub"
+  printf "page" > "$system_sub"
+  printf "page" > "$system_other"
+  printf "page" > "$user_other"
+
+  run ./ssi uninstall man rush --all
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"• info → Removed: $system_sub"* ]]
+  [[ "$output" == *"• info → Removed: $user_main"* ]]
+  [[ "$output" == *"• info → Removed: $user_sub"* ]]
+  [ ! -e "$user_main" ]
+  [ ! -e "$user_sub" ]
+  [ ! -e "$system_sub" ]
+  [ -e "$system_other" ]
+  [ -e "$user_other" ]
+}

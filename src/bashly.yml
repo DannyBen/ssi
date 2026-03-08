@@ -87,6 +87,10 @@ commands:
   - name: man
     help: Uninstall man page
     args: *uninstall_args
+    flags:
+    - long: --all
+      short: -a
+      help: Remove all matching man pages for the given base name
 
   - name: completion
     help: Uninstall completion script

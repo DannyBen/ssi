@@ -3,7 +3,7 @@ explicit_name="${args[--name]:-}"
 
 dry_run_message
 
-install_one() {
+install_man_install_one() {
   local source="$1"
   local name_override="$2"
   local temp_file target_name target_info section filename man_dir target_path
@@ -46,7 +46,7 @@ if [[ -d "$source_input" ]]; then
   for file in "$source_input"/*; do
     [[ -f "$file" ]] || continue
     if [[ "$(basename "$file")" =~ \.([0-9][A-Za-z]{0,3})$ ]]; then
-      install_one "$file" "" || return 1
+      install_man_install_one "$file" "" || return 1
       matched=1
     fi
   done
@@ -56,5 +56,5 @@ if [[ -d "$source_input" ]]; then
     return 1
   fi
 else
-  install_one "$source_input" "$explicit_name" || return 1
+  install_man_install_one "$source_input" "$explicit_name" || return 1
 fi

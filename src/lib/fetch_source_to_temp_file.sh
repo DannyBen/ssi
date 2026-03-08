@@ -12,7 +12,11 @@ fetch_source_to_temp_file() {
         return 0
         ;;
       file)
-        printf "%s" "$source"
+        if [[ ! -f "$source" ]]; then
+          fail "Invalid source: $source"
+          return 1
+        fi
+        printf "%s" "/dev/null"
         return 0
         ;;
     esac

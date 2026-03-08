@@ -53,3 +53,29 @@ setup() {
   [ "$status" -eq 1 ]
   [ -n "$output" ]
 }
+
+@test "fetch_source_to_temp_file returns /dev/null for local file in dry run" {
+  export SSI_DRY_RUN=1
+  input="$(mktemp)"
+  printf "from-file" > "$input"
+
+  run fetch_source_to_temp_file "$input"
+
+  rm -f "$input"
+
+  [ "$status" -eq 0 ]
+  [ "$output" = "/dev/null" ]
+
+  unset -v SSI_DRY_RUN
+}
+
+@test "fetch_source_to_temp_file fails for missing local file in dry run" {
+  export SSI_DRY_RUN=1
+
+  run fetch_source_to_temp_file "/definitely/missing/source"
+
+  [ "$status" -eq 1 ]
+  [ -n "$output" ]
+
+  unset -v SSI_DRY_RUN
+}

@@ -167,3 +167,8 @@ commands:
 
 - name: bootstrap
   help: Print bootstrap script
+  args:
+  - name: FILE
+    help: |
+      Write the bootstrap template to file
+      If the file exists, it will only update the prepare_installer function

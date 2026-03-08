@@ -48,7 +48,7 @@ ssi_usage() {
     echo
 
     printf "  %s\n" "$(green "SSI_DRY_RUN")"
-    printf "    Dry-run mode - skip all filesystem changes and downloads\n"
+    printf "    Dry-run mode - skip all filesystem changes and downloads\n    Applied to install and uninstall commands only\n"
     echo
 
   fi
@@ -554,7 +554,7 @@ ssi_bootstrap_usage() {
   printf "ssi bootstrap - Print bootstrap script\n\n"
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi bootstrap\n"
+  printf "  ssi bootstrap [FILE]\n"
   printf "  ssi bootstrap --help | -h\n"
   echo
 
@@ -564,6 +564,12 @@ ssi_bootstrap_usage() {
 
     printf "  %s\n" "$(green "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    printf "%s\n" "$(bold "Arguments:")"
+
+    printf "  %s\n" "$(green "FILE")"
+    printf "    Write the bootstrap template to file\n    If the file exists, it will only update the prepare_installer function\n"
     echo
 
   fi
@@ -597,6 +603,110 @@ normalize_input() {
 
     shift
   done
+}
+
+bootstrap_apply_template() {
+  local file="$1"
+  local template="$2"
+  local prepare_section="$3"
+  local rc
+
+  if [[ -e "$file" ]]; then
+    rc=0
+    bootstrap_update_prepare_installer "$file" "$prepare_section" || rc=$?
+    if [[ $rc -eq 0 ]]; then
+      log info "Updated prepare_installer in $file"
+      return 0
+    fi
+
+    if [[ $rc -eq 2 ]]; then
+      log error "prepare_installer not found in $file"
+    else
+      log error "Failed updating prepare_installer in $file"
+    fi
+
+    return 1
+  fi
+
+  printf "%s\n" "$template" >"$file"
+  log info "Created bootstrap template to $file"
+}
+
+bootstrap_prepare_installer() {
+  local version="$1"
+  local template
+
+  template=$(cat <<'BOOTSTRAP'
+prepare_installer() {
+  echo "Initializing installer..."
+  SSI_VERSION="@VERSION@"
+
+  # Set up tmp dir where all work is done
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$tmpdir"' EXIT
+  cd "$tmpdir"
+  export PATH="$tmpdir:$PATH"
+
+  # Download ssi if needed
+  if ! command -v ssi >/dev/null 2>&1 || [ "$(ssi --version 2>/dev/null)" != "$SSI_VERSION" ]; then
+    if command -v curl >/dev/null 2>&1; then
+      curl -fSsL https://github.com/DannyBen/ssi/releases/download/v$SSI_VERSION/ssi -o ssi
+    elif command -v wget >/dev/null 2>&1; then
+      wget -nv -O ssi https://github.com/DannyBen/ssi/releases/download/v$SSI_VERSION/ssi
+    else
+      echo "Error: please install wget or curl, then try again" >&2
+      exit 1
+    fi
+    chmod +x ssi
+  fi
+}
+BOOTSTRAP
+)
+
+  printf "%s\n" "${template//@VERSION@/$version}"
+}
+
+bootstrap_template() {
+  local prepare_section="$1"
+  local template
+
+  template=$(cat <<'BOOTSTRAP'
+#!/usr/bin/env bash
+set -euo pipefail
+
+@PREPARE@
+
+# Example installation steps:
+# ssi log info "Installing <tool>"
+# ssi install bin <url>
+# ssi install man <url>
+# ssi log info "<tool> --version : $(<tool> --version)"
+BOOTSTRAP
+)
+
+  printf "%s\n" "${template//@PREPARE@/$prepare_section}"
+}
+
+bootstrap_update_prepare_installer() {
+  local file="$1"
+  local replacement="$2"
+  local tmp rc
+
+  if ! grep -q '^prepare_installer() {$' "$file"; then
+    return 2
+  fi
+
+  tmp="$(mktemp)" || return 1
+  awk -v repl="$replacement" '$0=="prepare_installer() {"{print repl; skip=1; next} skip{if($0=="}") skip=0; next} {print}' "$file" >"$tmp"
+  rc=$?
+
+  if [[ $rc -eq 0 ]]; then
+    mv "$tmp" "$file"
+  else
+    rm -f "$tmp"
+  fi
+
+  return $rc
 }
 
 enable_auto_colors() {
@@ -874,7 +984,7 @@ log() {
   color_func="cyan"
   case "$level" in
     debug) color_func="magenta" ;;
-    info) color_func="green_bold" ;;
+    info) color_func="blue_bold" ;;
     warn) color_func="yellow_bold" ;;
     error) color_func="red_bold" ;;
   esac
@@ -1922,43 +2032,15 @@ ssi_log_command() {
 ssi_bootstrap_command() {
 
   script_version="$version"
-  template=$(cat <<'BOOTSTRAP'
-#!/usr/bin/env bash
-set -euo pipefail
+  prepare_section="$(bootstrap_prepare_installer "$script_version")"
+  template="$(bootstrap_template "$prepare_section")"
+  file="${args[FILE]:-}"
 
-# === Setup SSI ===
-
-echo "Initializing installer..."
-
-# Set up tmp dir where all work is done
-tmpdir="$(mktemp -d)"
-trap 'rm -rf "$tmpdir"' EXIT
-cd "$tmpdir"
-export PATH="$tmpdir:$PATH"
-
-# Download ssi if needed
-if ! command -v ssi >/dev/null 2>&1 || [ "$(ssi --version 2>/dev/null)" != "@VERSION@" ]; then
-  if command -v curl >/dev/null 2>&1; then
-    curl -fSsL https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi -o ssi
-  elif command -v wget >/dev/null 2>&1; then
-    wget -nv -O ssi https://github.com/DannyBen/ssi/releases/download/v@VERSION@/ssi
+  if [[ -n "$file" ]]; then
+    bootstrap_apply_template "$file" "$template" "$prepare_section" || return 1
   else
-    echo "Error: please install wget or curl, then try again" >&2
-    exit 1
+    printf "%s\n" "$template"
   fi
-  chmod +x ssi
-fi
-
-# === Run ===
-
-# Example installation steps:
-# ssi log info "Installing <tool>"
-# ssi install bin <url>
-# ssi install man <url>
-# ssi log info "<tool> --version : $(<tool> --version)"
-BOOTSTRAP
-  )
-  printf "%s\n" "${template//@VERSION@/$script_version}"
 
 }
 
@@ -3281,8 +3363,13 @@ ssi_bootstrap_parse_requirements() {
 
       *)
 
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        if [[ -z ${args['FILE']+x} ]]; then
+          args['FILE']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 

@@ -6,7 +6,9 @@ environment_variables:
     default: info
     allowed: [debug, info, warn, error]
   - name: ssi_dry_run
-    help: Dry-run mode - skip all filesystem changes and downloads
+    help: |
+      Dry-run mode - skip all filesystem changes and downloads
+      Applied to install and uninstall commands only
 
   # Private
 

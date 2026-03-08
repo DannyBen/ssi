@@ -30,7 +30,7 @@ log() {
   color_func="cyan"
   case "$level" in
     debug) color_func="magenta" ;;
-    info) color_func="green_bold" ;;
+    info) color_func="blue_bold" ;;
     warn) color_func="yellow_bold" ;;
     error) color_func="red_bold" ;;
   esac

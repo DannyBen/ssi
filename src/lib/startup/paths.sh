@@ -4,4 +4,5 @@ startup_paths() {
   startup_path zsh
   printf "\n"
   startup_path fish
+  printf "\n"
 }

@@ -1,7 +1,8 @@
 # ssi Agent Notes
 
 ## Policy Source Of Truth
-- Use `DEVELOPMENT.md` as the source of truth for project architecture, source layout, and coding conventions.
+- Use `DEVELOPMENT.md` as the source of truth for project architecture, source
+  layout, and coding conventions.
 - Keep this file focused on agent workflow and repository-specific execution notes.
 
 ## Command Source Of Truth
@@ -29,13 +30,19 @@
 - Use `test/fixtures/` for reusable stub executables and fixtures.
 
 ## Coding Conventions
-- Use `log info` for user-facing success/info output and `log warn` for warnings so output styling stays consistent. `fail` remains `log error` + return 1.
+- Use `log info` for user-facing success/info output and `log warn` for
+  warnings so output styling stays consistent. `fail` remains `log error` +
+  return 1.
 - Prefer small, deterministic functions and unit tests before command integration.
 - Favor readability and explicit branching over compact but opaque Bash.
-- Do not set default values for args in command handlers; rely on Bashly defaults.
-- Do not add manual "required arg" validation in command handlers; use Bashly `required: true`.
+- Do not set default values for args in command handlers; rely on Bashly
+  defaults.
+- Do not add manual "required arg" validation in command handlers; use Bashly
+  `required: true`.
 - In tests, prefer sourcing real libs; stub only when required by the test scenario.
 - Do not define nested functions in command files or library functions.
+- Do not test private helpers directly unless the behavior cannot be covered
+  reasonably through a public function.
 - For command tests that assert CLI output, set `NO_COLOR=1` for deterministic output.
 
 ## Maintenance

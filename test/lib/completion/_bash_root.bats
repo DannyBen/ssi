@@ -1,5 +1,9 @@
 #!/usr/bin/env bats
 
+# This private helper is tested directly because the branch selection for
+# system Bash completion roots is difficult to cover completely through the
+# public completion API.
+
 setup() {
   BASE="$BATS_TEST_DIRNAME/../../../src/lib"
   source "$BASE/completion/_bash_root.sh"

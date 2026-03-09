@@ -56,20 +56,9 @@
 - Prefer one function per source file and one matching test file when
   practical.
 - Prefer sourcing real libs in tests; stub only when required by the scenario.
+- Do not test private helper functions directly unless their behavior cannot be
+  reasonably covered through a public function.
+- When a private helper must be tested directly, keep the exception narrow and
+  document why the public surface is insufficient.
 - Use `test/fixtures/` for reusable stub executables and fixtures.
 - For command tests that assert CLI output, set `NO_COLOR=1`.
-
-## Refactor Process
-- First agree on names, namespaces, and target paths.
-- Then do a mechanical rename and move pass with no behavior changes.
-- Move matching tests in the same pass.
-- After the namespace is stable, review that namespace for redundant helpers,
-  merge opportunities, and removals.
-- Run the affected tests after each step.
-
-## Size Reduction Goal
-- Moving and renaming code improves navigation but usually does not shrink the
-  generated `ssi` script by itself.
-- Size reduction should come from deleting wrappers, consolidating duplicated
-  control flow, and replacing shell-specific repetition with shared helpers
-  where that keeps the code clear.

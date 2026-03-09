@@ -601,6 +601,156 @@ normalize_input() {
   done
 }
 
+bin_install() {
+  local source_input="${1:-}"
+  local explicit_name="${2:-}"
+  local mode target_name temp_file target_root target_path
+
+  mode="$(bin_mode)" || return 1
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(source_target_name "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
+    return 1
+  fi
+
+  temp_file="$(source_to_temp_file "$source_input")" || return 1
+  target_root="$(bin_root "$mode")" || return 1
+  target_path="${target_root}/${target_name}"
+
+  install_file "$temp_file" "$target_path" 755 || return 1
+
+  remove_file "$temp_file"
+  log info "Installed: $target_path"
+}
+
+bin_mode() {
+  local mode="${1:-auto}"
+
+  case "$mode" in
+    system | user)
+      printf "%s" "$mode"
+      return 0
+      ;;
+    auto)
+      ;;
+    *)
+      fail "Could not resolve install mode"
+      return 1
+      ;;
+  esac
+
+  if is_root; then
+    printf "system"
+    return 0
+  fi
+
+  if is_writable_dir "$SSI_SYSTEM_BIN_ROOT"; then
+    printf "system"
+    return 0
+  fi
+
+  if is_sudo_usable; then
+    printf "system"
+    return 0
+  fi
+
+  printf "user"
+}
+
+bin_root() {
+  local mode
+  mode="$(bin_mode "${1:-auto}")" || {
+    fail "Could not resolve binary root"
+    return 1
+  }
+
+  if [[ "$mode" == "system" ]]; then
+    printf "%s" "$SSI_SYSTEM_BIN_ROOT"
+  else
+    printf "%s" "$SSI_USER_BIN_ROOT"
+  fi
+}
+
+bin_roots() {
+  printf "%s\n%s\n" "$SSI_SYSTEM_BIN_ROOT" "$SSI_USER_BIN_ROOT"
+}
+
+bin_test() {
+  local target_name="${1:-}"
+  local check_all="${2:-}"
+  local found mode target_root target_path
+
+  if [[ -n "$check_all" ]]; then
+    found=0
+    while IFS= read -r target_root; do
+      [[ -n "$target_root" ]] || continue
+      target_path="${target_root}/${target_name}"
+      if [[ -x "$target_path" ]]; then
+        if [[ "$found" -eq 0 ]]; then
+          log info "Found: $target_path"
+        else
+          log warn "Duplicate: $target_path"
+        fi
+        found=$((found + 1))
+      else
+        log info "Not found: $target_path"
+      fi
+    done < <(bin_roots)
+
+    if [[ "$found" -gt 0 ]]; then
+      return 0
+    fi
+
+    fail "Not found in any path: $target_name"
+    return 1
+  fi
+
+  mode="$(bin_mode)" || return 1
+  target_root="$(bin_root "$mode")" || return 1
+  target_path="${target_root}/${target_name}"
+
+  if [[ -x "$target_path" ]]; then
+    log info "Found: $target_path"
+    return 0
+  fi
+
+  fail "Not found: $target_path"
+  return 1
+}
+
+bin_uninstall() {
+  local name="${1:-}"
+  local user_root system_root user_path system_path removed
+
+  user_root="${SSI_USER_BIN_ROOT}"
+  system_root="${SSI_SYSTEM_BIN_ROOT}"
+  user_path="${user_root}/${name}"
+  system_path="${system_root}/${name}"
+  removed=0
+
+  if [[ -f "$user_path" ]]; then
+    remove_file "$user_path" || return 1
+    log info "Removed: $user_path"
+    removed=1
+  fi
+
+  if [[ -f "$system_path" ]]; then
+    remove_file "$system_path" || return 1
+    log info "Removed: $system_path"
+    removed=1
+  fi
+
+  if [[ "$removed" -eq 0 ]]; then
+    log warn "Not found: $name"
+  fi
+}
+
 bootstrap_apply_template() {
   local file="$1"
   local template="$2"
@@ -706,6 +856,481 @@ bootstrap_update_prepare_installer() {
   return $rc
 }
 
+completion__bash_root() {
+  local default_root="/usr/local/share/bash-completion/completions"
+  local brew_prefix
+  local brew_root
+
+  if [[ -n "$SSI_SYSTEM_BASH_COMPLETION_ROOT" && "$SSI_SYSTEM_BASH_COMPLETION_ROOT" != "$default_root" ]]; then
+    printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
+    return 0
+  fi
+
+  if is_dir "/usr/share/bash-completion/completions"; then
+    printf "%s" "/usr/share/bash-completion/completions"
+    return 0
+  fi
+
+  if is_dir "/usr/local/etc/bash_completion.d"; then
+    printf "%s" "/usr/local/etc/bash_completion.d"
+    return 0
+  fi
+
+  if is_command brew; then
+    brew_prefix="$(brew --prefix 2>/dev/null)"
+    brew_root="${brew_prefix}/etc/bash_completion.d"
+    if [[ -n "$brew_prefix" ]] && is_dir "$brew_root"; then
+      printf "%s" "$brew_root"
+      return 0
+    fi
+  fi
+
+  printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
+}
+
+completion_install() {
+  local source_input="${1:-}"
+  local explicit_name="${2:-}"
+  local shell="${3:-}"
+  local mode target_name target_root target_path temp_file
+
+  mode="$(completion_mode)" || return 1
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(source_target_name "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
+    return 1
+  fi
+
+  target_root="$(completion_path "$shell" "$mode")" || return 1
+  target_path="${target_root}/${target_name}"
+  temp_file="$(source_to_temp_file "$source_input")" || return 1
+
+  install_file "$temp_file" "$target_path" 644 || return 1
+
+  remove_file "$temp_file"
+  log info "Installed: $target_path"
+}
+
+completion_mode() {
+  local mode="${1:-auto}"
+  local system_parent
+
+  case "$mode" in
+    system | user)
+      printf "%s" "$mode"
+      return 0
+      ;;
+    auto)
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  if is_root; then
+    printf "system"
+    return 0
+  fi
+
+  if is_writable_dir "$(completion__bash_root)"; then
+    printf "system"
+    return 0
+  fi
+
+  system_parent="$(dirname "$(completion__bash_root)")"
+  if is_writable_dir "$system_parent"; then
+    printf "system"
+    return 0
+  fi
+
+  if is_sudo_usable; then
+    printf "system"
+    return 0
+  fi
+
+  printf "user"
+}
+
+completion_path() {
+  local shell="${1:-}"
+  local mode="${2:-auto}"
+  [[ -n "$shell" ]] || return 1
+  mode="$(completion_mode "$mode")" || return 1
+
+  if [[ "$mode" == "system" ]]; then
+    case "$shell" in
+      bash)
+        completion__bash_root
+        ;;
+      zsh)
+        printf "%s" "$SSI_SYSTEM_ZSH_COMPLETION_ROOT"
+        ;;
+      fish)
+        printf "%s" "$SSI_SYSTEM_FISH_COMPLETION_ROOT"
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+    return 0
+  fi
+
+  case "$shell" in
+    bash)
+      printf "%s" "$SSI_USER_BASH_COMPLETION_ROOT"
+      ;;
+    zsh)
+      printf "%s" "$SSI_USER_ZSH_COMPLETION_ROOT"
+      ;;
+    fish)
+      printf "%s" "$SSI_USER_FISH_COMPLETION_ROOT"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+completion_paths() {
+  local shell="${1:-}"
+  [[ -n "$shell" ]] || return 1
+
+  printf "%s\n%s\n" \
+    "$(completion_path "$shell" system)" \
+    "$(completion_path "$shell" user)"
+}
+
+completion_test() {
+  local target_name="${1:-}"
+  local shell="${2:-}"
+  local check_all="${3:-}"
+  local found mode target_root target_path
+
+  if [[ -n "$check_all" ]]; then
+    found=0
+    while IFS= read -r target_root; do
+      [[ -n "$target_root" ]] || continue
+      target_path="${target_root}/${target_name}"
+      if [[ -f "$target_path" ]]; then
+        if [[ "$found" -eq 0 ]]; then
+          log info "Found: $target_path"
+        else
+          log warn "Duplicate: $target_path"
+        fi
+        found=$((found + 1))
+      else
+        log info "Not found: $target_path"
+      fi
+    done < <(completion_paths "$shell")
+
+    if [[ "$found" -gt 0 ]]; then
+      return 0
+    fi
+
+    fail "Not found in any path: $target_name"
+    return 1
+  fi
+
+  mode="$(completion_mode)" || return 1
+  target_root="$(completion_path "$shell" "$mode")" || return 1
+  target_path="${target_root}/${target_name}"
+
+  if [[ -f "$target_path" ]]; then
+    log info "Found: $target_path"
+    return 0
+  fi
+
+  fail "Not found: $target_path"
+  return 1
+}
+
+completion_uninstall() {
+  local name="${1:-}"
+  local shell="${2:-}"
+  local removed user_root system_root user_path system_path
+
+  removed=0
+  user_root="$(completion_path "$shell" user)" || return 1
+  system_root="$(completion_path "$shell" system)" || return 1
+
+  user_path="${user_root}/${name}"
+  system_path="${system_root}/${name}"
+
+  if [[ -e "$user_path" ]]; then
+    remove_file "$user_path" || return 1
+    log info "Removed: $user_path"
+    removed=1
+  fi
+
+  if [[ -e "$system_path" ]]; then
+    remove_file "$system_path" || return 1
+    log info "Removed: $system_path"
+    removed=1
+  fi
+
+  if [[ "$removed" -eq 0 ]]; then
+    log warn "Not found: $name"
+  fi
+}
+
+is_command() {
+  local name="${1:-}"
+  [[ -n "$name" ]] && command -v "$name" >/dev/null 2>&1
+}
+
+is_dir() {
+  local dir="${1:-}"
+  [[ -n "$dir" && -d "$dir" ]]
+}
+
+is_root() {
+  [ "$(id -u)" -eq 0 ]
+}
+
+is_sudo_usable() {
+  command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1
+}
+
+is_writable_dir() {
+  local dir="$1"
+  [[ -n "$dir" && -d "$dir" && -w "$dir" ]]
+}
+
+create_dir() {
+  local dir="${1:-}"
+  local message
+
+  if [[ -z "$dir" ]]; then
+    fail "Missing directory"
+    return 1
+  fi
+
+  if [[ -d "$dir" ]]; then
+    return 0
+  fi
+
+  message="Creating directory: $dir"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
+
+  mkdir -p "$dir" 2>/dev/null && return 0
+
+  if is_sudo_usable; then
+    sudo mkdir -p "$dir" || {
+      fail "Could not create directory: $dir"
+      return 1
+    }
+    return 0
+  fi
+
+  fail "Could not create directory: $dir"
+  return 1
+}
+
+install_file() {
+  local source="${1:-}"
+  local destination="${2:-}"
+  local mode="${3:-755}"
+  local destination_dir message
+
+  if [[ -z "$source" || -z "$destination" ]]; then
+    fail "Missing source or destination for install"
+    return 1
+  fi
+
+  destination_dir="$(dirname "$destination")"
+
+  message="Installing file: $source -> $destination (mode $mode)"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
+
+  create_dir "$destination_dir" || return 1
+
+  install -m "$mode" "$source" "$destination" 2>/dev/null && return 0
+
+  if is_sudo_usable; then
+    sudo install -m "$mode" "$source" "$destination" && return 0
+  fi
+
+  fail "Could not install file to destination: $destination"
+  return 1
+}
+
+remove_file() {
+  local path="${1:-}"
+  local message
+
+  if [[ -z "$path" ]]; then
+    fail "Missing file"
+    return 1
+  fi
+
+  if [[ ! -e "$path" ]]; then
+    return 0
+  fi
+
+  message="Removing file: $path"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
+
+  rm -f "$path" 2>/dev/null && return 0
+
+  if is_sudo_usable; then
+    sudo rm -f "$path" || {
+      fail "Could not remove file: $path"
+      return 1
+    }
+    return 0
+  fi
+
+  fail "Could not remove file: $path"
+  return 1
+}
+
+source_download_to_file() {
+  local url="${1:-}"
+  local destination="${2:-}"
+  local message
+
+  if [[ -z "$url" || -z "$destination" ]]; then
+    fail "Missing URL or destination for download"
+    return 1
+  fi
+
+  message="Downloading: $url -> $destination"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
+
+  if is_command curl; then
+    curl -fsSL "$url" -o "$destination" && return 0
+    fail "Failed downloading with curl: $url"
+    return 1
+  fi
+
+  if is_command wget; then
+    wget -qO "$destination" "$url" && return 0
+    fail "Failed downloading with wget: $url"
+    return 1
+  fi
+
+  fail "No downloader available (need curl or wget)"
+  return 1
+}
+
+source_to_temp_file() {
+  local source="${1:--}"
+  local temp_root="${2:-${TMPDIR:-/tmp}}"
+  local source_type temp_file
+
+  source_type="$(source_type "$source")" || return 1
+
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    case "$source_type" in
+      stdin | url)
+        printf "%s" "/dev/null"
+        return 0
+        ;;
+      file)
+        if [[ ! -f "$source" ]]; then
+          fail "Invalid source: $source"
+          return 1
+        fi
+        printf "%s" "/dev/null"
+        return 0
+        ;;
+    esac
+  fi
+
+  temp_file="$(mktemp "${temp_root%/}/ssi.fetch.XXXXXX")" || {
+    fail "Could not allocate temporary file"
+    return 1
+  }
+
+  case "$source_type" in
+    stdin)
+      cat > "$temp_file" || {
+        fail "Could not read source from stdin"
+        return 1
+      }
+      ;;
+    file)
+      cp "$source" "$temp_file" || {
+        fail "Could not copy source file"
+        return 1
+      }
+      ;;
+    url)
+      source_download_to_file "$source" "$temp_file" || return 1
+      ;;
+  esac
+
+  printf "%s" "$temp_file"
+}
+
+source_type() {
+  local source="${1:--}"
+
+  if [[ "$source" == "-" ]]; then
+    printf "stdin"
+    return 0
+  elif [[ "$source" =~ ^https?:// ]]; then
+    printf "url"
+    return 0
+  elif [[ -f "$source" ]]; then
+    printf "file"
+    return 0
+  else
+    fail "Invalid source: $source"
+    return 1
+  fi
+}
+
+source_target_name() {
+  local source_input="${1:-}"
+  local name=""
+
+  if [[ -z "$source_input" ]]; then
+    fail "Missing source input"
+    return 1
+  fi
+
+  if [[ "$source_input" == "-" ]]; then
+    printf ""
+    return 0
+  fi
+
+  if [[ "$source_input" =~ ^https?:// ]]; then
+    if [[ "$source_input" =~ ^https?://[^/]+/?$ ]]; then
+      printf ""
+      return 0
+    fi
+    name="${source_input##*/}"
+    name="${name%%\?*}"
+    printf "%s" "$name"
+    return 0
+  fi
+
+  printf "%s" "$(basename "$source_input")"
+}
+
 enable_auto_colors() {
   if [[ -z ${NO_COLOR+x} && ! -t 1 ]]; then
     NO_COLOR=1
@@ -753,201 +1378,11 @@ cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
 black_underlined() { print_in_color "\e[4;30m" "$*"; }
 white_underlined() { print_in_color "\e[4;37m" "$*"; }
 
-create_dir() {
-  local dir="${1:-}"
-  local message
-
-  if [[ -z "$dir" ]]; then
-    fail "Missing directory"
-    return 1
-  fi
-
-  if [[ -d "$dir" ]]; then
-    return 0
-  fi
-
-  message="Creating directory: $dir"
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log debug "[DRY] $message"
-    return 0
-  fi
-  log debug "$message"
-
-  mkdir -p "$dir" 2>/dev/null && return 0
-
-  if is_sudo_usable; then
-    sudo mkdir -p "$dir" || {
-      fail "Could not create directory: $dir"
-      return 1
-    }
-    return 0
-  fi
-
-  fail "Could not create directory: $dir"
-  return 1
-}
-
-dry_run_message() {
+dry_run_note() {
   if [[ -n "${SSI_DRY_RUN:-}" && -z "${_SSI_DRY_RUN_NOTED:-}" ]]; then
     log warn "Dry-run enabled"
     export _SSI_DRY_RUN_NOTED=1
   fi
-}
-
-fetch_download_to_file() {
-  local url="${1:-}"
-  local destination="${2:-}"
-  local message
-
-  if [[ -z "$url" || -z "$destination" ]]; then
-    fail "Missing URL or destination for download"
-    return 1
-  fi
-
-  message="Downloading: $url -> $destination"
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log debug "[DRY] $message"
-    return 0
-  fi
-  log debug "$message"
-
-  if is_command curl; then
-    curl -fsSL "$url" -o "$destination" && return 0
-    fail "Failed downloading with curl: $url"
-    return 1
-  fi
-
-  if is_command wget; then
-    wget -qO "$destination" "$url" && return 0
-    fail "Failed downloading with wget: $url"
-    return 1
-  fi
-
-  fail "No downloader available (need curl or wget)"
-  return 1
-}
-
-fetch_source_to_temp_file() {
-  local source="${1:--}"
-  local temp_root="${2:-${TMPDIR:-/tmp}}"
-  local source_type temp_file
-
-  source_type="$(fetch_source_type "$source")" || return 1
-
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    case "$source_type" in
-      stdin | url)
-        printf "%s" "/dev/null"
-        return 0
-        ;;
-      file)
-        if [[ ! -f "$source" ]]; then
-          fail "Invalid source: $source"
-          return 1
-        fi
-        printf "%s" "/dev/null"
-        return 0
-        ;;
-    esac
-  fi
-
-  temp_file="$(mktemp "${temp_root%/}/ssi.fetch.XXXXXX")" || {
-    fail "Could not allocate temporary file"
-    return 1
-  }
-
-  case "$source_type" in
-    stdin)
-      cat > "$temp_file" || {
-        fail "Could not read source from stdin"
-        return 1
-      }
-      ;;
-    file)
-      cp "$source" "$temp_file" || {
-        fail "Could not copy source file"
-        return 1
-      }
-      ;;
-    url)
-      fetch_download_to_file "$source" "$temp_file" || return 1
-      ;;
-  esac
-
-  printf "%s" "$temp_file"
-}
-
-fetch_source_type() {
-  local source="${1:--}"
-
-  if [[ "$source" == "-" ]]; then
-    printf "stdin"
-    return 0
-  elif [[ "$source" =~ ^https?:// ]]; then
-    printf "url"
-    return 0
-  elif [[ -f "$source" ]]; then
-    printf "file"
-    return 0
-  else
-    fail "Invalid source: $source"
-    return 1
-  fi
-}
-
-install_file() {
-  local source="${1:-}"
-  local destination="${2:-}"
-  local mode="${3:-755}"
-  local destination_dir message
-
-  if [[ -z "$source" || -z "$destination" ]]; then
-    fail "Missing source or destination for install"
-    return 1
-  fi
-
-  destination_dir="$(dirname "$destination")"
-
-  message="Installing file: $source -> $destination (mode $mode)"
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log debug "[DRY] $message"
-    return 0
-  fi
-  log debug "$message"
-
-  create_dir "$destination_dir" || return 1
-
-  install -m "$mode" "$source" "$destination" 2>/dev/null && return 0
-
-  if is_sudo_usable; then
-    sudo install -m "$mode" "$source" "$destination" && return 0
-  fi
-
-  fail "Could not install file to destination: $destination"
-  return 1
-}
-
-is_command() {
-  local name="${1:-}"
-  [[ -n "$name" ]] && command -v "$name" >/dev/null 2>&1
-}
-
-is_dir() {
-  local dir="${1:-}"
-  [[ -n "$dir" && -d "$dir" ]]
-}
-
-is_root() {
-  [ "$(id -u)" -eq 0 ]
-}
-
-is_sudo_usable() {
-  command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1
-}
-
-is_writable_dir() {
-  local dir="$1"
-  [[ -n "$dir" && -d "$dir" && -w "$dir" ]]
 }
 
 log() {
@@ -1004,225 +1439,71 @@ fail() {
   return 1
 }
 
-remove_file() {
-  local path="${1:-}"
-  local message
+man_install() {
+  local source_input="${1:-}"
+  local explicit_name="${2:-}"
+  local mode matched file
 
-  if [[ -z "$path" ]]; then
-    fail "Missing file"
-    return 1
-  fi
+  mode="$(man_mode)" || return 1
 
-  if [[ ! -e "$path" ]]; then
-    return 0
-  fi
-
-  message="Removing file: $path"
-  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log debug "[DRY] $message"
-    return 0
-  fi
-  log debug "$message"
-
-  rm -f "$path" 2>/dev/null && return 0
-
-  if is_sudo_usable; then
-    sudo rm -f "$path" || {
-      fail "Could not remove file: $path"
+  if [[ -d "$source_input" ]]; then
+    if [[ -n "$explicit_name" ]]; then
+      fail "--name cannot be used with a directory source"
       return 1
-    }
-    return 0
-  fi
-
-  fail "Could not remove file: $path"
-  return 1
-}
-
-resolve_bash_completion_root() {
-  local default_root="/usr/local/share/bash-completion/completions"
-  local brew_prefix
-  local brew_root
-
-  if [[ -n "$SSI_SYSTEM_BASH_COMPLETION_ROOT" && "$SSI_SYSTEM_BASH_COMPLETION_ROOT" != "$default_root" ]]; then
-    printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
-    return 0
-  fi
-
-  if is_dir "/usr/share/bash-completion/completions"; then
-    printf "%s" "/usr/share/bash-completion/completions"
-    return 0
-  fi
-
-  if is_dir "/usr/local/etc/bash_completion.d"; then
-    printf "%s" "/usr/local/etc/bash_completion.d"
-    return 0
-  fi
-
-  if is_command brew; then
-    brew_prefix="$(brew --prefix 2>/dev/null)"
-    brew_root="${brew_prefix}/etc/bash_completion.d"
-    if [[ -n "$brew_prefix" ]] && is_dir "$brew_root"; then
-      printf "%s" "$brew_root"
-      return 0
     fi
-  fi
 
-  printf "%s" "$SSI_SYSTEM_BASH_COMPLETION_ROOT"
-}
+    matched=0
+    for file in "$source_input"/*; do
+      [[ -f "$file" ]] || continue
+      if [[ "$(basename "$file")" =~ \.([0-9][A-Za-z]{0,3})$ ]]; then
+        man__install_one "$file" "" "$mode" || return 1
+        matched=1
+      fi
+    done
 
-resolve_bin_mode() {
-  local mode="${1:-auto}"
-
-  case "$mode" in
-    system | user)
-      printf "%s" "$mode"
-      return 0
-      ;;
-    auto)
-      ;;
-    *)
-      fail "Could not resolve install mode"
+    if [[ "$matched" -eq 0 ]]; then
+      fail "No matching man pages in directory: $source_input"
       return 1
-      ;;
-  esac
+    fi
 
-  if is_root; then
-    printf "system"
     return 0
   fi
 
-  if is_writable_dir "$SSI_SYSTEM_BIN_ROOT"; then
-    printf "system"
-    return 0
-  fi
-
-  if is_sudo_usable; then
-    printf "system"
-    return 0
-  fi
-
-  printf "user"
+  man__install_one "$source_input" "$explicit_name" "$mode"
 }
 
-resolve_bin_root() {
-  local mode
-  mode="$(resolve_bin_mode "${1:-auto}")" || {
-    fail "Could not resolve binary root"
+man__install_one() {
+  local source_input="${1:-}"
+  local explicit_name="${2:-}"
+  local mode="${3:-}"
+  local temp_file target_name target_info section filename target_dir
+  local target_path
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(source_target_name "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
     return 1
-  }
-
-  if [[ "$mode" == "system" ]]; then
-    printf "%s" "$SSI_SYSTEM_BIN_ROOT"
-  else
-    printf "%s" "$SSI_USER_BIN_ROOT"
   fi
+
+  target_info="$(man_target "$target_name")" || return 1
+  section="${target_info%%:*}"
+  filename="${target_info#*:}"
+  target_dir="$(man_path "$section" "$mode")" || return 1
+  target_path="${target_dir}/${filename}"
+  temp_file="$(source_to_temp_file "$source_input")" || return 1
+
+  install_file "$temp_file" "$target_path" 644 || return 1
+
+  remove_file "$temp_file"
+  log info "Installed: $target_path"
 }
 
-resolve_bin_roots() {
-  printf "%s\n%s\n" "$SSI_SYSTEM_BIN_ROOT" "$SSI_USER_BIN_ROOT"
-}
-
-resolve_completion_base_path() {
-  local shell="${1:-}"
-  local mode="${2:-auto}"
-  [[ -n "$shell" ]] || return 1
-  mode="$(resolve_completion_mode "$mode")" || return 1
-
-  if [[ "$mode" == "system" ]]; then
-    case "$shell" in
-      bash)
-        resolve_bash_completion_root
-        ;;
-      zsh)
-        printf "%s" "$SSI_SYSTEM_ZSH_COMPLETION_ROOT"
-        ;;
-      fish)
-        printf "%s" "$SSI_SYSTEM_FISH_COMPLETION_ROOT"
-        ;;
-      *)
-        return 1
-        ;;
-    esac
-    return 0
-  fi
-
-  case "$shell" in
-    bash)
-      printf "%s" "$SSI_USER_BASH_COMPLETION_ROOT"
-      ;;
-    zsh)
-      printf "%s" "$SSI_USER_ZSH_COMPLETION_ROOT"
-      ;;
-    fish)
-      printf "%s" "$SSI_USER_FISH_COMPLETION_ROOT"
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
-resolve_completion_mode() {
-  local mode="${1:-auto}"
-  local system_parent
-
-  case "$mode" in
-    system | user)
-      printf "%s" "$mode"
-      return 0
-      ;;
-    auto)
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-
-  if is_root; then
-    printf "system"
-    return 0
-  fi
-
-  if is_writable_dir "$(resolve_bash_completion_root)"; then
-    printf "system"
-    return 0
-  fi
-
-  system_parent="$(dirname "$(resolve_bash_completion_root)")"
-  if is_writable_dir "$system_parent"; then
-    printf "system"
-    return 0
-  fi
-
-  if is_sudo_usable; then
-    printf "system"
-    return 0
-  fi
-
-  printf "user"
-}
-
-resolve_completion_paths() {
-  local shell="${1:-}"
-  [[ -n "$shell" ]] || return 1
-
-  printf "%s\n%s\n" \
-    "$(resolve_completion_base_path "$shell" system)" \
-    "$(resolve_completion_base_path "$shell" user)"
-}
-
-resolve_man_base_path() {
-  local mode
-  mode="$(resolve_man_mode "${1:-auto}")" || return 1
-
-  if [[ "$mode" == "system" ]]; then
-    printf "%s" "$SSI_SYSTEM_MAN_ROOT"
-  else
-    printf "%s" "$SSI_USER_MAN_ROOT"
-  fi
-}
-
-resolve_man_matches() {
+man_matches() {
   local raw_name="${1:-}"
   local base name man_dir file
   local nullglob_state
@@ -1244,13 +1525,13 @@ resolve_man_matches() {
 
   while IFS= read -r man_dir; do
     [[ -n "$man_dir" ]] || continue
-    resolve_man_matches_in_dir "$raw_name" "$man_dir"
-  done < <(resolve_man_dirs)
+    man__matches_in_dir "$raw_name" "$man_dir"
+  done < <(man__dirs)
 
   eval "$nullglob_state"
 }
 
-resolve_man_matches_in_dir() {
+man__matches_in_dir() {
   local raw_name="${1:-}"
   local man_dir="${2:-}"
   local base name file
@@ -1284,7 +1565,7 @@ resolve_man_matches_in_dir() {
   eval "$nullglob_state"
 }
 
-resolve_man_mode() {
+man_mode() {
   local mode="${1:-auto}"
   local system_parent
 
@@ -1324,24 +1605,24 @@ resolve_man_mode() {
   printf "user"
 }
 
-resolve_man_path() {
+man_path() {
   local section="${1:-1}"
   local mode="${2:-auto}"
-  local base_path
+  local root
 
-  base_path="$(resolve_man_base_path "$mode")" || return 1
-  printf "%s/man%s" "$base_path" "$section"
+  root="$(man_root "$mode")" || return 1
+  printf "%s/man%s" "$root" "$section"
 }
 
-resolve_man_paths() {
+man_paths() {
   local section="${1:-1}"
 
   printf "%s\n%s\n" \
-    "$(resolve_man_path "$section" system)" \
-    "$(resolve_man_path "$section" user)"
+    "$(man_path "$section" system)" \
+    "$(man_path "$section" user)"
 }
 
-resolve_man_roots() {
+man__roots() {
   local root
 
   for root in "$SSI_SYSTEM_MAN_ROOT" "$SSI_USER_MAN_ROOT"; do
@@ -1350,7 +1631,7 @@ resolve_man_roots() {
   done
 }
 
-resolve_man_dirs() {
+man__dirs() {
   local base_dir man_dir
 
   while IFS= read -r base_dir; do
@@ -1359,10 +1640,21 @@ resolve_man_dirs() {
       [[ -d "$man_dir" ]] || continue
       printf "%s\n" "$man_dir"
     done
-  done < <(resolve_man_roots)
+  done < <(man__roots)
 }
 
-resolve_man_target_from_name() {
+man_root() {
+  local mode
+  mode="$(man_mode "${1:-auto}")" || return 1
+
+  if [[ "$mode" == "system" ]]; then
+    printf "%s" "$SSI_SYSTEM_MAN_ROOT"
+  else
+    printf "%s" "$SSI_USER_MAN_ROOT"
+  fi
+}
+
+man_target() {
   local raw_name="${1:-}"
   local base section filename
 
@@ -1383,581 +1675,13 @@ resolve_man_target_from_name() {
   printf "%s:%s" "$section" "$filename"
 }
 
-resolve_startup_paths() {
-  local shell="${1:-}"
-
-  case "$shell" in
-    bash)
-      printf "%s\n" "$HOME/.bashrc.d"
-      ;;
-    zsh)
-      printf "%s\n" "${ZDOTDIR:-$HOME}/.zshrc.d"
-      ;;
-    fish)
-      printf "%s\n" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
-      ;;
-    all)
-      printf "%s\n" "$HOME/.bashrc.d"
-      printf "%s\n" "${ZDOTDIR:-$HOME}/.zshrc.d"
-      printf "%s\n" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
-resolve_target_name_from_source() {
-  local source_input="${1:-}"
-  local name=""
-
-  if [[ -z "$source_input" ]]; then
-    fail "Missing source input"
-    return 1
-  fi
-
-  if [[ "$source_input" == "-" ]]; then
-    printf ""
-    return 0
-  fi
-
-  if [[ "$source_input" =~ ^https?:// ]]; then
-    if [[ "$source_input" =~ ^https?://[^/]+/?$ ]]; then
-      printf ""
-      return 0
-    fi
-    name="${source_input##*/}"
-    name="${name%%\?*}"
-    printf "%s" "$name"
-    return 0
-  fi
-
-  printf "%s" "$(basename "$source_input")"
-}
-
-startup_install_bash() {
-  local source="${1:-}"
-  local name="${2:-}"
-  local strict="${3:-}"
-  local bash_rc="$HOME/.bashrc"
-  local bash_dir="$HOME/.bashrc.d"
-  local target=""
-
-  if [[ ! -f "$bash_rc" && ! -d "$bash_dir" ]]; then
-    if [[ -n "$strict" ]]; then
-      fail "Bash startup file not found"
-      return 1
-    fi
-
-    log info "Skip: Bash startup file not found"
-    return 0
-  fi
-
-  create_dir "$bash_dir" || return 1
-  target="$bash_dir/$name"
-  install_file "$source" "$target" 644 || return 1
-  log info "Installed startup file: $target"
-
-  if [[ -f "$bash_rc" ]] && ! grep -Fq ".bashrc.d" "$bash_rc"; then
-    log warn "Bash startup configuration incomplete; add this to $bash_rc:"
-    log warn "for f in ~/.bashrc.d/*; do . \"\$f\"; done"
-  elif [[ ! -f "$bash_rc" ]]; then
-    log warn "Bash startup file (~/.bashrc) not found; ensure $bash_dir is sourced"
-  fi
-
-  return 0
-}
-
-startup_install_fish() {
-  local source="${1:-}"
-  local name="${2:-}"
-  local strict="${3:-}"
-  local fish_root="${XDG_CONFIG_HOME:-$HOME/.config}/fish"
-  local fish_rc="$fish_root/config.fish"
-  local fish_dir="$fish_root/conf.d"
-  local target=""
-
-  if [[ ! -f "$fish_rc" && ! -d "$fish_dir" ]]; then
-    if [[ -n "$strict" ]]; then
-      fail "Fish startup file not found"
-      return 1
-    fi
-
-    log info "Skip: Fish startup file not found"
-    return 0
-  fi
-
-  create_dir "$fish_dir" || return 1
-  target="$fish_dir/$name"
-  install_file "$source" "$target" 644 || return 1
-  log info "Installed startup file: $target"
-}
-
-startup_install_zsh() {
-  local source="${1:-}"
-  local name="${2:-}"
-  local strict="${3:-}"
-  local zsh_root="${ZDOTDIR:-$HOME}"
-  local zsh_rc="$zsh_root/.zshrc"
-  local zsh_dir="$zsh_root/.zshrc.d"
-  local target=""
-
-  if [[ ! -f "$zsh_rc" && ! -d "$zsh_dir" ]]; then
-    if [[ -n "$strict" ]]; then
-      fail "Zsh startup file not found"
-      return 1
-    fi
-
-    log info "Skip: Zsh startup file not found"
-    return 0
-  fi
-
-  create_dir "$zsh_dir" || return 1
-  target="$zsh_dir/$name"
-  install_file "$source" "$target" 644 || return 1
-  log info "Installed startup file: $target"
-
-  if [[ -f "$zsh_rc" ]] && ! grep -Fq ".zshrc.d" "$zsh_rc"; then
-    log warn "Zsh startup configuration incomplete; add this to $zsh_rc:"
-    log warn "for f in ~/.zshrc.d/*; do . \"\$f\"; done"
-  elif [[ ! -f "$zsh_rc" ]]; then
-    log warn "Zsh startup file (~/.zshrc) not found; ensure $zsh_dir is sourced"
-  fi
-
-  return 0
-}
-
-startup_uninstall_bash() {
-  local name="${1:-}"
-  local strict="${2:-}"
-  local bash_dir="$HOME/.bashrc.d"
-  local target="$bash_dir/$name"
-
-  if [[ -z "$name" ]]; then
-    fail "Missing startup name"
-    return 1
-  fi
-
-  if [[ ! -f "$target" ]]; then
-    if [[ -n "$strict" ]]; then
-      fail "Bash startup file not found"
-      return 1
-    fi
-
-    log info "Skip: Bash startup file not found"
-    return 0
-  fi
-
-  remove_file "$target" || return 1
-  log info "Removed startup file: $target"
-  return 0
-}
-
-startup_uninstall_fish() {
-  local name="${1:-}"
-  local strict="${2:-}"
-  local fish_root="${XDG_CONFIG_HOME:-$HOME/.config}/fish"
-  local fish_dir="$fish_root/conf.d"
-  local target="$fish_dir/$name"
-
-  if [[ -z "$name" ]]; then
-    fail "Missing startup name"
-    return 1
-  fi
-
-  if [[ ! -f "$target" ]]; then
-    if [[ -n "$strict" ]]; then
-      fail "Fish startup file not found"
-      return 1
-    fi
-
-    log info "Skip: Fish startup file not found"
-    return 0
-  fi
-
-  remove_file "$target" || return 1
-  log info "Removed startup file: $target"
-  return 0
-}
-
-startup_uninstall_zsh() {
-  local name="${1:-}"
-  local strict="${2:-}"
-  local zsh_root="${ZDOTDIR:-$HOME}"
-  local zsh_dir="$zsh_root/.zshrc.d"
-  local target="$zsh_dir/$name"
-
-  if [[ -z "$name" ]]; then
-    fail "Missing startup name"
-    return 1
-  fi
-
-  if [[ ! -f "$target" ]]; then
-    if [[ -n "$strict" ]]; then
-      fail "Zsh startup file not found"
-      return 1
-    fi
-
-    log info "Skip: Zsh startup file not found"
-    return 0
-  fi
-
-  remove_file "$target" || return 1
-  log info "Removed startup file: $target"
-  return 0
-}
-
-ssi_install_bin_command() {
-
-  source_input="${args[source]}"
-  explicit_name="${args[--name]:-}"
-
-  dry_run_message
-
-  mode="$(resolve_bin_mode)" || return 1
-
-  if [[ -n "$explicit_name" ]]; then
-    target_name="$explicit_name"
-  else
-    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
-  fi
-
-  if [[ -z "$target_name" ]]; then
-    fail "Could not determine target name; use --name"
-    return 1
-  fi
-
-  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
-
-  bin_root="$(resolve_bin_root "$mode")" || return 1
-  target_path="${bin_root}/${target_name}"
-
-  install_file "$temp_file" "$target_path" 755 || return 1
-
-  remove_file "$temp_file"
-  log info "Installed: $target_path"
-
-}
-
-ssi_install_man_command() {
-
-  source_input="${args[source]}"
-  explicit_name="${args[--name]:-}"
-
-  dry_run_message
-
-  install_man_install_one() {
-    local source="$1"
-    local name_override="$2"
-    local temp_file target_name target_info section filename man_dir target_path
-
-    if [[ -n "$name_override" ]]; then
-      target_name="$name_override"
-    else
-      target_name="$(resolve_target_name_from_source "$source")" || return 1
-    fi
-
-    if [[ -z "$target_name" ]]; then
-      fail "Could not determine target name; use --name"
-      return 1
-    fi
-
-    target_info="$(resolve_man_target_from_name "$target_name")" || return 1
-    section="${target_info%%:*}"
-    filename="${target_info#*:}"
-
-    man_dir="$(resolve_man_path "$section" "$mode")" || return 1
-    target_path="${man_dir}/${filename}"
-
-    temp_file="$(fetch_source_to_temp_file "$source")" || return 1
-
-    install_file "$temp_file" "$target_path" 644 || return 1
-
-    remove_file "$temp_file"
-    log info "Installed: $target_path"
-  }
-
-  mode="$(resolve_man_mode)" || return 1
-
-  if [[ -d "$source_input" ]]; then
-    if [[ -n "$explicit_name" ]]; then
-      fail "--name cannot be used with a directory source"
-      return 1
-    fi
-
-    matched=0
-    for file in "$source_input"/*; do
-      [[ -f "$file" ]] || continue
-      if [[ "$(basename "$file")" =~ \.([0-9][A-Za-z]{0,3})$ ]]; then
-        install_man_install_one "$file" "" || return 1
-        matched=1
-      fi
-    done
-
-    if [[ "$matched" -eq 0 ]]; then
-      fail "No matching man pages in directory: $source_input"
-      return 1
-    fi
-  else
-    install_man_install_one "$source_input" "$explicit_name" || return 1
-  fi
-
-}
-
-ssi_install_completion_command() {
-
-  source_input="${args[source]}"
-  explicit_name="${args[--name]:-}"
-  shell="${args[--shell]}"
-
-  dry_run_message
-
-  mode="$(resolve_completion_mode)" || return 1
-
-  if [[ -n "$explicit_name" ]]; then
-    target_name="$explicit_name"
-  else
-    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
-  fi
-
-  if [[ -z "$target_name" ]]; then
-    fail "Could not determine target name; use --name"
-    return 1
-  fi
-
-  completion_root="$(resolve_completion_base_path "$shell" "$mode")" || return 1
-  target_path="${completion_root}/${target_name}"
-
-  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
-
-  install_file "$temp_file" "$target_path" 644 || return 1
-
-  remove_file "$temp_file"
-  log info "Installed: $target_path"
-
-}
-
-ssi_install_startup_command() {
-
-  source_input="${args[source]}"
-  explicit_name="${args[--name]:-}"
-  shell="${args[--shell]}"
-  strict="${args[--strict]:-}"
-
-  dry_run_message
-
-  if [[ -n "$explicit_name" ]]; then
-    target_name="$explicit_name"
-  else
-    target_name="$(resolve_target_name_from_source "$source_input")" || return 1
-  fi
-
-  if [[ -z "$target_name" ]]; then
-    fail "Could not determine target name; use --name"
-    return 1
-  fi
-
-  temp_file="$(fetch_source_to_temp_file "$source_input")" || return 1
-  trap 'remove_file "$temp_file"' RETURN
-
-  case "$shell" in
-    bash)
-      startup_install_bash "$temp_file" "$target_name" "$strict"
-      ;;
-    zsh)
-      startup_install_zsh "$temp_file" "$target_name" "$strict"
-      ;;
-    fish)
-      startup_install_fish "$temp_file" "$target_name" "$strict"
-      ;;
-    *)
-      fail "Unknown shell: $shell"
-      return 1
-      ;;
-  esac
-
-}
-
-ssi_uninstall_bin_command() {
-
-  name="${args[name]}"
-  user_root="${SSI_USER_BIN_ROOT}"
-  system_root="${SSI_SYSTEM_BIN_ROOT}"
-  user_path="$user_root/$name"
-  system_path="$system_root/$name"
-  removed=0
-
-  dry_run_message
-
-  if [[ -f "$user_path" ]]; then
-    remove_file "$user_path" || return 1
-    log info "Removed: $user_path"
-    removed=1
-  fi
-
-  if [[ -f "$system_path" ]]; then
-    remove_file "$system_path" || return 1
-    log info "Removed: $system_path"
-    removed=1
-  fi
-
-  if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
-  fi
-
-}
-
-ssi_uninstall_man_command() {
-
-  name="${args[name]}"
-  removed=0
-
-  dry_run_message
-
-  uninstall_man_remove_one() {
-    local target_path="$1"
-
-    if [[ -e "$target_path" ]]; then
-      remove_file "$target_path" || return 1
-      log info "Removed: $target_path"
-      removed=1
-    fi
-  }
-
-  if [[ "$name" != *.* ]]; then
-    while IFS= read -r target_path; do
-      [[ -n "$target_path" ]] || continue
-      uninstall_man_remove_one "$target_path" || return 1
-    done < <(resolve_man_matches "$name")
-  else
-    target_info="$(resolve_man_target_from_name "$name")" || return 1
-    section="${target_info%%:*}"
-    filename="${target_info#*:}"
-
-    user_dir="$(resolve_man_path "$section" user)" || return 1
-    system_dir="$(resolve_man_path "$section" system)" || return 1
-
-    user_path="${user_dir}/${filename}"
-    system_path="${system_dir}/${filename}"
-
-  uninstall_man_remove_one "$user_path" || return 1
-  uninstall_man_remove_one "$system_path" || return 1
-  fi
-
-  if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
-  fi
-
-}
-
-ssi_uninstall_completion_command() {
-
-  name="${args[name]}"
-  shell="${args[--shell]}"
-  removed=0
-
-  dry_run_message
-
-  user_root="$(resolve_completion_base_path "$shell" user)" || return 1
-  system_root="$(resolve_completion_base_path "$shell" system)" || return 1
-
-  user_path="${user_root}/${name}"
-  system_path="${system_root}/${name}"
-
-  if [[ -e "$user_path" ]]; then
-    remove_file "$user_path" || return 1
-    log info "Removed: $user_path"
-    removed=1
-  fi
-
-  if [[ -e "$system_path" ]]; then
-    remove_file "$system_path" || return 1
-    log info "Removed: $system_path"
-    removed=1
-  fi
-
-  if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
-  fi
-
-}
-
-ssi_uninstall_startup_command() {
-
-  name="${args[name]}"
-  shell="${args[--shell]}"
-  strict="${args[--strict]:-}"
-
-  dry_run_message
-
-  case "$shell" in
-    bash)
-      startup_uninstall_bash "$name" "$strict"
-      ;;
-    zsh)
-      startup_uninstall_zsh "$name" "$strict"
-      ;;
-    fish)
-      startup_uninstall_fish "$name" "$strict"
-      ;;
-    *)
-      fail "Unknown shell: $shell"
-      return 1
-      ;;
-  esac
-
-}
-
-ssi_test_bin_command() {
-
-  target_name="${args[name]}"
-  check_all="${args[--all]:-}"
-
-  if [[ -n "$check_all" ]]; then
-    found=0
-    while IFS= read -r bin_root; do
-      [[ -n "$bin_root" ]] || continue
-      target_path="${bin_root}/${target_name}"
-      if [[ -x "$target_path" ]]; then
-        if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target_path"
-        else
-          log warn "Duplicate: $target_path"
-        fi
-        found=$((found + 1))
-      else
-        log info "Not found: $target_path"
-      fi
-    done < <(resolve_bin_roots)
-
-    if [[ "$found" -gt 0 ]]; then
-      return 0
-    fi
-
-    fail "Not found in any path: $target_name"
-    return 1
-  fi
-
-  mode="$(resolve_bin_mode)" || return 1
-  bin_root="$(resolve_bin_root "$mode")" || return 1
-  target_path="${bin_root}/${target_name}"
-
-  if [[ -x "$target_path" ]]; then
-    log info "Found: $target_path"
-    return 0
-  fi
-
-  fail "Not found: $target_path"
-  return 1
-
-}
-
-ssi_test_man_command() {
-
-  target_name="${args[name]}"
-  check_all="${args[--all]:-}"
-
-  target_info="$(resolve_man_target_from_name "$target_name")" || return 1
+man_test() {
+  local target_name="${1:-}"
+  local check_all="${2:-}"
+  local target_info section filename found base_dir has_dirs man_dir matched
+  local target_path mode
+
+  target_info="$(man_target "$target_name")" || return 1
   section="${target_info%%:*}"
   filename="${target_info#*:}"
 
@@ -1975,7 +1699,7 @@ ssi_test_man_command() {
           log info "Found: $target_path"
           matched=1
           found=$((found + 1))
-        done < <(resolve_man_matches_in_dir "$target_name" "$man_dir")
+        done < <(man__matches_in_dir "$target_name" "$man_dir")
 
         if [[ "$matched" -eq 0 ]]; then
           log info "Not found in: $man_dir"
@@ -1985,7 +1709,7 @@ ssi_test_man_command() {
       if [[ "$has_dirs" -eq 0 ]]; then
         log info "Not found in: ${base_dir}/man*"
       fi
-    done < <(resolve_man_roots)
+    done < <(man__roots)
 
     if [[ "$found" -gt 0 ]]; then
       return 0
@@ -2010,7 +1734,7 @@ ssi_test_man_command() {
       else
         log info "Not found: $target_path"
       fi
-    done < <(resolve_man_paths "$section")
+    done < <(man_paths "$section")
 
     if [[ "$found" -gt 0 ]]; then
       return 0
@@ -2020,8 +1744,8 @@ ssi_test_man_command() {
     return 1
   fi
 
-  mode="$(resolve_man_mode)" || return 1
-  man_dir="$(resolve_man_path "$section" "$mode")" || return 1
+  mode="$(man_mode)" || return 1
+  man_dir="$(man_path "$section" "$mode")" || return 1
   target_path="${man_dir}/${filename}"
 
   if [[ -f "$target_path" ]]; then
@@ -2031,65 +1755,236 @@ ssi_test_man_command() {
 
   fail "Not found: $target_path"
   return 1
-
 }
 
-ssi_test_completion_command() {
+man_uninstall() {
+  local name="${1:-}"
+  local removed target_info section filename user_dir system_dir user_path
+  local system_path target_path
 
-  target_name="${args[name]}"
-  shell="${args[--shell]}"
-  check_all="${args[--all]:-}"
+  removed=0
 
-  if [[ -n "$check_all" ]]; then
-    found=0
-    while IFS= read -r completion_root; do
-      [[ -n "$completion_root" ]] || continue
-      target_path="${completion_root}/${target_name}"
-      if [[ -f "$target_path" ]]; then
-        if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target_path"
-        else
-          log warn "Duplicate: $target_path"
-        fi
-        found=$((found + 1))
-      else
-        log info "Not found: $target_path"
-      fi
-    done < <(resolve_completion_paths "$shell")
+  if [[ "$name" != *.* ]]; then
+    while IFS= read -r target_path; do
+      [[ -n "$target_path" ]] || continue
+      man__uninstall_one "$target_path" && removed=1 || return 1
+    done < <(man_matches "$name")
+  else
+    target_info="$(man_target "$name")" || return 1
+    section="${target_info%%:*}"
+    filename="${target_info#*:}"
+    user_dir="$(man_path "$section" user)" || return 1
+    system_dir="$(man_path "$section" system)" || return 1
+    user_path="${user_dir}/${filename}"
+    system_path="${system_dir}/${filename}"
 
-    if [[ "$found" -gt 0 ]]; then
-      return 0
+    if [[ -e "$user_path" ]]; then
+      man__uninstall_one "$user_path" || return 1
+      removed=1
     fi
 
-    fail "Not found in any path: $target_name"
+    if [[ -e "$system_path" ]]; then
+      man__uninstall_one "$system_path" || return 1
+      removed=1
+    fi
+  fi
+
+  if [[ "$removed" -eq 0 ]]; then
+    log warn "Not found: $name"
+  fi
+}
+
+man__uninstall_one() {
+  local target_path="${1:-}"
+
+  if [[ -e "$target_path" ]]; then
+    remove_file "$target_path" || return 1
+    log info "Removed: $target_path"
+  fi
+}
+
+startup__rc_file() {
+  local shell="${1:-}"
+
+  case "$shell" in
+    bash)
+      printf "%s" "$HOME/.bashrc"
+      ;;
+    zsh)
+      printf "%s" "${ZDOTDIR:-$HOME}/.zshrc"
+      ;;
+    fish)
+      printf "%s" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+startup__missing_message() {
+  local shell="${1:-}"
+
+  case "$shell" in
+    bash)
+      printf "%s" "Bash startup file not found"
+      ;;
+    zsh)
+      printf "%s" "Zsh startup file not found"
+      ;;
+    fish)
+      printf "%s" "Fish startup file not found"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+startup__warning_title() {
+  local shell="${1:-}"
+
+  case "$shell" in
+    bash)
+      printf "%s" "Bash startup configuration incomplete"
+      ;;
+    zsh)
+      printf "%s" "Zsh startup configuration incomplete"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+startup__source_hint() {
+  local shell="${1:-}"
+
+  case "$shell" in
+    bash)
+      printf "%s" 'for f in ~/.bashrc.d/*; do . "$f"; done'
+      ;;
+    zsh)
+      printf "%s" 'for f in ~/.zshrc.d/*; do . "$f"; done'
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+startup_install() {
+  local source_input="${1:-}"
+  local explicit_name="${2:-}"
+  local shell="${3:-}"
+  local strict="${4:-}"
+  local target_name temp_file rc
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(source_target_name "$source_input")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
     return 1
   fi
 
-  mode="$(resolve_completion_mode)" || return 1
-  completion_root="$(resolve_completion_base_path "$shell" "$mode")" || return 1
-  target_path="${completion_root}/${target_name}"
+  temp_file="$(source_to_temp_file "$source_input")" || return 1
+  startup__install_one "$temp_file" "$target_name" "$shell" "$strict"
+  rc=$?
 
-  if [[ -f "$target_path" ]]; then
-    log info "Found: $target_path"
+  if [[ "$temp_file" != "/dev/null" ]]; then
+    remove_file "$temp_file" || return 1
+  fi
+
+  return "$rc"
+}
+
+startup__install_one() {
+  local source_input="${1:-}"
+  local name="${2:-}"
+  local shell="${3:-}"
+  local strict="${4:-}"
+  local rc_file startup_dir target missing_message warning_title
+
+  rc_file="$(startup__rc_file "$shell")" || {
+    fail "Unknown shell: $shell"
+    return 1
+  }
+
+  startup_dir="$(startup_path "$shell")" || {
+    fail "Unknown shell: $shell"
+    return 1
+  }
+
+  missing_message="$(startup__missing_message "$shell")" || return 1
+
+  if [[ ! -f "$rc_file" && ! -d "$startup_dir" ]]; then
+    if [[ -n "$strict" ]]; then
+      fail "$missing_message"
+      return 1
+    fi
+
+    log info "Skip: $missing_message"
     return 0
   fi
 
-  fail "Not found: $target_path"
-  return 1
+  create_dir "$startup_dir" || return 1
+  target="${startup_dir}/${name}"
+  install_file "$source_input" "$target" 644 || return 1
+  log info "Installed startup file: $target"
 
+  if [[ "$shell" == "fish" ]]; then
+    return 0
+  fi
+
+  if [[ -f "$rc_file" ]] && ! grep -Fq "$(basename "$startup_dir")" "$rc_file"; then
+    warning_title="$(startup__warning_title "$shell")" || return 1
+    log warn "$warning_title; add this to $rc_file:"
+    log warn "$(startup__source_hint "$shell")"
+  elif [[ ! -f "$rc_file" ]]; then
+    log warn "$missing_message; ensure $startup_dir is sourced"
+  fi
 }
 
-ssi_test_startup_command() {
+startup_path() {
+  local shell="${1:-}"
 
-  name="${args[name]}"
-  shell="${args[--shell]}"
-  check_all="${args[--all]:-}"
+  case "$shell" in
+    bash)
+      printf "%s" "$HOME/.bashrc.d"
+      ;;
+    zsh)
+      printf "%s" "${ZDOTDIR:-$HOME}/.zshrc.d"
+      ;;
+    fish)
+      printf "%s" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+startup_paths() {
+  printf "%s\n" "$HOME/.bashrc.d"
+  printf "%s\n" "${ZDOTDIR:-$HOME}/.zshrc.d"
+  printf "%s\n" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
+}
+
+startup_test() {
+  local name="${1:-}"
+  local shell="${2:-}"
+  local check_all="${3:-}"
+  local found startup_dir target
 
   if [[ -n "$check_all" ]]; then
     found=0
-    while IFS= read -r startup_root; do
-      [[ -n "$startup_root" ]] || continue
-      target="${startup_root}/${name}"
+    while IFS= read -r startup_dir; do
+      [[ -n "$startup_dir" ]] || continue
+      target="${startup_dir}/${name}"
       if [[ -f "$target" ]]; then
         if [[ "$found" -eq 0 ]]; then
           log info "Found: $target"
@@ -2100,7 +1995,7 @@ ssi_test_startup_command() {
       else
         log info "Not found: $target"
       fi
-    done < <(resolve_startup_paths all)
+    done < <(startup_paths)
 
     if [[ "$found" -gt 0 ]]; then
       return 0
@@ -2110,16 +2005,11 @@ ssi_test_startup_command() {
     return 1
   fi
 
-  case "$shell" in
-    bash|zsh|fish)
-      startup_root="$(resolve_startup_paths "$shell")" || return 1
-      target="${startup_root}/${name}"
-      ;;
-    *)
-      fail "Unknown shell: $shell"
-      return 1
-      ;;
-  esac
+  startup_dir="$(startup_path "$shell")" || {
+    fail "Unknown shell: $shell"
+    return 1
+  }
+  target="${startup_dir}/${name}"
 
   if [[ -f "$target" ]]; then
     log info "Found: $target"
@@ -2128,6 +2018,156 @@ ssi_test_startup_command() {
 
   fail "Not found: $target"
   return 1
+}
+
+startup_uninstall() {
+  local name="${1:-}"
+  local shell="${2:-}"
+  local strict="${3:-}"
+  local startup_dir target missing_message
+
+  startup_dir="$(startup_path "$shell")" || {
+    fail "Unknown shell: $shell"
+    return 1
+  }
+
+  target="${startup_dir}/${name}"
+  missing_message="$(startup__missing_message "$shell")" || return 1
+
+  if [[ -z "$name" ]]; then
+    fail "Missing startup name"
+    return 1
+  fi
+
+  if [[ ! -f "$target" ]]; then
+    if [[ -n "$strict" ]]; then
+      fail "$missing_message"
+      return 1
+    fi
+
+    log info "Skip: $missing_message"
+    return 0
+  fi
+
+  remove_file "$target" || return 1
+  log info "Removed startup file: $target"
+}
+
+ssi_install_bin_command() {
+
+  source_input="${args[source]}"
+  explicit_name="${args[--name]:-}"
+
+  dry_run_note
+  bin_install "$source_input" "$explicit_name"
+
+}
+
+ssi_install_man_command() {
+
+  source_input="${args[source]}"
+  explicit_name="${args[--name]:-}"
+
+  dry_run_note
+  man_install "$source_input" "$explicit_name"
+
+}
+
+ssi_install_completion_command() {
+
+  source_input="${args[source]}"
+  explicit_name="${args[--name]:-}"
+  shell="${args[--shell]}"
+
+  dry_run_note
+  completion_install "$source_input" "$explicit_name" "$shell"
+
+}
+
+ssi_install_startup_command() {
+
+  source_input="${args[source]}"
+  explicit_name="${args[--name]:-}"
+  shell="${args[--shell]}"
+  strict="${args[--strict]:-}"
+
+  dry_run_note
+  startup_install "$source_input" "$explicit_name" "$shell" "$strict"
+
+}
+
+ssi_uninstall_bin_command() {
+
+  name="${args[name]}"
+
+  dry_run_note
+  bin_uninstall "$name"
+
+}
+
+ssi_uninstall_man_command() {
+
+  name="${args[name]}"
+
+  dry_run_note
+  man_uninstall "$name"
+
+}
+
+ssi_uninstall_completion_command() {
+
+  name="${args[name]}"
+  shell="${args[--shell]}"
+
+  dry_run_note
+  completion_uninstall "$name" "$shell"
+
+}
+
+ssi_uninstall_startup_command() {
+
+  name="${args[name]}"
+  shell="${args[--shell]}"
+  strict="${args[--strict]:-}"
+
+  dry_run_note
+  startup_uninstall "$name" "$shell" "$strict"
+
+}
+
+ssi_test_bin_command() {
+
+  target_name="${args[name]}"
+  check_all="${args[--all]:-}"
+
+  bin_test "$target_name" "$check_all"
+
+}
+
+ssi_test_man_command() {
+
+  target_name="${args[name]}"
+  check_all="${args[--all]:-}"
+  man_test "$target_name" "$check_all"
+
+}
+
+ssi_test_completion_command() {
+
+  target_name="${args[name]}"
+  shell="${args[--shell]}"
+  check_all="${args[--all]:-}"
+
+  completion_test "$target_name" "$shell" "$check_all"
+
+}
+
+ssi_test_startup_command() {
+
+  name="${args[name]}"
+  shell="${args[--shell]}"
+  check_all="${args[--all]:-}"
+  startup_test "$name" "$shell" "$check_all"
 
 }
 

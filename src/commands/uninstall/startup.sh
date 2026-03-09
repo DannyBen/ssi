@@ -2,20 +2,5 @@ name="${args[name]}"
 shell="${args[--shell]}"
 strict="${args[--strict]:-}"
 
-dry_run_message
-
-case "$shell" in
-  bash)
-    startup_uninstall_bash "$name" "$strict"
-    ;;
-  zsh)
-    startup_uninstall_zsh "$name" "$strict"
-    ;;
-  fish)
-    startup_uninstall_fish "$name" "$strict"
-    ;;
-  *)
-    fail "Unknown shell: $shell"
-    return 1
-    ;;
-esac
+dry_run_note
+startup_uninstall "$name" "$shell" "$strict"

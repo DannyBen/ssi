@@ -1,5 +1,9 @@
 # ssi Agent Notes
 
+## Policy Source Of Truth
+- Use `DEVELOPMENT.md` as the source of truth for project architecture, source layout, and coding conventions.
+- Keep this file focused on agent workflow and repository-specific execution notes.
+
 ## Command Source Of Truth
 - Use `op.conf` as the single source of truth for project commands.
 - Preferred entry points:
@@ -21,19 +25,17 @@
 ## Current Test Layout
 - The test directory structure must always mirror `src`.
 - Use one function per source file and one matching test file when practical.
-- Preferred test location pattern: mirror the source path (e.g., `src/lib/resolve/bin_mode.sh` -> `test/lib/resolve/bin_mode.bats`).
+- Preferred test location pattern: mirror the source path (e.g., `src/lib/man/path.sh` -> `test/lib/man/path.bats`).
 - Use `test/fixtures/` for reusable stub executables and fixtures.
 
 ## Coding Conventions
-- Keep resolver logic in `src/lib/resolve/...`.
-- When a domain has its own directory (e.g., `resolve/`), filenames inside it omit the domain prefix (e.g., `resolve/bin_mode.sh` for `resolve_bin_mode()`).
 - Use `log info` for user-facing success/info output and `log warn` for warnings so output styling stays consistent. `fail` remains `log error` + return 1.
 - Prefer small, deterministic functions and unit tests before command integration.
 - Favor readability and explicit branching over compact but opaque Bash.
 - Do not set default values for args in command handlers; rely on Bashly defaults.
 - Do not add manual "required arg" validation in command handlers; use Bashly `required: true`.
 - In tests, prefer sourcing real libs; stub only when required by the test scenario.
-- Only use a directory as a domain when its name matches the function name prefix (e.g., `resolve_*` in `src/lib/resolve/`). Otherwise, place the function at `src/lib/<name>.sh`.
+- Do not define nested functions in command files or library functions.
 - For command tests that assert CLI output, set `NO_COLOR=1` for deterministic output.
 
 ## Maintenance

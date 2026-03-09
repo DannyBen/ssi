@@ -41,10 +41,10 @@ startup__source_hint() {
 
   case "$shell" in
     bash)
-      printf "%s" 'for f in ~/.bashrc.d/*; do . "$f"; done'
+      printf "%s" "for f in ~/.bashrc.d/*; do . \"\$f\"; done"
       ;;
     zsh)
-      printf "%s" 'for f in ~/.zshrc.d/*; do . "$f"; done'
+      printf "%s" "for f in ~/.zshrc.d/*; do . \"\$f\"; done"
       ;;
     *)
       return 1

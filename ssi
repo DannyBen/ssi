@@ -271,17 +271,13 @@ ssi_uninstall_man_usage() {
   printf "ssi uninstall man - Uninstall man page\n\n"
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi uninstall man NAME [OPTIONS]\n"
+  printf "  ssi uninstall man NAME\n"
   printf "  ssi uninstall man --help | -h\n"
   echo
 
   if [[ -n "$long_usage" ]]; then
 
     printf "%s\n" "$(bold "Options:")"
-
-    printf "  %s\n" "$(green "--all, -a")"
-    printf "    Remove all matching man pages for the given base name\n"
-    echo
 
     printf "  %s\n" "$(green "--help, -h")"
     printf "    Show this help\n"
@@ -1226,6 +1222,68 @@ resolve_man_base_path() {
   fi
 }
 
+resolve_man_matches() {
+  local raw_name="${1:-}"
+  local base name man_dir file
+  local nullglob_state
+
+  if [[ -z "$raw_name" ]]; then
+    fail "Missing man page name"
+    return 1
+  fi
+
+  base="$(basename "$raw_name")"
+  if [[ "$base" =~ \.([A-Za-z0-9]+)$ ]]; then
+    name="${base%.*}"
+  else
+    name="$base"
+  fi
+
+  nullglob_state="$(shopt -p nullglob || true)"
+  shopt -s nullglob
+
+  while IFS= read -r man_dir; do
+    [[ -n "$man_dir" ]] || continue
+    resolve_man_matches_in_dir "$raw_name" "$man_dir"
+  done < <(resolve_man_dirs)
+
+  eval "$nullglob_state"
+}
+
+resolve_man_matches_in_dir() {
+  local raw_name="${1:-}"
+  local man_dir="${2:-}"
+  local base name file
+  local nullglob_state
+
+  if [[ -z "$raw_name" ]]; then
+    fail "Missing man page name"
+    return 1
+  fi
+
+  if [[ -z "$man_dir" ]]; then
+    fail "Missing man directory"
+    return 1
+  fi
+
+  base="$(basename "$raw_name")"
+  if [[ "$base" =~ \.([A-Za-z0-9]+)$ ]]; then
+    name="${base%.*}"
+  else
+    name="$base"
+  fi
+
+  nullglob_state="$(shopt -p nullglob || true)"
+  shopt -s nullglob
+
+  for file in "$man_dir"/"$name".* "$man_dir"/"$name"-*.*; do
+    [[ -f "$file" ]] || continue
+    printf "%s\n" "$file"
+  done
+
+  eval "$nullglob_state"
+}
+
 resolve_man_mode() {
   local mode="${1:-auto}"
   local system_parent
@@ -1281,6 +1339,27 @@ resolve_man_paths() {
   printf "%s\n%s\n" \
     "$(resolve_man_path "$section" system)" \
     "$(resolve_man_path "$section" user)"
+}
+
+resolve_man_roots() {
+  local root
+
+  for root in "$SSI_SYSTEM_MAN_ROOT" "$SSI_USER_MAN_ROOT"; do
+    [[ -d "$root" ]] || continue
+    printf "%s\n" "$root"
+  done
+}
+
+resolve_man_dirs() {
+  local base_dir man_dir
+
+  while IFS= read -r base_dir; do
+    [[ -n "$base_dir" ]] || continue
+    for man_dir in "$base_dir"/man*; do
+      [[ -d "$man_dir" ]] || continue
+      printf "%s\n" "$man_dir"
+    done
+  done < <(resolve_man_roots)
 }
 
 resolve_man_target_from_name() {
@@ -1731,7 +1810,6 @@ ssi_uninstall_bin_command() {
 ssi_uninstall_man_command() {
 
   name="${args[name]}"
-  remove_all="${args[--all]:-}"
   removed=0
 
   dry_run_message
@@ -1746,16 +1824,11 @@ ssi_uninstall_man_command() {
     fi
   }
 
-  if [[ -n "$remove_all" ]]; then
-    for base_dir in "$SSI_SYSTEM_MAN_ROOT" "$SSI_USER_MAN_ROOT"; do
-      [[ -d "$base_dir" ]] || continue
-      for man_dir in "$base_dir"/man*; do
-        [[ -d "$man_dir" ]] || continue
-        for file in "$man_dir"/"$name".* "$man_dir"/"$name"-*.*; do
-          uninstall_man_remove_one "$file" || return 1
-        done
-      done
-    done
+  if [[ "$name" != *.* ]]; then
+    while IFS= read -r target_path; do
+      [[ -n "$target_path" ]] || continue
+      uninstall_man_remove_one "$target_path" || return 1
+    done < <(resolve_man_matches "$name")
   else
     target_info="$(resolve_man_target_from_name "$name")" || return 1
     section="${target_info%%:*}"
@@ -1887,6 +1960,40 @@ ssi_test_man_command() {
   target_info="$(resolve_man_target_from_name "$target_name")" || return 1
   section="${target_info%%:*}"
   filename="${target_info#*:}"
+
+  if [[ "$target_name" != *.* ]]; then
+    found=0
+    while IFS= read -r base_dir; do
+      [[ -n "$base_dir" ]] || continue
+      has_dirs=0
+      for man_dir in "$base_dir"/man*; do
+        [[ -d "$man_dir" ]] || continue
+        has_dirs=1
+        matched=0
+        while IFS= read -r target_path; do
+          [[ -n "$target_path" ]] || continue
+          log info "Found: $target_path"
+          matched=1
+          found=$((found + 1))
+        done < <(resolve_man_matches_in_dir "$target_name" "$man_dir")
+
+        if [[ "$matched" -eq 0 ]]; then
+          log info "Not found in: $man_dir"
+        fi
+      done
+
+      if [[ "$has_dirs" -eq 0 ]]; then
+        log info "Not found in: ${base_dir}/man*"
+      fi
+    done < <(resolve_man_roots)
+
+    if [[ "$found" -gt 0 ]]; then
+      return 0
+    fi
+
+    fail "Not found in any man path: $target_name"
+    return 1
+  fi
 
   if [[ -n "$check_all" ]]; then
     found=0
@@ -2714,12 +2821,6 @@ ssi_uninstall_man_parse_requirements() {
     key="$1"
     case "$key" in
 
-      --all | -a)
-
-        args['--all']=1
-        shift
-        ;;
-
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -2741,7 +2842,7 @@ ssi_uninstall_man_parse_requirements() {
   done
 
   if [[ -z ${args['name']+x} ]]; then
-    printf "missing required argument: NAME\nusage: ssi uninstall man NAME [OPTIONS]\n" >&2
+    printf "missing required argument: NAME\nusage: ssi uninstall man NAME\n" >&2
 
     exit 1
   fi

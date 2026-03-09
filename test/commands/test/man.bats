@@ -21,14 +21,19 @@ teardown() {
   rm -rf "$tmp_root"
 }
 
-@test "test man resolves default section when no extension is provided" {
-  mkdir -p "$SSI_USER_MAN_ROOT/man1"
+@test "test man without extension reports all matching pages" {
+  export SSI_SYSTEM_MAN_ROOT="$tmp_root/system-man"
+  mkdir -p "$SSI_SYSTEM_MAN_ROOT"
+  mkdir -p "$SSI_USER_MAN_ROOT/man1" "$SSI_USER_MAN_ROOT/man5"
   printf "manpage" > "$SSI_USER_MAN_ROOT/man1/op.1"
+  printf "manpage" > "$SSI_USER_MAN_ROOT/man5/op-add.5"
 
   run ./ssi test man op
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Found: $SSI_USER_MAN_ROOT/man1/op.1" ]
+  [[ "$output" == *"• info  → Found: $SSI_USER_MAN_ROOT/man1/op.1"* ]]
+  [[ "$output" == *"• info  → Found: $SSI_USER_MAN_ROOT/man5/op-add.5"* ]]
+  [[ "$output" == *"• info  → Not found in: $SSI_SYSTEM_MAN_ROOT/man*"* ]]
 }
 
 @test "test man uses provided section when extension exists" {
@@ -47,7 +52,7 @@ teardown() {
   mkdir -p "$SSI_SYSTEM_MAN_ROOT/man1" "$SSI_USER_MAN_ROOT/man1"
   printf "manpage" > "$SSI_SYSTEM_MAN_ROOT/man1/op.1"
 
-  run ./ssi test man op --all
+  run ./ssi test man op.1 --all
 
   [ "$status" -eq 0 ]
   [ "$output" = $'• info  → Found: '"$SSI_SYSTEM_MAN_ROOT"$'/man1/op.1\n• info  → Not found: '"$SSI_USER_MAN_ROOT"$'/man1/op.1' ]

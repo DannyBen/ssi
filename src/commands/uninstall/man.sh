@@ -1,5 +1,4 @@
 name="${args[name]}"
-remove_all="${args[--all]:-}"
 removed=0
 
 dry_run_message
@@ -14,16 +13,11 @@ uninstall_man_remove_one() {
   fi
 }
 
-if [[ -n "$remove_all" ]]; then
-  for base_dir in "$SSI_SYSTEM_MAN_ROOT" "$SSI_USER_MAN_ROOT"; do
-    [[ -d "$base_dir" ]] || continue
-    for man_dir in "$base_dir"/man*; do
-      [[ -d "$man_dir" ]] || continue
-      for file in "$man_dir"/"$name".* "$man_dir"/"$name"-*.*; do
-        uninstall_man_remove_one "$file" || return 1
-      done
-    done
-  done
+if [[ "$name" != *.* ]]; then
+  while IFS= read -r target_path; do
+    [[ -n "$target_path" ]] || continue
+    uninstall_man_remove_one "$target_path" || return 1
+  done < <(resolve_man_matches "$name")
 else
   target_info="$(resolve_man_target_from_name "$name")" || return 1
   section="${target_info%%:*}"

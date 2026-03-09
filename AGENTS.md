@@ -39,6 +39,7 @@
 ## Maintenance
 - Agent responsibility: update this file occasionally when project structure, commands, or test workflows change.
 - Do not read the generated `ssi` file; it is large and mirrors source files elsewhere.
+- Before moving from discussion/planning to implementation (code changes, generation, or running tests), get explicit user approval.
 
 ## Test Style Notes
 - Avoid adding `teardown()` blocks unless they are functionally required.

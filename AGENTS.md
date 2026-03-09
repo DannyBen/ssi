@@ -39,11 +39,13 @@
   defaults.
 - Do not add manual "required arg" validation in command handlers; use Bashly
   `required: true`.
-- In tests, prefer sourcing real libs; stub only when required by the test scenario.
+- In tests, prefer sourcing real libs; stub only when required by the test
+  scenario.
 - Do not define nested functions in command files or library functions.
-- Do not test private helpers directly unless the behavior cannot be covered
-  reasonably through a public function.
-- For command tests that assert CLI output, set `NO_COLOR=1` for deterministic output.
+- Follow the test-boundary rules in `DEVELOPMENT.md`, including the preference
+  for testing public behavior over private helpers.
+- For command tests that assert CLI output, set `NO_COLOR=1` for deterministic
+  output.
 
 ## Maintenance
 - Agent responsibility: update this file occasionally when project structure, commands, or test workflows change.

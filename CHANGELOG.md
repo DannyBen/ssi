@@ -1,6 +1,14 @@
 Changelog
 ========================================
 
+v0.1.6 - 2026-03-09
+----------------------------------------
+
+- Refactor man commands [`ddcd47e`](https://github.com/DannyBen/ssi/commit/ddcd47e)
+- Mega refactor (internal) [`649210b`](https://github.com/DannyBen/ssi/commit/649210b)
+- Compare [`v0.1.5..v0.1.6`](https://github.com/dannyben/ssi/compare/v0.1.5..v0.1.6)
+
+
 v0.1.5 - 2026-03-08
 ----------------------------------------
 

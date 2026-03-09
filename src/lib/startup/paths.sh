@@ -1,5 +1,7 @@
 startup_paths() {
-  printf "%s\n" "$HOME/.bashrc.d"
-  printf "%s\n" "${ZDOTDIR:-$HOME}/.zshrc.d"
-  printf "%s\n" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
+  startup_path bash
+  printf "\n"
+  startup_path zsh
+  printf "\n"
+  startup_path fish
 }

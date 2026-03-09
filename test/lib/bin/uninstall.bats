@@ -2,6 +2,7 @@
 
 setup() {
   BASE="$BATS_TEST_DIRNAME/../../../src/lib"
+  source "$BASE/bin/roots.sh"
   source "$BASE/bin/uninstall.sh"
 }
 

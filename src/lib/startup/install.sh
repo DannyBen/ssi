@@ -32,7 +32,7 @@ startup__install_one() {
   local name="${2:-}"
   local shell="${3:-}"
   local strict="${4:-}"
-  local rc_file startup_dir target missing_message warning_title
+  local rc_file startup_dir target shell_name missing_message
 
   rc_file="$(startup__rc_file "$shell")" || {
     fail "Unknown shell: $shell"
@@ -44,7 +44,8 @@ startup__install_one() {
     return 1
   }
 
-  missing_message="$(startup__missing_message "$shell")" || return 1
+  shell_name="$(startup__display_name "$shell")" || return 1
+  missing_message="${shell_name} startup file not found"
 
   if [[ ! -f "$rc_file" && ! -d "$startup_dir" ]]; then
     if [[ -n "$strict" ]]; then
@@ -66,8 +67,7 @@ startup__install_one() {
   fi
 
   if [[ -f "$rc_file" ]] && ! grep -Fq "$(basename "$startup_dir")" "$rc_file"; then
-    warning_title="$(startup__warning_title "$shell")" || return 1
-    log warn "$warning_title; add this to $rc_file:"
+    log warn "${shell_name} startup configuration incomplete; add this to $rc_file:"
     log warn "$(startup__source_hint "$shell")"
   elif [[ ! -f "$rc_file" ]]; then
     log warn "$missing_message; ensure $startup_dir is sourced"

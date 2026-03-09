@@ -1,6 +1,6 @@
 completion_mode() {
   local mode="${1:-auto}"
-  local system_parent
+  local bash_root system_parent
 
   case "$mode" in
     system | user)
@@ -19,12 +19,14 @@ completion_mode() {
     return 0
   fi
 
-  if is_writable_dir "$(completion__bash_root)"; then
+  bash_root="$(completion__bash_root)"
+
+  if is_writable_dir "$bash_root"; then
     printf "system"
     return 0
   fi
 
-  system_parent="$(dirname "$(completion__bash_root)")"
+  system_parent="$(dirname "$bash_root")"
   if is_writable_dir "$system_parent"; then
     printf "system"
     return 0

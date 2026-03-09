@@ -1,18 +1,11 @@
 man_matches() {
   local raw_name="${1:-}"
-  local base name man_dir file
+  local man_dir
   local nullglob_state
 
   if [[ -z "$raw_name" ]]; then
     fail "Missing man page name"
     return 1
-  fi
-
-  base="$(basename "$raw_name")"
-  if [[ "$base" =~ \.([A-Za-z0-9]+)$ ]]; then
-    name="${base%.*}"
-  else
-    name="$base"
   fi
 
   nullglob_state="$(shopt -p nullglob || true)"

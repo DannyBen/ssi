@@ -17,34 +17,18 @@ startup__rc_file() {
   esac
 }
 
-startup__missing_message() {
+startup__display_name() {
   local shell="${1:-}"
 
   case "$shell" in
     bash)
-      printf "%s" "Bash startup file not found"
+      printf "%s" "Bash"
       ;;
     zsh)
-      printf "%s" "Zsh startup file not found"
+      printf "%s" "Zsh"
       ;;
     fish)
-      printf "%s" "Fish startup file not found"
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
-startup__warning_title() {
-  local shell="${1:-}"
-
-  case "$shell" in
-    bash)
-      printf "%s" "Bash startup configuration incomplete"
-      ;;
-    zsh)
-      printf "%s" "Zsh startup configuration incomplete"
+      printf "%s" "Fish"
       ;;
     *)
       return 1

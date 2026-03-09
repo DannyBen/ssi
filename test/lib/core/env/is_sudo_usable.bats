@@ -2,6 +2,7 @@
 
 setup() {
   BASE="$BATS_TEST_DIRNAME/../../../../src/lib"
+  source "$BASE/core/env/is_command.sh"
   source "$BASE/core/env/is_sudo_usable.sh"
 }
 

@@ -1,12 +1,12 @@
 source_to_temp_file() {
   local source="${1:--}"
   local temp_root="${2:-${TMPDIR:-/tmp}}"
-  local source_type temp_file
+  local detected_type temp_file
 
-  source_type="$(source_type "$source")" || return 1
+  detected_type="$(source_type "$source")" || return 1
 
   if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    case "$source_type" in
+    case "$detected_type" in
       stdin | url)
         printf "%s" "/dev/null"
         return 0
@@ -27,7 +27,7 @@ source_to_temp_file() {
     return 1
   }
 
-  case "$source_type" in
+  case "$detected_type" in
     stdin)
       cat > "$temp_file" || {
         fail "Could not read source from stdin"

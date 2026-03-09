@@ -2,7 +2,7 @@ startup_uninstall() {
   local name="${1:-}"
   local shell="${2:-}"
   local strict="${3:-}"
-  local startup_dir target missing_message
+  local startup_dir target shell_name missing_message
 
   startup_dir="$(startup_path "$shell")" || {
     fail "Unknown shell: $shell"
@@ -10,7 +10,8 @@ startup_uninstall() {
   }
 
   target="${startup_dir}/${name}"
-  missing_message="$(startup__missing_message "$shell")" || return 1
+  shell_name="$(startup__display_name "$shell")" || return 1
+  missing_message="${shell_name} startup file not found"
 
   if [[ -z "$name" ]]; then
     fail "Missing startup name"

@@ -665,10 +665,7 @@ bin_mode() {
 
 bin_root() {
   local mode
-  mode="$(bin_mode "${1:-auto}")" || {
-    fail "Could not resolve binary root"
-    return 1
-  }
+  mode="$(bin_mode "${1:-auto}")" || return 1
 
   if [[ "$mode" == "system" ]]; then
     printf "%s" "$SSI_SYSTEM_BIN_ROOT"
@@ -726,25 +723,19 @@ bin_test() {
 
 bin_uninstall() {
   local name="${1:-}"
-  local user_root system_root user_path system_path removed
+  local target_root target_path removed
 
-  user_root="${SSI_USER_BIN_ROOT}"
-  system_root="${SSI_SYSTEM_BIN_ROOT}"
-  user_path="${user_root}/${name}"
-  system_path="${system_root}/${name}"
   removed=0
 
-  if [[ -f "$user_path" ]]; then
-    remove_file "$user_path" || return 1
-    log info "Removed: $user_path"
-    removed=1
-  fi
-
-  if [[ -f "$system_path" ]]; then
-    remove_file "$system_path" || return 1
-    log info "Removed: $system_path"
-    removed=1
-  fi
+  while IFS= read -r target_root; do
+    [[ -n "$target_root" ]] || continue
+    target_path="${target_root}/${name}"
+    if [[ -f "$target_path" ]]; then
+      remove_file "$target_path" || return 1
+      log info "Removed: $target_path"
+      removed=1
+    fi
+  done < <(bin_roots)
 
   if [[ "$removed" -eq 0 ]]; then
     log warn "Not found: $name"
@@ -919,7 +910,7 @@ completion_install() {
 
 completion_mode() {
   local mode="${1:-auto}"
-  local system_parent
+  local bash_root system_parent
 
   case "$mode" in
     system | user)
@@ -938,12 +929,14 @@ completion_mode() {
     return 0
   fi
 
-  if is_writable_dir "$(completion__bash_root)"; then
+  bash_root="$(completion__bash_root)"
+
+  if is_writable_dir "$bash_root"; then
     printf "system"
     return 0
   fi
 
-  system_parent="$(dirname "$(completion__bash_root)")"
+  system_parent="$(dirname "$bash_root")"
   if is_writable_dir "$system_parent"; then
     printf "system"
     return 0
@@ -1094,7 +1087,7 @@ is_root() {
 }
 
 is_sudo_usable() {
-  command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1
+  is_command sudo && sudo -n true >/dev/null 2>&1
 }
 
 is_writable_dir() {
@@ -1238,12 +1231,12 @@ source_download_to_file() {
 source_to_temp_file() {
   local source="${1:--}"
   local temp_root="${2:-${TMPDIR:-/tmp}}"
-  local source_type temp_file
+  local detected_type temp_file
 
-  source_type="$(source_type "$source")" || return 1
+  detected_type="$(source_type "$source")" || return 1
 
   if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    case "$source_type" in
+    case "$detected_type" in
       stdin | url)
         printf "%s" "/dev/null"
         return 0
@@ -1264,7 +1257,7 @@ source_to_temp_file() {
     return 1
   }
 
-  case "$source_type" in
+  case "$detected_type" in
     stdin)
       cat > "$temp_file" || {
         fail "Could not read source from stdin"
@@ -1331,12 +1324,6 @@ source_target_name() {
   printf "%s" "$(basename "$source_input")"
 }
 
-enable_auto_colors() {
-  if [[ -z ${NO_COLOR+x} && ! -t 1 ]]; then
-    NO_COLOR=1
-  fi
-}
-
 print_in_color() {
   local color="$1"
   shift
@@ -1347,36 +1334,13 @@ print_in_color() {
   fi
 }
 
-red() { print_in_color "\e[31m" "$*"; }
-green() { print_in_color "\e[32m" "$*"; }
-yellow() { print_in_color "\e[33m" "$*"; }
-blue() { print_in_color "\e[34m" "$*"; }
 magenta() { print_in_color "\e[35m" "$*"; }
 cyan() { print_in_color "\e[36m" "$*"; }
-black() { print_in_color "\e[30m" "$*"; }
-white() { print_in_color "\e[37m" "$*"; }
-
-bold() { print_in_color "\e[1m" "$*"; }
-underlined() { print_in_color "\e[4m" "$*"; }
-bold_underlined() { print_in_color "\e[1;4m" "$*"; }
 
 red_bold() { print_in_color "\e[1;31m" "$*"; }
 green_bold() { print_in_color "\e[1;32m" "$*"; }
 yellow_bold() { print_in_color "\e[1;33m" "$*"; }
 blue_bold() { print_in_color "\e[1;34m" "$*"; }
-magenta_bold() { print_in_color "\e[1;35m" "$*"; }
-cyan_bold() { print_in_color "\e[1;36m" "$*"; }
-black_bold() { print_in_color "\e[1;30m" "$*"; }
-white_bold() { print_in_color "\e[1;37m" "$*"; }
-
-red_underlined() { print_in_color "\e[4;31m" "$*"; }
-green_underlined() { print_in_color "\e[4;32m" "$*"; }
-yellow_underlined() { print_in_color "\e[4;33m" "$*"; }
-blue_underlined() { print_in_color "\e[4;34m" "$*"; }
-magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
-cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
-black_underlined() { print_in_color "\e[4;30m" "$*"; }
-white_underlined() { print_in_color "\e[4;37m" "$*"; }
 
 dry_run_note() {
   if [[ -n "${SSI_DRY_RUN:-}" && -z "${_SSI_DRY_RUN_NOTED:-}" ]]; then
@@ -1505,19 +1469,12 @@ man__install_one() {
 
 man_matches() {
   local raw_name="${1:-}"
-  local base name man_dir file
+  local man_dir
   local nullglob_state
 
   if [[ -z "$raw_name" ]]; then
     fail "Missing man page name"
     return 1
-  fi
-
-  base="$(basename "$raw_name")"
-  if [[ "$base" =~ \.([A-Za-z0-9]+)$ ]]; then
-    name="${base%.*}"
-  else
-    name="$base"
   fi
 
   nullglob_state="$(shopt -p nullglob || true)"
@@ -1822,34 +1779,18 @@ startup__rc_file() {
   esac
 }
 
-startup__missing_message() {
+startup__display_name() {
   local shell="${1:-}"
 
   case "$shell" in
     bash)
-      printf "%s" "Bash startup file not found"
+      printf "%s" "Bash"
       ;;
     zsh)
-      printf "%s" "Zsh startup file not found"
+      printf "%s" "Zsh"
       ;;
     fish)
-      printf "%s" "Fish startup file not found"
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
-startup__warning_title() {
-  local shell="${1:-}"
-
-  case "$shell" in
-    bash)
-      printf "%s" "Bash startup configuration incomplete"
-      ;;
-    zsh)
-      printf "%s" "Zsh startup configuration incomplete"
+      printf "%s" "Fish"
       ;;
     *)
       return 1
@@ -1907,7 +1848,7 @@ startup__install_one() {
   local name="${2:-}"
   local shell="${3:-}"
   local strict="${4:-}"
-  local rc_file startup_dir target missing_message warning_title
+  local rc_file startup_dir target shell_name missing_message
 
   rc_file="$(startup__rc_file "$shell")" || {
     fail "Unknown shell: $shell"
@@ -1919,7 +1860,8 @@ startup__install_one() {
     return 1
   }
 
-  missing_message="$(startup__missing_message "$shell")" || return 1
+  shell_name="$(startup__display_name "$shell")" || return 1
+  missing_message="${shell_name} startup file not found"
 
   if [[ ! -f "$rc_file" && ! -d "$startup_dir" ]]; then
     if [[ -n "$strict" ]]; then
@@ -1941,8 +1883,7 @@ startup__install_one() {
   fi
 
   if [[ -f "$rc_file" ]] && ! grep -Fq "$(basename "$startup_dir")" "$rc_file"; then
-    warning_title="$(startup__warning_title "$shell")" || return 1
-    log warn "$warning_title; add this to $rc_file:"
+    log warn "${shell_name} startup configuration incomplete; add this to $rc_file:"
     log warn "$(startup__source_hint "$shell")"
   elif [[ ! -f "$rc_file" ]]; then
     log warn "$missing_message; ensure $startup_dir is sourced"
@@ -1969,9 +1910,11 @@ startup_path() {
 }
 
 startup_paths() {
-  printf "%s\n" "$HOME/.bashrc.d"
-  printf "%s\n" "${ZDOTDIR:-$HOME}/.zshrc.d"
-  printf "%s\n" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d"
+  startup_path bash
+  printf "\n"
+  startup_path zsh
+  printf "\n"
+  startup_path fish
 }
 
 startup_test() {
@@ -2024,7 +1967,7 @@ startup_uninstall() {
   local name="${1:-}"
   local shell="${2:-}"
   local strict="${3:-}"
-  local startup_dir target missing_message
+  local startup_dir target shell_name missing_message
 
   startup_dir="$(startup_path "$shell")" || {
     fail "Unknown shell: $shell"
@@ -2032,7 +1975,8 @@ startup_uninstall() {
   }
 
   target="${startup_dir}/${name}"
-  missing_message="$(startup__missing_message "$shell")" || return 1
+  shell_name="$(startup__display_name "$shell")" || return 1
+  missing_message="${shell_name} startup file not found"
 
   if [[ -z "$name" ]]; then
     fail "Missing startup name"

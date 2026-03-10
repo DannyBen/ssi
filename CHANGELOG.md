@@ -1,6 +1,13 @@
 Changelog
 ========================================
 
+v0.1.7 - 2026-03-10
+----------------------------------------
+
+- Fix missing colors [`df9c02b`](https://github.com/DannyBen/ssi/commit/df9c02b)
+- Compare [`v0.1.6..v0.1.7`](https://github.com/dannyben/ssi/compare/v0.1.6..v0.1.7)
+
+
 v0.1.6 - 2026-03-09
 ----------------------------------------
 

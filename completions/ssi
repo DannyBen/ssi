@@ -131,7 +131,7 @@ _ssi_completions() {
       ;;
 
     'uninstall startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     't startup'*'--shell')
@@ -155,7 +155,7 @@ _ssi_completions() {
       ;;
 
     'install startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
     'add completion'*)
@@ -163,7 +163,7 @@ _ssi_completions() {
       ;;
 
     'remove startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     'uninstall bin'*)
@@ -199,7 +199,7 @@ _ssi_completions() {
       ;;
 
     'add startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
     'install man'*)
@@ -211,7 +211,7 @@ _ssi_completions() {
       ;;
 
     'rm startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     'remove man'*)
@@ -239,11 +239,11 @@ _ssi_completions() {
       ;;
 
     'u startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     'i startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
     'uninstall'*)

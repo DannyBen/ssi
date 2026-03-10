@@ -31,7 +31,7 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 # Download ssi to a new temp dir
 cd "$tmpdir"
-wget https://github.com/DannyBen/ssi/releases/download/v0.1.6/ssi
+wget https://github.com/DannyBen/ssi/releases/download/v0.1.7/ssi
 chmod +x ssi
 
 # Use it to download and install files

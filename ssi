@@ -623,10 +623,11 @@ bin_install() {
   target_root="$(bin_root "$mode")" || return 1
   target_path="${target_root}/${target_name}"
 
+  log info "Installing executable: $target_path"
   install_file "$temp_file" "$target_path" 755 || return 1
 
   remove_file "$temp_file"
-  log info "Installed: $target_path"
+  log info "Executable installed: $target_path"
 }
 
 bin_mode() {
@@ -684,19 +685,20 @@ bin_test() {
   local found mode target_root target_path
 
   if [[ -n "$check_all" ]]; then
+    log info "Checking executable in all paths: $target_name"
     found=0
     while IFS= read -r target_root; do
       [[ -n "$target_root" ]] || continue
       target_path="${target_root}/${target_name}"
       if [[ -x "$target_path" ]]; then
         if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target_path"
+          log info "Executable found: $target_path"
         else
-          log warn "Duplicate: $target_path"
+          log warn "Executable duplicate: $target_path"
         fi
         found=$((found + 1))
       else
-        log info "Not found: $target_path"
+        log info "Executable missing: $target_path"
       fi
     done < <(bin_roots)
 
@@ -704,20 +706,21 @@ bin_test() {
       return 0
     fi
 
-    fail "Not found in any path: $target_name"
+    fail "Executable missing in all paths: $target_name"
     return 1
   fi
 
   mode="$(bin_mode)" || return 1
   target_root="$(bin_root "$mode")" || return 1
   target_path="${target_root}/${target_name}"
+  log info "Checking executable: $target_name"
 
   if [[ -x "$target_path" ]]; then
-    log info "Found: $target_path"
+    log info "Executable found: $target_path"
     return 0
   fi
 
-  fail "Not found: $target_path"
+  fail "Executable missing: $target_path"
   return 1
 }
 
@@ -726,19 +729,20 @@ bin_uninstall() {
   local target_root target_path removed
 
   removed=0
+  log info "Uninstalling executable: $name"
 
   while IFS= read -r target_root; do
     [[ -n "$target_root" ]] || continue
     target_path="${target_root}/${name}"
     if [[ -f "$target_path" ]]; then
       remove_file "$target_path" || return 1
-      log info "Removed: $target_path"
+      log info "Executable removed: $target_path"
       removed=1
     fi
   done < <(bin_roots)
 
   if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
+    log warn "Executable missing: $name"
   fi
 }
 
@@ -902,10 +906,11 @@ completion_install() {
   target_path="${target_root}/${target_name}"
   temp_file="$(source_to_temp_file "$source_input")" || return 1
 
+  log info "Installing completion: $target_path"
   install_file "$temp_file" "$target_path" 644 || return 1
 
   remove_file "$temp_file"
-  log info "Installed: $target_path"
+  log info "Completion installed: $target_path"
 }
 
 completion_mode() {
@@ -1006,19 +1011,20 @@ completion_test() {
   local found mode target_root target_path
 
   if [[ -n "$check_all" ]]; then
+    log info "Checking completion in all paths: $target_name"
     found=0
     while IFS= read -r target_root; do
       [[ -n "$target_root" ]] || continue
       target_path="${target_root}/${target_name}"
       if [[ -f "$target_path" ]]; then
         if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target_path"
+          log info "Completion found: $target_path"
         else
-          log warn "Duplicate: $target_path"
+          log warn "Completion duplicate: $target_path"
         fi
         found=$((found + 1))
       else
-        log info "Not found: $target_path"
+        log info "Completion missing: $target_path"
       fi
     done < <(completion_paths "$shell")
 
@@ -1026,20 +1032,21 @@ completion_test() {
       return 0
     fi
 
-    fail "Not found in any path: $target_name"
+    fail "Completion missing in all paths: $target_name"
     return 1
   fi
 
   mode="$(completion_mode)" || return 1
   target_root="$(completion_path "$shell" "$mode")" || return 1
   target_path="${target_root}/${target_name}"
+  log info "Checking completion: $target_name"
 
   if [[ -f "$target_path" ]]; then
-    log info "Found: $target_path"
+    log info "Completion found: $target_path"
     return 0
   fi
 
-  fail "Not found: $target_path"
+  fail "Completion missing: $target_path"
   return 1
 }
 
@@ -1054,21 +1061,22 @@ completion_uninstall() {
 
   user_path="${user_root}/${name}"
   system_path="${system_root}/${name}"
+  log info "Uninstalling completion: $name"
 
   if [[ -e "$user_path" ]]; then
     remove_file "$user_path" || return 1
-    log info "Removed: $user_path"
+    log info "Completion removed: $user_path"
     removed=1
   fi
 
   if [[ -e "$system_path" ]]; then
     remove_file "$system_path" || return 1
-    log info "Removed: $system_path"
+    log info "Completion removed: $system_path"
     removed=1
   fi
 
   if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
+    log warn "Completion missing: $name"
   fi
 }
 
@@ -1490,10 +1498,11 @@ man__install_one() {
   target_path="${target_dir}/${filename}"
   temp_file="$(source_to_temp_file "$source_input")" || return 1
 
+  log info "Installing man page: $target_path"
   install_file "$temp_file" "$target_path" 644 || return 1
 
   remove_file "$temp_file"
-  log info "Installed: $target_path"
+  log info "Man page installed: $target_path"
 }
 
 man_matches() {
@@ -1672,6 +1681,7 @@ man_test() {
   filename="${target_info#*:}"
 
   if [[ "$target_name" != *.* ]]; then
+    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r base_dir; do
       [[ -n "$base_dir" ]] || continue
@@ -1682,18 +1692,18 @@ man_test() {
         matched=0
         while IFS= read -r target_path; do
           [[ -n "$target_path" ]] || continue
-          log info "Found: $target_path"
+          log info "Man page found: $target_path"
           matched=1
           found=$((found + 1))
         done < <(man__matches_in_dir "$target_name" "$man_dir")
 
         if [[ "$matched" -eq 0 ]]; then
-          log info "Not found in: $man_dir"
+          log info "Man page missing in: $man_dir"
         fi
       done
 
       if [[ "$has_dirs" -eq 0 ]]; then
-        log info "Not found in: ${base_dir}/man*"
+        log info "Man page missing in: ${base_dir}/man*"
       fi
     done < <(man__roots)
 
@@ -1701,24 +1711,25 @@ man_test() {
       return 0
     fi
 
-    fail "Not found in any man path: $target_name"
+    fail "Man page missing in all paths: $target_name"
     return 1
   fi
 
   if [[ -n "$check_all" ]]; then
+    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r man_dir; do
       [[ -n "$man_dir" ]] || continue
       target_path="${man_dir}/${filename}"
       if [[ -f "$target_path" ]]; then
         if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target_path"
+          log info "Man page found: $target_path"
         else
-          log warn "Duplicate: $target_path"
+          log warn "Man page duplicate: $target_path"
         fi
         found=$((found + 1))
       else
-        log info "Not found: $target_path"
+        log info "Man page missing: $target_path"
       fi
     done < <(man_paths "$section")
 
@@ -1726,20 +1737,21 @@ man_test() {
       return 0
     fi
 
-    fail "Not found in any path: $filename"
+    fail "Man page missing in all paths: $filename"
     return 1
   fi
 
   mode="$(man_mode)" || return 1
   man_dir="$(man_path "$section" "$mode")" || return 1
   target_path="${man_dir}/${filename}"
+  log info "Checking man page: $target_name"
 
   if [[ -f "$target_path" ]]; then
-    log info "Found: $target_path"
+    log info "Man page found: $target_path"
     return 0
   fi
 
-  fail "Not found: $target_path"
+  fail "Man page missing: $target_path"
   return 1
 }
 
@@ -1749,6 +1761,7 @@ man_uninstall() {
   local system_path target_path
 
   removed=0
+  log info "Uninstalling man page: $name"
 
   if [[ "$name" != *.* ]]; then
     while IFS= read -r target_path; do
@@ -1776,7 +1789,7 @@ man_uninstall() {
   fi
 
   if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
+    log warn "Man page missing: $name"
   fi
 }
 
@@ -1785,7 +1798,7 @@ man__uninstall_one() {
 
   if [[ -e "$target_path" ]]; then
     remove_file "$target_path" || return 1
-    log info "Removed: $target_path"
+    log info "Man page removed: $target_path"
   fi
 }
 
@@ -1898,14 +1911,15 @@ startup__install_one() {
       return 1
     fi
 
-    log info "Skip: $missing_message"
+    log info "Startup file skipped: $missing_message"
     return 0
   fi
 
   create_dir "$startup_dir" || return 1
   target="${startup_dir}/${name}"
+  log info "Installing startup file: $target"
   install_file "$source_input" "$target" 644 || return 1
-  log info "Installed startup file: $target"
+  log info "Startup file installed: $target"
 
   if [[ "$shell" == "fish" ]]; then
     return 0
@@ -1954,19 +1968,20 @@ startup_test() {
   local found startup_dir target
 
   if [[ -n "$check_all" ]]; then
+    log info "Checking startup file in all paths: $name"
     found=0
     while IFS= read -r startup_dir; do
       [[ -n "$startup_dir" ]] || continue
       target="${startup_dir}/${name}"
       if [[ -f "$target" ]]; then
         if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target"
+          log info "Startup file found: $target"
         else
-          log warn "Duplicate: $target"
+          log warn "Startup file duplicate: $target"
         fi
         found=$((found + 1))
       else
-        log info "Not found: $target"
+        log info "Startup file missing: $target"
       fi
     done < <(startup_paths)
 
@@ -1974,7 +1989,7 @@ startup_test() {
       return 0
     fi
 
-    fail "Not found in any path: $name"
+    fail "Startup file missing in all paths: $name"
     return 1
   fi
 
@@ -1983,13 +1998,14 @@ startup_test() {
     return 1
   }
   target="${startup_dir}/${name}"
+  log info "Checking startup file: $name"
 
   if [[ -f "$target" ]]; then
-    log info "Found: $target"
+    log info "Startup file found: $target"
     return 0
   fi
 
-  fail "Not found: $target"
+  fail "Startup file missing: $target"
   return 1
 }
 
@@ -2007,6 +2023,7 @@ startup_uninstall() {
   target="${startup_dir}/${name}"
   shell_name="$(startup__display_name "$shell")" || return 1
   missing_message="${shell_name} startup file not found"
+  log info "Uninstalling startup file: $target"
 
   if [[ -z "$name" ]]; then
     fail "Missing startup name"
@@ -2019,12 +2036,12 @@ startup_uninstall() {
       return 1
     fi
 
-    log info "Skip: $missing_message"
+    log info "Startup file skipped: $missing_message"
     return 0
   fi
 
   remove_file "$target" || return 1
-  log info "Removed startup file: $target"
+  log info "Startup file removed: $target"
 }
 
 ssi_install_bin_command() {

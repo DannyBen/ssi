@@ -4,6 +4,7 @@ man_uninstall() {
   local system_path target_path
 
   removed=0
+  log info "Uninstalling man page: $name"
 
   if [[ "$name" != *.* ]]; then
     while IFS= read -r target_path; do
@@ -31,7 +32,7 @@ man_uninstall() {
   fi
 
   if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
+    log warn "Man page missing: $name"
   fi
 }
 
@@ -40,6 +41,6 @@ man__uninstall_one() {
 
   if [[ -e "$target_path" ]]; then
     remove_file "$target_path" || return 1
-    log info "Removed: $target_path"
+    log info "Man page removed: $target_path"
   fi
 }

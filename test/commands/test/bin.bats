@@ -28,14 +28,14 @@ teardown() {
   run ./ssi test bin op
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Found: $SSI_USER_BIN_ROOT/op" ]
+  [ "$output" = $'• info  → Checking executable: op\n• info  → Executable found: '"$SSI_USER_BIN_ROOT"'/op' ]
 }
 
 @test "test bin fails when file does not exist" {
   run ./ssi test bin missing
 
   [ "$status" -ne 0 ]
-  [ "$output" = "• error → Not found: $SSI_USER_BIN_ROOT/missing" ]
+  [ "$output" = $'• info  → Checking executable: missing\n• error → Executable missing: '"$SSI_USER_BIN_ROOT"'/missing' ]
 }
 
 @test "test bin --all reports all paths and succeeds if any found" {
@@ -48,5 +48,5 @@ teardown() {
   run ./ssi test bin op --all
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Found: '"$SSI_SYSTEM_BIN_ROOT"$'/op\n• info  → Not found: '"$SSI_USER_BIN_ROOT"$'/op' ]
+  [ "$output" = $'• info  → Checking executable in all paths: op\n• info  → Executable found: '"$SSI_SYSTEM_BIN_ROOT"$'/op\n• info  → Executable missing: '"$SSI_USER_BIN_ROOT"'/op' ]
 }

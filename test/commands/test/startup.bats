@@ -18,7 +18,7 @@ teardown() {
   run ./ssi test startup op --shell bash
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Found: $HOME/.bashrc.d/op" ]
+  [ "$output" = $'• info  → Checking startup file: op\n• info  → Startup file found: '"$HOME"'/.bashrc.d/op' ]
 }
 
 @test "test startup succeeds for zsh when file exists" {
@@ -29,7 +29,7 @@ teardown() {
   run ./ssi test startup op --shell zsh
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Found: $ZDOTDIR/.zshrc.d/op" ]
+  [ "$output" = $'• info  → Checking startup file: op\n• info  → Startup file found: '"$ZDOTDIR"'/.zshrc.d/op' ]
 }
 
 @test "test startup fails when file is missing" {
@@ -38,7 +38,7 @@ teardown() {
   run ./ssi test startup op --shell fish
 
   [ "$status" -ne 0 ]
-  [ "$output" = "• error → Not found: $XDG_CONFIG_HOME/fish/conf.d/op" ]
+  [ "$output" = $'• info  → Checking startup file: op\n• error → Startup file missing: '"$XDG_CONFIG_HOME"'/fish/conf.d/op' ]
 }
 
 @test "test startup --all checks all shells" {
@@ -51,5 +51,5 @@ teardown() {
   run ./ssi test startup op --all
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Not found: '"$HOME"$'/.bashrc.d/op\n• info  → Found: '"$ZDOTDIR"$'/.zshrc.d/op\n• info  → Not found: '"$XDG_CONFIG_HOME"$'/fish/conf.d/op' ]
+  [ "$output" = $'• info  → Checking startup file in all paths: op\n• info  → Startup file missing: '"$HOME"$'/.bashrc.d/op\n• info  → Startup file found: '"$ZDOTDIR"$'/.zshrc.d/op\n• info  → Startup file missing: '"$XDG_CONFIG_HOME"$'/fish/conf.d/op' ]
 }

@@ -9,20 +9,21 @@ completion_uninstall() {
 
   user_path="${user_root}/${name}"
   system_path="${system_root}/${name}"
+  log info "Uninstalling completion: $name"
 
   if [[ -e "$user_path" ]]; then
     remove_file "$user_path" || return 1
-    log info "Removed: $user_path"
+    log info "Completion removed: $user_path"
     removed=1
   fi
 
   if [[ -e "$system_path" ]]; then
     remove_file "$system_path" || return 1
-    log info "Removed: $system_path"
+    log info "Completion removed: $system_path"
     removed=1
   fi
 
   if [[ "$removed" -eq 0 ]]; then
-    log warn "Not found: $name"
+    log warn "Completion missing: $name"
   fi
 }

@@ -5,19 +5,20 @@ startup_test() {
   local found startup_dir target
 
   if [[ -n "$check_all" ]]; then
+    log info "Checking startup file in all paths: $name"
     found=0
     while IFS= read -r startup_dir; do
       [[ -n "$startup_dir" ]] || continue
       target="${startup_dir}/${name}"
       if [[ -f "$target" ]]; then
         if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target"
+          log info "Startup file found: $target"
         else
-          log warn "Duplicate: $target"
+          log warn "Startup file duplicate: $target"
         fi
         found=$((found + 1))
       else
-        log info "Not found: $target"
+        log info "Startup file missing: $target"
       fi
     done < <(startup_paths)
 
@@ -25,7 +26,7 @@ startup_test() {
       return 0
     fi
 
-    fail "Not found in any path: $name"
+    fail "Startup file missing in all paths: $name"
     return 1
   fi
 
@@ -34,12 +35,13 @@ startup_test() {
     return 1
   }
   target="${startup_dir}/${name}"
+  log info "Checking startup file: $name"
 
   if [[ -f "$target" ]]; then
-    log info "Found: $target"
+    log info "Startup file found: $target"
     return 0
   fi
 
-  fail "Not found: $target"
+  fail "Startup file missing: $target"
   return 1
 }

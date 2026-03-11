@@ -53,14 +53,15 @@ startup__install_one() {
       return 1
     fi
 
-    log info "Skip: $missing_message"
+    log info "Startup file skipped: $missing_message"
     return 0
   fi
 
   create_dir "$startup_dir" || return 1
   target="${startup_dir}/${name}"
+  log info "Installing startup file: $target"
   install_file "$source_input" "$target" 644 || return 1
-  log info "Installed startup file: $target"
+  log info "Startup file installed: $target"
 
   if [[ "$shell" == "fish" ]]; then
     return 0

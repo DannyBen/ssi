@@ -26,7 +26,7 @@ teardown() {
   run ./ssi install bin "https://example.com/tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Installed: $SSI_USER_BIN_ROOT/tool" ]
+  [ "$output" = $'• info  → Installing executable: '"$SSI_USER_BIN_ROOT"$'/tool\n• info  → Executable installed: '"$SSI_USER_BIN_ROOT"'/tool' ]
   [ -f "$SSI_USER_BIN_ROOT/tool" ]
   [ "$(cat "$SSI_USER_BIN_ROOT/tool")" = "downloaded:https://example.com/tool" ]
 }
@@ -38,7 +38,7 @@ teardown() {
   run ./ssi install bin - --name stdin-tool <<< "from-stdin"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Installed: $SSI_USER_BIN_ROOT/stdin-tool" ]
+  [ "$output" = $'• info  → Installing executable: '"$SSI_USER_BIN_ROOT"$'/stdin-tool\n• info  → Executable installed: '"$SSI_USER_BIN_ROOT"'/stdin-tool' ]
   [ -f "$SSI_USER_BIN_ROOT/stdin-tool" ]
   [ "$(cat "$SSI_USER_BIN_ROOT/stdin-tool")" = "from-stdin" ]
 }
@@ -62,7 +62,7 @@ teardown() {
   run ./ssi install bin "https://example.com/tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installed: '"$SSI_USER_BIN_ROOT"'/tool' ]
+  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installing executable: '"$SSI_USER_BIN_ROOT"$'/tool\n• info  → Executable installed: '"$SSI_USER_BIN_ROOT"'/tool' ]
   [ ! -e "$SSI_USER_BIN_ROOT/tool" ]
 
   unset -v SSI_DRY_RUN

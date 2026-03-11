@@ -9,6 +9,7 @@ man_test() {
   filename="${target_info#*:}"
 
   if [[ "$target_name" != *.* ]]; then
+    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r base_dir; do
       [[ -n "$base_dir" ]] || continue
@@ -19,18 +20,18 @@ man_test() {
         matched=0
         while IFS= read -r target_path; do
           [[ -n "$target_path" ]] || continue
-          log info "Found: $target_path"
+          log info "Man page found: $target_path"
           matched=1
           found=$((found + 1))
         done < <(man__matches_in_dir "$target_name" "$man_dir")
 
         if [[ "$matched" -eq 0 ]]; then
-          log info "Not found in: $man_dir"
+          log info "Man page missing in: $man_dir"
         fi
       done
 
       if [[ "$has_dirs" -eq 0 ]]; then
-        log info "Not found in: ${base_dir}/man*"
+        log info "Man page missing in: ${base_dir}/man*"
       fi
     done < <(man__roots)
 
@@ -38,24 +39,25 @@ man_test() {
       return 0
     fi
 
-    fail "Not found in any man path: $target_name"
+    fail "Man page missing in all paths: $target_name"
     return 1
   fi
 
   if [[ -n "$check_all" ]]; then
+    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r man_dir; do
       [[ -n "$man_dir" ]] || continue
       target_path="${man_dir}/${filename}"
       if [[ -f "$target_path" ]]; then
         if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target_path"
+          log info "Man page found: $target_path"
         else
-          log warn "Duplicate: $target_path"
+          log warn "Man page duplicate: $target_path"
         fi
         found=$((found + 1))
       else
-        log info "Not found: $target_path"
+        log info "Man page missing: $target_path"
       fi
     done < <(man_paths "$section")
 
@@ -63,19 +65,20 @@ man_test() {
       return 0
     fi
 
-    fail "Not found in any path: $filename"
+    fail "Man page missing in all paths: $filename"
     return 1
   fi
 
   mode="$(man_mode)" || return 1
   man_dir="$(man_path "$section" "$mode")" || return 1
   target_path="${man_dir}/${filename}"
+  log info "Checking man page: $target_name"
 
   if [[ -f "$target_path" ]]; then
-    log info "Found: $target_path"
+    log info "Man page found: $target_path"
     return 0
   fi
 
-  fail "Not found: $target_path"
+  fail "Man page missing: $target_path"
   return 1
 }

@@ -32,14 +32,14 @@ teardown() {
   run ./ssi test completion op --shell bash
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Found: $SSI_USER_BASH_COMPLETION_ROOT/op" ]
+  [ "$output" = $'• info  → Checking completion: op\n• info  → Completion found: '"$SSI_USER_BASH_COMPLETION_ROOT"'/op' ]
 }
 
 @test "test completion fails when file is missing" {
   run ./ssi test completion op --shell zsh
 
   [ "$status" -ne 0 ]
-  [ "$output" = "• error → Not found: $SSI_USER_ZSH_COMPLETION_ROOT/op" ]
+  [ "$output" = $'• info  → Checking completion: op\n• error → Completion missing: '"$SSI_USER_ZSH_COMPLETION_ROOT"'/op' ]
 }
 
 @test "test completion --all reports all paths and succeeds if any found" {
@@ -51,5 +51,5 @@ teardown() {
   run ./ssi test completion op --shell zsh --all
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Found: '"$SSI_SYSTEM_ZSH_COMPLETION_ROOT"$'/op\n• info  → Not found: '"$SSI_USER_ZSH_COMPLETION_ROOT"$'/op' ]
+  [ "$output" = $'• info  → Checking completion in all paths: op\n• info  → Completion found: '"$SSI_SYSTEM_ZSH_COMPLETION_ROOT"$'/op\n• info  → Completion missing: '"$SSI_USER_ZSH_COMPLETION_ROOT"'/op' ]
 }

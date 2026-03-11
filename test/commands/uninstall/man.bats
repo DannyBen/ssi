@@ -24,7 +24,7 @@ teardown() {
   run ./ssi uninstall man tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Removed: $file" ]
+  [ "$output" = $'• info  → Uninstalling man page: tool\n• info  → Man page removed: '"$file" ]
   [ ! -e "$file" ]
 }
 
@@ -36,7 +36,7 @@ teardown() {
   run ./ssi uninstall man tool.5
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Removed: $file" ]
+  [ "$output" = $'• info  → Uninstalling man page: tool.5\n• info  → Man page removed: '"$file" ]
   [ ! -e "$file" ]
 }
 
@@ -44,7 +44,7 @@ teardown() {
   run ./ssi uninstall man missing-tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• warn  → Not found: missing-tool" ]
+  [ "$output" = $'• info  → Uninstalling man page: missing-tool\n• warn  → Man page missing: missing-tool' ]
 }
 
 @test "uninstall man without extension removes base and subcommand pages across sections" {
@@ -65,9 +65,10 @@ teardown() {
   run ./ssi uninstall man rush
 
   [ "$status" -eq 0 ]
-  [[ "$output" == *"• info  → Removed: $system_sub"* ]]
-  [[ "$output" == *"• info  → Removed: $user_main"* ]]
-  [[ "$output" == *"• info  → Removed: $user_sub"* ]]
+  [[ "$output" == *"• info  → Uninstalling man page: rush"* ]]
+  [[ "$output" == *"• info  → Man page removed: $system_sub"* ]]
+  [[ "$output" == *"• info  → Man page removed: $user_main"* ]]
+  [[ "$output" == *"• info  → Man page removed: $user_sub"* ]]
   [ ! -e "$user_main" ]
   [ ! -e "$user_sub" ]
   [ ! -e "$system_sub" ]

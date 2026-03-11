@@ -23,7 +23,7 @@ teardown() {
   run ./ssi uninstall bin tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Removed: $file" ]
+  [ "$output" = $'• info  → Uninstalling executable: tool\n• info  → Executable removed: '"$file" ]
   [ ! -e "$file" ]
 }
 
@@ -31,7 +31,7 @@ teardown() {
   run ./ssi uninstall bin missing-tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• warn  → Not found: missing-tool" ]
+  [ "$output" = $'• info  → Uninstalling executable: missing-tool\n• warn  → Executable missing: missing-tool' ]
 }
 
 @test "uninstall bin removes system bin when writable" {
@@ -41,6 +41,6 @@ teardown() {
   run ./ssi uninstall bin system-tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Removed: $file" ]
+  [ "$output" = $'• info  → Uninstalling executable: system-tool\n• info  → Executable removed: '"$file" ]
   [ ! -e "$file" ]
 }

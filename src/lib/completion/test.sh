@@ -5,19 +5,20 @@ completion_test() {
   local found mode target_root target_path
 
   if [[ -n "$check_all" ]]; then
+    log info "Checking completion in all paths: $target_name"
     found=0
     while IFS= read -r target_root; do
       [[ -n "$target_root" ]] || continue
       target_path="${target_root}/${target_name}"
       if [[ -f "$target_path" ]]; then
         if [[ "$found" -eq 0 ]]; then
-          log info "Found: $target_path"
+          log info "Completion found: $target_path"
         else
-          log warn "Duplicate: $target_path"
+          log warn "Completion duplicate: $target_path"
         fi
         found=$((found + 1))
       else
-        log info "Not found: $target_path"
+        log info "Completion missing: $target_path"
       fi
     done < <(completion_paths "$shell")
 
@@ -25,19 +26,20 @@ completion_test() {
       return 0
     fi
 
-    fail "Not found in any path: $target_name"
+    fail "Completion missing in all paths: $target_name"
     return 1
   fi
 
   mode="$(completion_mode)" || return 1
   target_root="$(completion_path "$shell" "$mode")" || return 1
   target_path="${target_root}/${target_name}"
+  log info "Checking completion: $target_name"
 
   if [[ -f "$target_path" ]]; then
-    log info "Found: $target_path"
+    log info "Completion found: $target_path"
     return 0
   fi
 
-  fail "Not found: $target_path"
+  fail "Completion missing: $target_path"
   return 1
 }

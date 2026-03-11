@@ -29,7 +29,7 @@ teardown() {
   run ./ssi install completion "https://example.com/tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Installed: $SSI_USER_BASH_COMPLETION_ROOT/tool" ]
+  [ "$output" = $'• info  → Installing completion: '"$SSI_USER_BASH_COMPLETION_ROOT"$'/tool\n• info  → Completion installed: '"$SSI_USER_BASH_COMPLETION_ROOT"'/tool' ]
   [ -f "$SSI_USER_BASH_COMPLETION_ROOT/tool" ]
   [ "$(cat "$SSI_USER_BASH_COMPLETION_ROOT/tool")" = "downloaded:https://example.com/tool" ]
 }
@@ -41,7 +41,7 @@ teardown() {
   run ./ssi install completion - --name stdin-tool <<< "from-stdin"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Installed: $SSI_USER_BASH_COMPLETION_ROOT/stdin-tool" ]
+  [ "$output" = $'• info  → Installing completion: '"$SSI_USER_BASH_COMPLETION_ROOT"$'/stdin-tool\n• info  → Completion installed: '"$SSI_USER_BASH_COMPLETION_ROOT"'/stdin-tool' ]
   [ -f "$SSI_USER_BASH_COMPLETION_ROOT/stdin-tool" ]
   [ "$(cat "$SSI_USER_BASH_COMPLETION_ROOT/stdin-tool")" = "from-stdin" ]
 }
@@ -54,7 +54,7 @@ teardown() {
   run ./ssi install completion "https://example.com/_tool" --shell zsh
 
   [ "$status" -eq 0 ]
-  [ "$output" = "• info  → Installed: $SSI_USER_ZSH_COMPLETION_ROOT/_tool" ]
+  [ "$output" = $'• info  → Installing completion: '"$SSI_USER_ZSH_COMPLETION_ROOT"$'/_tool\n• info  → Completion installed: '"$SSI_USER_ZSH_COMPLETION_ROOT"'/_tool' ]
   [ -f "$SSI_USER_ZSH_COMPLETION_ROOT/_tool" ]
   [ "$(cat "$SSI_USER_ZSH_COMPLETION_ROOT/_tool")" = "downloaded:https://example.com/_tool" ]
 }
@@ -78,7 +78,7 @@ teardown() {
   run ./ssi install completion "https://example.com/tool"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installed: '"$SSI_USER_BASH_COMPLETION_ROOT"'/tool' ]
+  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installing completion: '"$SSI_USER_BASH_COMPLETION_ROOT"$'/tool\n• info  → Completion installed: '"$SSI_USER_BASH_COMPLETION_ROOT"'/tool' ]
   [ ! -e "$SSI_USER_BASH_COMPLETION_ROOT/tool" ]
 
   unset -v SSI_DRY_RUN

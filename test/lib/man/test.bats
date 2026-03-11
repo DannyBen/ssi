@@ -19,7 +19,7 @@ setup() {
   rm -rf "$TEST_ROOT"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "info: Found: $TEST_ROOT/man1/tool.1" ]
+  [ "$output" = "info: Checking man page: tool.1info: Man page found: $TEST_ROOT/man1/tool.1" ]
 }
 
 @test "man_test fails when a sectioned page is missing" {
@@ -31,5 +31,5 @@ setup() {
   run man_test "missing.1" ""
 
   [ "$status" -eq 1 ]
-  [ "$output" = "Not found: /tmp/missing-root/man1/missing.1" ]
+  [[ "$output" == *"Man page missing: /tmp/missing-root/man1/missing.1"* ]]
 }

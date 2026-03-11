@@ -4,8 +4,6 @@ man_uninstall() {
   local system_path target_path
 
   removed=0
-  log info "Uninstalling man page: $name"
-
   if [[ "$name" != *.* ]]; then
     while IFS= read -r target_path; do
       [[ -n "$target_path" ]] || continue

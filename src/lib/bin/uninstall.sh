@@ -3,8 +3,6 @@ bin_uninstall() {
   local target_root target_path removed
 
   removed=0
-  log info "Uninstalling executable: $name"
-
   while IFS= read -r target_root; do
     [[ -n "$target_root" ]] || continue
     target_path="${target_root}/${name}"

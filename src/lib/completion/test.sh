@@ -5,7 +5,6 @@ completion_test() {
   local found mode target_root target_path
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking completion in all paths: $target_name"
     found=0
     while IFS= read -r target_root; do
       [[ -n "$target_root" ]] || continue
@@ -33,8 +32,6 @@ completion_test() {
   mode="$(completion_mode)" || return 1
   target_root="$(completion_path "$shell" "$mode")" || return 1
   target_path="${target_root}/${target_name}"
-  log info "Checking completion: $target_name"
-
   if [[ -f "$target_path" ]]; then
     log info "Completion found: $target_path"
     return 0

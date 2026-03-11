@@ -17,7 +17,7 @@ setup() {
   run startup_test "tool" "bash" ""
 
   [ "$status" -eq 0 ]
-  [ "$output" = "info: Checking startup file: toolinfo: Startup file found: $HOME/.bashrc.d/tool" ]
+  [ "$output" = "info: Startup file found: $HOME/.bashrc.d/tool" ]
 
   rm -rf "$tmp_root"
 }

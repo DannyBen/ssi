@@ -26,7 +26,7 @@ teardown() {
   run ./ssi install man "https://example.com/tool.1"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Installing man page: '"$SSI_USER_MAN_ROOT"$'/man1/tool.1\n• info  → Man page installed: '"$SSI_USER_MAN_ROOT"'/man1/tool.1' ]
+  [ "$output" = $'• info  → Installing man page: tool.1\n• info  → Man page installed: '"$SSI_USER_MAN_ROOT"'/man1/tool.1' ]
   [ -f "$SSI_USER_MAN_ROOT/man1/tool.1" ]
   [ "$(cat "$SSI_USER_MAN_ROOT/man1/tool.1")" = "downloaded:https://example.com/tool.1" ]
 }
@@ -38,7 +38,7 @@ teardown() {
   run ./ssi install man - --name stdin-tool <<< "from-stdin"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Installing man page: '"$SSI_USER_MAN_ROOT"$'/man1/stdin-tool.1\n• info  → Man page installed: '"$SSI_USER_MAN_ROOT"'/man1/stdin-tool.1' ]
+  [ "$output" = $'• info  → Installing man page: stdin-tool\n• info  → Man page installed: '"$SSI_USER_MAN_ROOT"'/man1/stdin-tool.1' ]
   [ -f "$SSI_USER_MAN_ROOT/man1/stdin-tool.1" ]
   [ "$(cat "$SSI_USER_MAN_ROOT/man1/stdin-tool.1")" = "from-stdin" ]
 }
@@ -88,7 +88,7 @@ teardown() {
   run ./ssi install man "https://example.com/tool.1"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installing man page: '"$SSI_USER_MAN_ROOT"$'/man1/tool.1\n• info  → Man page installed: '"$SSI_USER_MAN_ROOT"'/man1/tool.1' ]
+  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installing man page: tool.1\n• info  → Man page installed: '"$SSI_USER_MAN_ROOT"'/man1/tool.1' ]
   [ ! -e "$SSI_USER_MAN_ROOT/man1/tool.1" ]
 
   unset -v SSI_DRY_RUN

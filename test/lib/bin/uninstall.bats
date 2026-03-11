@@ -29,5 +29,5 @@ setup() {
   run bin_uninstall "missing"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "info Uninstalling executable: missingwarn Executable missing: missing" ]
+  [ "$output" = "warn Executable missing: missing" ]
 }

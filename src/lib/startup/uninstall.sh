@@ -12,8 +12,6 @@ startup_uninstall() {
   target="${startup_dir}/${name}"
   shell_name="$(startup__display_name "$shell")" || return 1
   missing_message="${shell_name} startup file not found"
-  log info "Uninstalling startup file: $target"
-
   if [[ -z "$name" ]]; then
     fail "Missing startup name"
     return 1

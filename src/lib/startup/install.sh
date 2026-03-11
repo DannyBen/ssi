@@ -59,7 +59,6 @@ startup__install_one() {
 
   create_dir "$startup_dir" || return 1
   target="${startup_dir}/${name}"
-  log info "Installing startup file: $target"
   install_file "$source_input" "$target" 644 || return 1
   log info "Startup file installed: $target"
 

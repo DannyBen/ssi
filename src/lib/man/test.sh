@@ -9,7 +9,6 @@ man_test() {
   filename="${target_info#*:}"
 
   if [[ "$target_name" != *.* ]]; then
-    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r base_dir; do
       [[ -n "$base_dir" ]] || continue
@@ -44,7 +43,6 @@ man_test() {
   fi
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r man_dir; do
       [[ -n "$man_dir" ]] || continue
@@ -72,8 +70,6 @@ man_test() {
   mode="$(man_mode)" || return 1
   man_dir="$(man_path "$section" "$mode")" || return 1
   target_path="${man_dir}/${filename}"
-  log info "Checking man page: $target_name"
-
   if [[ -f "$target_path" ]]; then
     log info "Man page found: $target_path"
     return 0

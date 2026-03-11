@@ -623,7 +623,6 @@ bin_install() {
   target_root="$(bin_root "$mode")" || return 1
   target_path="${target_root}/${target_name}"
 
-  log info "Installing executable: $target_path"
   install_file "$temp_file" "$target_path" 755 || return 1
 
   remove_file "$temp_file"
@@ -685,7 +684,6 @@ bin_test() {
   local found mode target_root target_path
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking executable in all paths: $target_name"
     found=0
     while IFS= read -r target_root; do
       [[ -n "$target_root" ]] || continue
@@ -713,8 +711,6 @@ bin_test() {
   mode="$(bin_mode)" || return 1
   target_root="$(bin_root "$mode")" || return 1
   target_path="${target_root}/${target_name}"
-  log info "Checking executable: $target_name"
-
   if [[ -x "$target_path" ]]; then
     log info "Executable found: $target_path"
     return 0
@@ -729,8 +725,6 @@ bin_uninstall() {
   local target_root target_path removed
 
   removed=0
-  log info "Uninstalling executable: $name"
-
   while IFS= read -r target_root; do
     [[ -n "$target_root" ]] || continue
     target_path="${target_root}/${name}"
@@ -906,7 +900,6 @@ completion_install() {
   target_path="${target_root}/${target_name}"
   temp_file="$(source_to_temp_file "$source_input")" || return 1
 
-  log info "Installing completion: $target_path"
   install_file "$temp_file" "$target_path" 644 || return 1
 
   remove_file "$temp_file"
@@ -1011,7 +1004,6 @@ completion_test() {
   local found mode target_root target_path
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking completion in all paths: $target_name"
     found=0
     while IFS= read -r target_root; do
       [[ -n "$target_root" ]] || continue
@@ -1039,8 +1031,6 @@ completion_test() {
   mode="$(completion_mode)" || return 1
   target_root="$(completion_path "$shell" "$mode")" || return 1
   target_path="${target_root}/${target_name}"
-  log info "Checking completion: $target_name"
-
   if [[ -f "$target_path" ]]; then
     log info "Completion found: $target_path"
     return 0
@@ -1061,8 +1051,6 @@ completion_uninstall() {
 
   user_path="${user_root}/${name}"
   system_path="${system_root}/${name}"
-  log info "Uninstalling completion: $name"
-
   if [[ -e "$user_path" ]]; then
     remove_file "$user_path" || return 1
     log info "Completion removed: $user_path"
@@ -1498,7 +1486,6 @@ man__install_one() {
   target_path="${target_dir}/${filename}"
   temp_file="$(source_to_temp_file "$source_input")" || return 1
 
-  log info "Installing man page: $target_path"
   install_file "$temp_file" "$target_path" 644 || return 1
 
   remove_file "$temp_file"
@@ -1681,7 +1668,6 @@ man_test() {
   filename="${target_info#*:}"
 
   if [[ "$target_name" != *.* ]]; then
-    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r base_dir; do
       [[ -n "$base_dir" ]] || continue
@@ -1716,7 +1702,6 @@ man_test() {
   fi
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking man page in all paths: $target_name"
     found=0
     while IFS= read -r man_dir; do
       [[ -n "$man_dir" ]] || continue
@@ -1744,8 +1729,6 @@ man_test() {
   mode="$(man_mode)" || return 1
   man_dir="$(man_path "$section" "$mode")" || return 1
   target_path="${man_dir}/${filename}"
-  log info "Checking man page: $target_name"
-
   if [[ -f "$target_path" ]]; then
     log info "Man page found: $target_path"
     return 0
@@ -1761,8 +1744,6 @@ man_uninstall() {
   local system_path target_path
 
   removed=0
-  log info "Uninstalling man page: $name"
-
   if [[ "$name" != *.* ]]; then
     while IFS= read -r target_path; do
       [[ -n "$target_path" ]] || continue
@@ -1917,7 +1898,6 @@ startup__install_one() {
 
   create_dir "$startup_dir" || return 1
   target="${startup_dir}/${name}"
-  log info "Installing startup file: $target"
   install_file "$source_input" "$target" 644 || return 1
   log info "Startup file installed: $target"
 
@@ -1968,7 +1948,6 @@ startup_test() {
   local found startup_dir target
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking startup file in all paths: $name"
     found=0
     while IFS= read -r startup_dir; do
       [[ -n "$startup_dir" ]] || continue
@@ -1998,8 +1977,6 @@ startup_test() {
     return 1
   }
   target="${startup_dir}/${name}"
-  log info "Checking startup file: $name"
-
   if [[ -f "$target" ]]; then
     log info "Startup file found: $target"
     return 0
@@ -2023,8 +2000,6 @@ startup_uninstall() {
   target="${startup_dir}/${name}"
   shell_name="$(startup__display_name "$shell")" || return 1
   missing_message="${shell_name} startup file not found"
-  log info "Uninstalling startup file: $target"
-
   if [[ -z "$name" ]]; then
     fail "Missing startup name"
     return 1
@@ -2048,8 +2023,16 @@ ssi_install_bin_command() {
 
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
+  display_name="$explicit_name"
+
+  if [[ -z "$display_name" ]]; then
+    display_name="$(source_target_name "$source_input" 2>/dev/null || true)"
+  fi
+
+  [[ -n "$display_name" ]] || display_name="$source_input"
 
   dry_run_note
+  log info "$(bold "Installing executable"): $display_name"
   bin_install "$source_input" "$explicit_name"
 
 }
@@ -2058,8 +2041,22 @@ ssi_install_man_command() {
 
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
+  display_name="$explicit_name"
+
+  if [[ -d "$source_input" ]]; then
+    display_name="$source_input"
+  elif [[ -z "$display_name" ]]; then
+    display_name="$(source_target_name "$source_input" 2>/dev/null || true)"
+  fi
+
+  [[ -n "$display_name" ]] || display_name="$source_input"
 
   dry_run_note
+  if [[ -d "$source_input" ]]; then
+    log info "$(bold "Installing man pages"): $display_name"
+  else
+    log info "$(bold "Installing man page"): $display_name"
+  fi
   man_install "$source_input" "$explicit_name"
 
 }
@@ -2069,8 +2066,16 @@ ssi_install_completion_command() {
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
   shell="${args[--shell]}"
+  display_name="$explicit_name"
+
+  if [[ -z "$display_name" ]]; then
+    display_name="$(source_target_name "$source_input" 2>/dev/null || true)"
+  fi
+
+  [[ -n "$display_name" ]] || display_name="$source_input"
 
   dry_run_note
+  log info "$(bold "Installing completion"): $display_name"
   completion_install "$source_input" "$explicit_name" "$shell"
 
 }
@@ -2081,8 +2086,16 @@ ssi_install_startup_command() {
   explicit_name="${args[--name]:-}"
   shell="${args[--shell]}"
   strict="${args[--strict]:-}"
+  display_name="$explicit_name"
+
+  if [[ -z "$display_name" ]]; then
+    display_name="$(source_target_name "$source_input" 2>/dev/null || true)"
+  fi
+
+  [[ -n "$display_name" ]] || display_name="$source_input"
 
   dry_run_note
+  log info "$(bold "Installing startup file"): $display_name"
   startup_install "$source_input" "$explicit_name" "$shell" "$strict"
 
 }
@@ -2092,6 +2105,7 @@ ssi_uninstall_bin_command() {
   name="${args[name]}"
 
   dry_run_note
+  log info "$(bold "Uninstalling executable"): $name"
   bin_uninstall "$name"
 
 }
@@ -2101,6 +2115,11 @@ ssi_uninstall_man_command() {
   name="${args[name]}"
 
   dry_run_note
+  if [[ "$name" == *.* ]]; then
+    log info "$(bold "Uninstalling man page"): $name"
+  else
+    log info "$(bold "Uninstalling man pages"): $name"
+  fi
   man_uninstall "$name"
 
 }
@@ -2111,6 +2130,7 @@ ssi_uninstall_completion_command() {
   shell="${args[--shell]}"
 
   dry_run_note
+  log info "$(bold "Uninstalling completion"): $name"
   completion_uninstall "$name" "$shell"
 
 }
@@ -2122,6 +2142,7 @@ ssi_uninstall_startup_command() {
   strict="${args[--strict]:-}"
 
   dry_run_note
+  log info "$(bold "Uninstalling startup file"): $name"
   startup_uninstall "$name" "$shell" "$strict"
 
 }
@@ -2131,6 +2152,11 @@ ssi_test_bin_command() {
   target_name="${args[name]}"
   check_all="${args[--all]:-}"
 
+  if [[ -n "$check_all" ]]; then
+    log info "$(bold "Checking executable in all paths"): $target_name"
+  else
+    log info "$(bold "Checking executable"): $target_name"
+  fi
   bin_test "$target_name" "$check_all"
 
 }
@@ -2139,6 +2165,12 @@ ssi_test_man_command() {
 
   target_name="${args[name]}"
   check_all="${args[--all]:-}"
+
+  if [[ -n "$check_all" || "$target_name" != *.* ]]; then
+    log info "$(bold "Checking man page in all paths"): $target_name"
+  else
+    log info "$(bold "Checking man page"): $target_name"
+  fi
   man_test "$target_name" "$check_all"
 
 }
@@ -2149,6 +2181,11 @@ ssi_test_completion_command() {
   shell="${args[--shell]}"
   check_all="${args[--all]:-}"
 
+  if [[ -n "$check_all" ]]; then
+    log info "$(bold "Checking completion in all paths"): $target_name"
+  else
+    log info "$(bold "Checking completion"): $target_name"
+  fi
   completion_test "$target_name" "$shell" "$check_all"
 
 }
@@ -2158,6 +2195,12 @@ ssi_test_startup_command() {
   name="${args[name]}"
   shell="${args[--shell]}"
   check_all="${args[--all]:-}"
+
+  if [[ -n "$check_all" ]]; then
+    log info "$(bold "Checking startup file in all paths"): $name"
+  else
+    log info "$(bold "Checking startup file"): $name"
+  fi
   startup_test "$name" "$shell" "$check_all"
 
 }

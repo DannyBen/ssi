@@ -17,7 +17,7 @@ setup() {
   rm -rf "$TEST_ROOT"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "info: Checking completion: toolinfo: Completion found: $TEST_ROOT/tool" ]
+  [ "$output" = "info: Completion found: $TEST_ROOT/tool" ]
 }
 
 @test "completion_test fails when target is missing" {

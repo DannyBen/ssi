@@ -20,7 +20,6 @@ bin_install() {
   target_root="$(bin_root "$mode")" || return 1
   target_path="${target_root}/${target_name}"
 
-  log info "Installing executable: $target_path"
   install_file "$temp_file" "$target_path" 755 || return 1
 
   remove_file "$temp_file"

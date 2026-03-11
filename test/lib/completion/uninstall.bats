@@ -40,5 +40,5 @@ setup() {
   run completion_uninstall "missing" "bash"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "info Uninstalling completion: missingwarn Completion missing: missing" ]
+  [ "$output" = "warn Completion missing: missing" ]
 }

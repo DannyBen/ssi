@@ -9,8 +9,6 @@ completion_uninstall() {
 
   user_path="${user_root}/${name}"
   system_path="${system_root}/${name}"
-  log info "Uninstalling completion: $name"
-
   if [[ -e "$user_path" ]]; then
     remove_file "$user_path" || return 1
     log info "Completion removed: $user_path"

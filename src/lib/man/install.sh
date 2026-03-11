@@ -56,7 +56,6 @@ man__install_one() {
   target_path="${target_dir}/${filename}"
   temp_file="$(source_to_temp_file "$source_input")" || return 1
 
-  log info "Installing man page: $target_path"
   install_file "$temp_file" "$target_path" 644 || return 1
 
   remove_file "$temp_file"

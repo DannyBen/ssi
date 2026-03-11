@@ -18,7 +18,7 @@ teardown() {
   run ./ssi uninstall startup --shell bash tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Uninstalling startup file: '"$HOME"$'/.bashrc.d/tool\n• info  → Startup file removed: '"$HOME"'/.bashrc.d/tool' ]
+  [ "$output" = $'• info  → Uninstalling startup file: tool\n• info  → Startup file removed: '"$HOME"'/.bashrc.d/tool' ]
   [ ! -f "$HOME/.bashrc.d/tool" ]
 }
 
@@ -26,7 +26,7 @@ teardown() {
   run ./ssi uninstall startup --shell bash tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Uninstalling startup file: '"$HOME"$'/.bashrc.d/tool\n• info  → Startup file skipped: Bash startup file not found' ]
+  [ "$output" = $'• info  → Uninstalling startup file: tool\n• info  → Startup file skipped: Bash startup file not found' ]
 }
 
 @test "uninstall startup fails in strict mode when bash entry is missing" {
@@ -44,7 +44,7 @@ teardown() {
   run ./ssi uninstall startup --shell zsh tool
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Uninstalling startup file: '"$ZDOTDIR"$'/.zshrc.d/tool\n• info  → Startup file removed: '"$ZDOTDIR"'/.zshrc.d/tool' ]
+  [ "$output" = $'• info  → Uninstalling startup file: tool\n• info  → Startup file removed: '"$ZDOTDIR"'/.zshrc.d/tool' ]
   [ ! -f "$ZDOTDIR/.zshrc.d/tool" ]
 }
 
@@ -56,6 +56,6 @@ teardown() {
   run ./ssi uninstall startup --shell fish tool.fish
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Uninstalling startup file: '"$XDG_CONFIG_HOME"$'/fish/conf.d/tool.fish\n• info  → Startup file removed: '"$XDG_CONFIG_HOME"'/fish/conf.d/tool.fish' ]
+  [ "$output" = $'• info  → Uninstalling startup file: tool.fish\n• info  → Startup file removed: '"$XDG_CONFIG_HOME"'/fish/conf.d/tool.fish' ]
   [ ! -f "$XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
 }

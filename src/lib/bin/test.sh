@@ -4,7 +4,6 @@ bin_test() {
   local found mode target_root target_path
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking executable in all paths: $target_name"
     found=0
     while IFS= read -r target_root; do
       [[ -n "$target_root" ]] || continue
@@ -32,8 +31,6 @@ bin_test() {
   mode="$(bin_mode)" || return 1
   target_root="$(bin_root "$mode")" || return 1
   target_path="${target_root}/${target_name}"
-  log info "Checking executable: $target_name"
-
   if [[ -x "$target_path" ]]; then
     log info "Executable found: $target_path"
     return 0

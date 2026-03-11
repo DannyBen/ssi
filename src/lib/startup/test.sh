@@ -5,7 +5,6 @@ startup_test() {
   local found startup_dir target
 
   if [[ -n "$check_all" ]]; then
-    log info "Checking startup file in all paths: $name"
     found=0
     while IFS= read -r startup_dir; do
       [[ -n "$startup_dir" ]] || continue
@@ -35,8 +34,6 @@ startup_test() {
     return 1
   }
   target="${startup_dir}/${name}"
-  log info "Checking startup file: $name"
-
   if [[ -f "$target" ]]; then
     log info "Startup file found: $target"
     return 0

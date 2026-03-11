@@ -34,5 +34,5 @@ setup() {
   run man_uninstall "missing"
 
   [ "$status" -eq 0 ]
-  [ "$output" = "info Uninstalling man page: missingwarn Man page missing: missing" ]
+  [ "$output" = "warn Man page missing: missing" ]
 }

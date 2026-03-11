@@ -18,7 +18,7 @@ setup() {
   rm -rf "$TEST_ROOT"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'info: Checking executable: toolinfo: Executable found: '"$TEST_ROOT"'/tool' ]
+  [ "$output" = "info: Executable found: $TEST_ROOT/tool" ]
 }
 
 @test "bin_test fails when target is missing" {

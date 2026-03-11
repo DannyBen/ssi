@@ -18,7 +18,7 @@ setup() {
   run startup_uninstall "tool" "bash" ""
 
   [ "$status" -eq 0 ]
-  [ "$output" = "Uninstalling startup file: $HOME/.bashrc.d/toolStartup file removed: $HOME/.bashrc.d/tool" ]
+  [ "$output" = "Startup file removed: $HOME/.bashrc.d/tool" ]
   [ ! -f "$HOME/.bashrc.d/tool" ]
 
   rm -rf "$tmp_root"
@@ -34,7 +34,7 @@ setup() {
   run startup_uninstall "tool" "bash" "1"
 
   [ "$status" -eq 1 ]
-  [ "$output" = "Uninstalling startup file: $HOME/.bashrc.d/toolBash startup file not found" ]
+  [ "$output" = "Bash startup file not found" ]
 
   rm -rf "$tmp_root"
 }

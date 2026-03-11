@@ -17,7 +17,7 @@ teardown() {
   run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Installing startup file: '"$HOME"$'/.bashrc.d/tool\n• info  → Startup file installed: '"$HOME"'/.bashrc.d/tool' ]
+  [ "$output" = $'• info  → Installing startup file: tool\n• info  → Startup file installed: '"$HOME"'/.bashrc.d/tool' ]
   [ -f "$HOME/.bashrc.d/tool" ]
   [ "$(cat "$HOME/.bashrc.d/tool")" = "content" ]
 }
@@ -28,7 +28,7 @@ teardown() {
   run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Installing startup file: $HOME/.bashrc.d/tool"* ]]
+  [[ "$output" == *"Installing startup file: tool"* ]]
   [[ "$output" == *"Startup file installed: $HOME/.bashrc.d/tool"* ]]
   [[ "$output" == *"Bash startup configuration incomplete"* ]]
   [[ "$output" == *'for f in ~/.bashrc.d/*; do . "$f"; done'* ]]
@@ -50,7 +50,7 @@ teardown() {
   run ./ssi install startup --shell zsh - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Installing startup file: '"$ZDOTDIR"$'/.zshrc.d/tool\n• info  → Startup file installed: '"$ZDOTDIR"'/.zshrc.d/tool' ]
+  [ "$output" = $'• info  → Installing startup file: tool\n• info  → Startup file installed: '"$ZDOTDIR"'/.zshrc.d/tool' ]
   [ -f "$ZDOTDIR/.zshrc.d/tool" ]
   [ "$(cat "$ZDOTDIR/.zshrc.d/tool")" = "content" ]
 }
@@ -63,7 +63,7 @@ teardown() {
   run ./ssi install startup --shell fish - --name tool.fish <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• info  → Installing startup file: '"$XDG_CONFIG_HOME"$'/fish/conf.d/tool.fish\n• info  → Startup file installed: '"$XDG_CONFIG_HOME"'/fish/conf.d/tool.fish' ]
+  [ "$output" = $'• info  → Installing startup file: tool.fish\n• info  → Startup file installed: '"$XDG_CONFIG_HOME"'/fish/conf.d/tool.fish' ]
   [ -f "$XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
   [ "$(cat "$XDG_CONFIG_HOME/fish/conf.d/tool.fish")" = "content" ]
 }
@@ -75,7 +75,7 @@ teardown() {
   run ./ssi install startup --shell bash - --name tool <<< "content"
 
   [ "$status" -eq 0 ]
-  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installing startup file: '"$HOME"$'/.bashrc.d/tool\n• info  → Startup file installed: '"$HOME"'/.bashrc.d/tool' ]
+  [ "$output" = $'• warn  → Dry-run enabled\n• info  → Installing startup file: tool\n• info  → Startup file installed: '"$HOME"'/.bashrc.d/tool' ]
   [ ! -e "$HOME/.bashrc.d/tool" ]
 
   unset -v SSI_DRY_RUN

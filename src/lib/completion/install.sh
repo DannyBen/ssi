@@ -21,7 +21,6 @@ completion_install() {
   target_path="${target_root}/${target_name}"
   temp_file="$(source_to_temp_file "$source_input")" || return 1
 
-  log info "Installing completion: $target_path"
   install_file "$temp_file" "$target_path" 644 || return 1
 
   remove_file "$temp_file"

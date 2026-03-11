@@ -24,7 +24,6 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ -f "$HOME/.bashrc.d/tool" ]
-  [[ "$output" == *"Installing startup file: $HOME/.bashrc.d/tool"* ]]
   [[ "$output" == *"Startup file installed: $HOME/.bashrc.d/tool"* ]]
   [[ "$output" == *"Bash startup configuration incomplete"* ]]
 
@@ -64,7 +63,6 @@ setup() {
 
   [ "$status" -eq 0 ]
   [ -f "$XDG_CONFIG_HOME/fish/conf.d/tool.fish" ]
-  [[ "$output" == *"Installing startup file: $XDG_CONFIG_HOME/fish/conf.d/tool.fish"* ]]
   [[ "$output" == *"Startup file installed: $XDG_CONFIG_HOME/fish/conf.d/tool.fish"* ]]
 
   rm -rf "$tmp_root"

@@ -1,6 +1,6 @@
 name: ssi
 help: Simple Script Installer
-version: 0.1.7
+version: 0.1.8
 
 import: src/env_vars.yml
 

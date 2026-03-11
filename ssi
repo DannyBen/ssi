@@ -3558,7 +3558,7 @@ ssi_bootstrap_parse_requirements() {
 }
 
 initialize() {
-  declare -g version="0.1.7"
+  declare -g version="0.1.8"
   set -eo pipefail
 
   export SSI_LOG_LEVEL="${SSI_LOG_LEVEL:-info}"

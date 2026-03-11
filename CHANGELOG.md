@@ -1,6 +1,14 @@
 Changelog
 ========================================
 
+v0.1.8 - 2026-03-11
+----------------------------------------
+
+- Normalize output messages and add pre-action messages [`1b1eca6`](https://github.com/DannyBen/ssi/commit/1b1eca6)
+- Reduce log chatter; log pre-action messages only once [`c573a3c`](https://github.com/DannyBen/ssi/commit/c573a3c)
+- Compare [`v0.1.7..v0.1.8`](https://github.com/dannyben/ssi/compare/v0.1.7..v0.1.8)
+
+
 v0.1.7 - 2026-03-10
 ----------------------------------------
 

@@ -43,6 +43,15 @@
 - Command files should not hold domain logic, resolver logic, or non-trivial
   branching.
 - Command files must not define nested functions.
+- Command files should own top-level action logs that describe user intent.
+
+## Logging Policy
+- Prefer action-first phrasing for command-level intent logs.
+- Prefer subject-first phrasing for library-level result logs.
+- Keep concrete outcome logs in libraries, where resolved paths and per-item
+  results are known.
+- For batch operations, log the action once at the command level and log each
+  concrete result in libraries.
 
 ## Function Design
 - Prefer small, deterministic functions.

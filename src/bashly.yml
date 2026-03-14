@@ -4,6 +4,11 @@ version: 0.1.8
 
 import: src/env_vars.yml
 
+flags:
+- long: --quiet
+  short: -q
+  help: Suppress log output
+
 commands:
 - name: install
   alias: [i, add]

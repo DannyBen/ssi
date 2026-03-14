@@ -1,5 +1,7 @@
 ## usage: log <level> <message...>
 log() {
+  [[ -n "$SSI_QUIET" ]] && return 0;
+
   : "${log_level:=${SSI_LOG_LEVEL:-info}}"
 
   local level="$1"

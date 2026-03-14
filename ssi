@@ -15,7 +15,7 @@ ssi_usage() {
   printf "ssi - Simple Script Installer\n\n"
 
   printf "%s\n" "$(bold "Usage:")"
-  printf "  ssi COMMAND\n"
+  printf "  ssi [OPTIONS] COMMAND\n"
   printf "  ssi [COMMAND] --help | -h\n"
   printf "  ssi --version | -v\n"
   echo
@@ -30,7 +30,11 @@ ssi_usage() {
 
   if [[ -n "$long_usage" ]]; then
 
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "Global Options:")"
+
+    printf "  %s\n" "$(green "--quiet, -q")"
+    printf "    Suppress log output\n"
+    echo
 
     printf "  %s\n" "$(green "--help, -h")"
     printf "    Show this help\n"
@@ -1375,6 +1379,8 @@ dry_run_note() {
 }
 
 log() {
+  [[ -n "$SSI_QUIET" ]] && return 0;
+
   : "${log_level:=${SSI_LOG_LEVEL:-info}}"
 
   local level="$1"
@@ -2244,6 +2250,12 @@ parse_requirements() {
         long_usage=yes
         ssi_usage
         exit
+        ;;
+
+      --quiet | -q)
+
+        args['--quiet']=1
+        shift
         ;;
 
       *)
@@ -3557,6 +3569,13 @@ ssi_bootstrap_parse_requirements() {
 
 }
 
+before_hook() {
+  if [[ "${args[--quiet]:-}" ]]; then
+    SSI_QUIET=1
+  fi
+
+}
+
 initialize() {
   declare -g version="0.1.8"
   set -eo pipefail
@@ -3583,6 +3602,7 @@ run() {
 
   normalize_input "$@"
   parse_requirements "${input[@]}"
+  before_hook
 
   case "$action" in
     "install") ssi_install_command ;;

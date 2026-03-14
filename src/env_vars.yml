@@ -52,3 +52,6 @@ environment_variables:
     help: Path to system fish completion directory
     default: /usr/local/share/fish/vendor_completions.d
     private: true
+  - name: ssi_quiet
+    help: Suppress log output
+    private: true

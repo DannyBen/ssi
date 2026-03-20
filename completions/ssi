@@ -50,296 +50,300 @@ _ssi_completions() {
   COMPREPLY=()
 
   case "$compline" in
-    'uninstall completion'*'--shell')
+    *'uninstall completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'install completion'*'--shell')
+    *'install completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'uninstall startup'*'--shell')
+    *'remove completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'remove completion'*'--shell')
+    *'uninstall startup'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'check completion'*'--shell')
+    *'check completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'test completion'*'--shell')
+    *'test completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'install startup'*'--shell')
+    *'install startup'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'add completion'*'--shell')
+    *'add completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'remove startup'*'--shell')
+    *'remove startup'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'rm completion'*'--shell')
+    *'check startup'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'check startup'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
-      ;;
-
-    'uninstall completion'*)
+    *'uninstall completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
-    'test startup'*'--shell')
+    *'rm completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'i completion'*'--shell')
+    *'i completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'u completion'*'--shell')
+    *'t completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    't completion'*'--shell')
+    *'test startup'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'add startup'*'--shell')
+    *'u completion'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'install completion'*)
+    *'add startup'*'--shell')
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
+      ;;
+
+    *'install completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
       ;;
 
-    'rm startup'*'--shell')
+    *'rm startup'*'--shell')
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'u startup'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
-      ;;
-
-    'uninstall startup'*)
+    *'uninstall startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
-    't startup'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
-      ;;
-
-    'i startup'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
-      ;;
-
-    'remove completion'*)
+    *'remove completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
-    'check completion'*)
+    *'i startup'*'--shell')
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
+      ;;
+
+    *'check completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help --shell -a -h")" -- "$cur")
       ;;
 
-    'test completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help --shell -a -h")" -- "$cur")
+    *'u startup'*'--shell')
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
       ;;
 
-    'install startup'*)
+    *'t startup'*'--shell')
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "bash zsh fish")" -- "$cur")
+      ;;
+
+    *'install startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
-    'add completion'*)
+    *'test completion'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help --shell -a -h")" -- "$cur")
+      ;;
+
+    *'add completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
       ;;
 
-    'remove startup'*)
+    *'remove startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
-    'uninstall bin'*)
+    *'uninstall bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'uninstall man'*)
+    *'uninstall man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'rm completion'*)
+    *'rm completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
-    'check startup'*)
+    *'check startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help --shell -a -h")" -- "$cur")
       ;;
 
-    't completion'*)
+    *'t completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help --shell -a -h")" -- "$cur")
       ;;
 
-    'i completion'*)
+    *'i completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
       ;;
 
-    'test startup'*)
+    *'test startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help --shell -a -h")" -- "$cur")
       ;;
 
-    'u completion'*)
+    *'u completion'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
-    'add startup'*)
+    *'add startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
-    'install man'*)
+    *'install man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
-    'install bin'*)
+    *'install bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
-    'rm startup'*)
+    *'rm startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
-    'remove man'*)
+    *'remove man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'remove bin'*)
+    *'remove bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'check bin'*)
+    *'check bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help -a -h")" -- "$cur")
       ;;
 
-    'check man'*)
+    *'check man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help -a -h")" -- "$cur")
       ;;
 
-    't startup'*)
+    *'t startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help --shell -a -h")" -- "$cur")
       ;;
 
-    'bootstrap'*)
+    *'bootstrap'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'u startup'*)
+    *'u startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
-    'i startup'*)
+    *'i startup'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
-    'uninstall'*)
+    *'uninstall'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    'test bin'*)
+    *'test bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help -a -h")" -- "$cur")
       ;;
 
-    'test man'*)
+    *'test man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help -a -h")" -- "$cur")
       ;;
 
-    'add bin'*)
+    *'download'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --output -h -o")" -- "$cur")
+      ;;
+
+    *'add bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
-    'add man'*)
+    *'add man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
-    'install'*)
+    *'install'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    'rm man'*)
+    *'rm man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'rm bin'*)
+    *'rm bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'remove'*)
+    *'remove'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    'i bin'*)
+    *'i bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
-    'i man'*)
+    *'i man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
-    'u bin'*)
+    *'u bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    't man'*)
+    *'t man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help -a -h")" -- "$cur")
       ;;
 
-    't bin'*)
+    *'t bin'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--all --help -a -h")" -- "$cur")
       ;;
 
-    'check'*)
+    *'check'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    'u man'*)
+    *'u man'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
-    'test'*)
+    *'test'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    'add'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
-      ;;
-
-    'log'*)
+    *'log'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h debug error info warn")" -- "$cur")
       ;;
 
-    'rm'*)
+    *'add'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    'u'*)
+    *'rm'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    'i'*)
+    *'i'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
-    't'*)
+    *'u'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
+      ;;
+
+    *'t'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h bin completion man startup")" -- "$cur")
       ;;
 
     *)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --version -h -v add bootstrap check i install log remove rm t test u uninstall")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --quiet --version -h -q -v add bootstrap check download i install log remove rm t test u uninstall")" -- "$cur")
       ;;
 
   esac

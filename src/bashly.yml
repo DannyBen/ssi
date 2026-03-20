@@ -154,6 +154,18 @@ commands:
       allowed: *shells
       conflicts: [--all]
 
+- name: download
+  help: Download a file
+  args:
+  - name: url
+    help: URL to download from
+    required: true
+  flags:
+  - long: --output
+    short: -o
+    arg: target
+    help: Path to save to, use '-' to write to stdout    
+
 - name: log
   help: Send a log message
   args:

@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+if [[ "$1" == "-qO" ]]; then
+  dest="$2"
+  url="$3"
+  if [[ "$dest" == "-" ]]; then
+    printf "downloaded:%s" "$url"
+  else
+    printf "downloaded:%s" "$url" > "$dest"
+  fi
+  exit 0
+fi
+exit 1

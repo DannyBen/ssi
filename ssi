@@ -24,6 +24,7 @@ ssi_usage() {
   printf "  %s   Install files\n" "$(green "install")  "
   printf "  %s   Uninstall files\n" "$(green "uninstall")"
   printf "  %s   Check if files are installed\n" "$(green "test")     "
+  printf "  %s   Download a file\n" "$(green "download") "
   printf "  %s   Send a log message\n" "$(green "log")      "
   printf "  %s   Print bootstrap script\n" "$(green "bootstrap")"
   echo
@@ -515,6 +516,35 @@ ssi_test_startup_usage() {
 
     printf "  %s\n" "$(green "NAME")"
     printf "    Target file name to check\n"
+    echo
+
+  fi
+}
+
+ssi_download_usage() {
+  printf "ssi download - Download a file\n\n"
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  ssi download URL [OPTIONS]\n"
+  printf "  ssi download --help | -h\n"
+  echo
+
+  if [[ -n "$long_usage" ]]; then
+
+    printf "%s\n" "$(bold "Options:")"
+
+    printf "  %s\n" "$(green "--output, -o TARGET")"
+    printf "    Path to save to, use '-' to write to stdout\n"
+    echo
+
+    printf "  %s\n" "$(green "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    printf "%s\n" "$(bold "Arguments:")"
+
+    printf "  %s\n" "$(green "URL")"
+    printf "    URL to download from\n"
     echo
 
   fi
@@ -1195,37 +1225,88 @@ remove_file() {
   return 1
 }
 
-source_download_to_file() {
+source_download() {
   local url="${1:-}"
   local destination="${2:-}"
-  local message
+  local stderr_file temp_root rc error_message
 
   if [[ -z "$url" || -z "$destination" ]]; then
     fail "Missing URL or destination for download"
     return 1
   fi
 
-  message="Downloading: $url -> $destination"
   if [[ -n "${SSI_DRY_RUN:-}" ]]; then
-    log debug "[DRY] $message"
+    if [[ "$destination" == "-" ]]; then
+      log debug "[DRY] Downloading: $url -> stdout"
+    else
+      log debug "[DRY] Downloading: $url -> $destination"
+    fi
     return 0
   fi
-  log debug "$message"
+
+  temp_root="${TMPDIR:-/tmp}"
+  stderr_file="$(mktemp "${temp_root%/}/ssi.download.stderr.XXXXXX")" || {
+    fail "Could not allocate temporary file"
+    return 1
+  }
+
+  source__download_with_tool "$url" "$destination" "$stderr_file"
+  rc=$?
+
+  if [[ -s "$stderr_file" ]]; then
+    error_message="$(<"$stderr_file")"
+    error_message="${error_message%$'\n'}"
+  else
+    error_message=""
+  fi
+  rm -f "$stderr_file"
+
+  if [[ "$rc" -eq 0 ]]; then
+    return 0
+  fi
+
+  if [[ -n "$error_message" ]]; then
+    fail "$error_message"
+    return 1
+  fi
+
+  fail "Download failed: $url"
+  return 1
+}
+
+source__download_with_tool() {
+  local url="${1:-}"
+  local destination="${2:-}"
+  local stderr_file="${3:-}"
 
   if is_command curl; then
-    curl -fsSL "$url" -o "$destination" && return 0
-    fail "Failed downloading with curl: $url"
-    return 1
+    if [[ "$destination" == "-" ]]; then
+      curl -fsSL "$url" 2>"$stderr_file"
+    else
+      curl -fsSL "$url" -o "$destination" 2>"$stderr_file"
+    fi
+    return $?
   fi
 
   if is_command wget; then
-    wget -qO "$destination" "$url" && return 0
-    fail "Failed downloading with wget: $url"
+    wget -qO "$destination" "$url" 2>"$stderr_file"
+    return $?
+  fi
+
+  printf "%s\n" "No downloader available (need curl or wget)" > "$stderr_file"
+  return 1
+}
+
+source_download_to_file() {
+  local url="${1:-}"
+  local destination="${2:-}"
+
+  if [[ -z "$url" || -z "$destination" ]]; then
+    fail "Missing URL or destination for download"
     return 1
   fi
 
-  fail "No downloader available (need curl or wget)"
-  return 1
+  source_download "$url" "$destination"
 }
 
 source_to_temp_file() {
@@ -2211,6 +2292,32 @@ ssi_test_startup_command() {
 
 }
 
+ssi_download_command() {
+
+  url="${args[url]}"
+  target="${args[--output]:-}"
+
+  if [[ -z "$target" ]]; then
+    target="$(source_target_name "$url")" || return 1
+    if [[ -z "$target" ]]; then
+      fail "Could not determine output file name; use -o FILE or -o -"
+      return 1
+    fi
+  fi
+
+  if [[ "$target" != "-" ]]; then
+    dry_run_note
+    log info "$(bold "Downloading file"): $target"
+  fi
+
+  source_download "$url" "$target" || return 1
+
+  if [[ "$target" != "-" ]]; then
+    log info "File downloaded: $target"
+  fi
+
+}
+
 ssi_log_command() {
 
   level="${args[level]}"
@@ -2305,6 +2412,13 @@ parse_requirements() {
       action="test"
       shift
       ssi_test_parse_requirements "$@"
+      shift $#
+      ;;
+
+    download)
+      action="download"
+      shift
+      ssi_download_parse_requirements "$@"
       shift $#
       ;;
 
@@ -3454,6 +3568,71 @@ ssi_test_startup_parse_requirements() {
 
 }
 
+ssi_download_parse_requirements() {
+  local key
+
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        ssi_download_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  action="download"
+
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --output | -o)
+
+        if [[ -n ${2+x} ]]; then
+          args['--output']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output requires an argument: --output, -o TARGET" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+
+        if [[ -z ${args['url']+x} ]]; then
+          args['url']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  if [[ -z ${args['url']+x} ]]; then
+    printf "missing required argument: URL\nusage: ssi download URL [OPTIONS]\n" >&2
+
+    exit 1
+  fi
+
+}
+
 ssi_log_parse_requirements() {
   local key
 
@@ -3620,6 +3799,7 @@ run() {
     "test man") ssi_test_man_command ;;
     "test completion") ssi_test_completion_command ;;
     "test startup") ssi_test_startup_command ;;
+    "download") ssi_download_command ;;
     "log") ssi_log_command ;;
     "bootstrap") ssi_bootstrap_command ;;
   esac

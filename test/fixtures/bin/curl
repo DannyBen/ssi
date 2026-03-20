@@ -9,7 +9,11 @@ if [[ "$1" == "-fsSL" ]]; then
       break
     fi
   done
-  printf "downloaded:%s" "$url" > "$dest"
+  if [[ -n "$dest" ]]; then
+    printf "downloaded:%s" "$url" > "$dest"
+  else
+    printf "downloaded:%s" "$url"
+  fi
   exit 0
 fi
 exit 1

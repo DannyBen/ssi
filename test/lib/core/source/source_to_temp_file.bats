@@ -2,10 +2,16 @@
 
 setup() {
   BASE="$BATS_TEST_DIRNAME/../../../../src/lib"
+  source "$BASE/core/ui/colors.sh"
   source "$BASE/core/ui/log.sh"
   source "$BASE/core/source/source_type.sh"
   source "$BASE/core/source/download_to_file.sh"
   source "$BASE/core/source/source_to_temp_file.sh"
+  export NO_COLOR=1
+}
+
+teardown() {
+  unset -v NO_COLOR log_level
 }
 
 @test "source_to_temp_file copies local file content" {
@@ -45,6 +51,19 @@ setup() {
   [ -f "$output" ]
   [ "$(cat "$output")" = "downloaded:https://example.com/tool" ]
   rm -f "$output"
+}
+
+@test "source_to_temp_file logs copy action in debug mode for local files" {
+  local input
+  log_level=debug
+  input="$(mktemp)"
+  printf "from-file" > "$input"
+
+  run source_to_temp_file "$input"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Copying source file: $input -> "* ]]
+  rm -f "$input" "${output##*$'\n'}"
 }
 
 @test "source_to_temp_file fails for invalid source" {

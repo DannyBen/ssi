@@ -38,11 +38,13 @@ commands:
     args:
     - name: source
       help: |
-        Source file. May be:
-        - URL to download from
-        - Path to file
-        - Path to a directory
-        - '-' to read from stdin
+        Source input. May be:
+        - URL to a single man page
+        - URL to a tarball archive (.tar.gz or .tgz)
+        - Path to a single man page
+        - Path to a tarball archive (.tar.gz or .tgz)
+        - Path to a directory of man pages
+        - '-' to read a single man page from stdin
       required: true
 
     flags: 
@@ -50,7 +52,7 @@ commands:
       arg: name
       help: |
         Explicit target file name (required for stdin or ambiguous sources)
-        Not relevant when SOURCE is a directory
+        Not relevant when SOURCE is a directory or archive
 
   - name: completion
     help: Install completion script

@@ -1,7 +1,7 @@
 source_to_temp_file() {
   local source="${1:--}"
   local temp_root="${2:-${TMPDIR:-/tmp}}"
-  local detected_type temp_file
+  local detected_type temp_file message
 
   detected_type="$(source_type "$source")" || return 1
 
@@ -29,12 +29,16 @@ source_to_temp_file() {
 
   case "$detected_type" in
     stdin)
+      message="Reading source from stdin: - -> $temp_file"
+      log debug "$message"
       cat > "$temp_file" || {
         fail "Could not read source from stdin"
         return 1
       }
       ;;
     file)
+      message="Copying source file: $source -> $temp_file"
+      log debug "$message"
       cp "$source" "$temp_file" || {
         fail "Could not copy source file"
         return 1

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+if [[ "$1" == "-fsSL" ]]; then
+  dest=""
+  for ((i=1; i<=$#; i++)); do
+    if [[ "${!i}" == "-o" ]]; then
+      j=$((i+1))
+      dest="${!j}"
+      break
+    fi
+  done
+
+  if [[ -z "$dest" || -z "${ARCHIVE_PAYLOAD:-}" ]]; then
+    exit 1
+  fi
+
+  cp "$ARCHIVE_PAYLOAD" "$dest"
+  exit 0
+fi
+exit 1

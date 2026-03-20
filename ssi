@@ -3962,7 +3962,7 @@ before_hook() {
 }
 
 initialize() {
-  declare -g version="0.1.8"
+  declare -g version="0.1.9"
   set -eo pipefail
 
   export SSI_LOG_LEVEL="${SSI_LOG_LEVEL:-info}"

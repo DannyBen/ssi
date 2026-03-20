@@ -1,6 +1,16 @@
 Changelog
 ========================================
 
+v0.1.9 - 2026-03-20
+----------------------------------------
+
+- Add `--quiet` global flag [`f25b9cc`](https://github.com/DannyBen/ssi/commit/f25b9cc)
+- Add general purpose download command [`0709517`](https://github.com/DannyBen/ssi/commit/0709517)
+- Add support for installing manpages from a tarball archive [`a7865ce`](https://github.com/DannyBen/ssi/commit/a7865ce)
+- Add files to ssi completion options [`c4efb8b`](https://github.com/DannyBen/ssi/commit/c4efb8b)
+- Compare [`v0.1.8..v0.1.9`](https://github.com/dannyben/ssi/compare/v0.1.8..v0.1.9)
+
+
 v0.1.8 - 2026-03-11
 ----------------------------------------
 

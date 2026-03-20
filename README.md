@@ -81,7 +81,7 @@ ssi install completion https://raw.githubusercontent.com/DannyBen/ssi/refs/tags/
 | `install`       | Installing executables, man pages, completion scripts and startup scripts                   |
 | `uninstall`     | Uninstalling executables, man pages, completion scripts and startup scripts                 |
 | `test`          | Checking for the presence of executables, man pages, completion scripts and startup scripts |
-| Other Utilities | Logging, Bootstrapping of `setup` scripts.                                                  |
+| Other Utilities | General purpose download, logging, bootstrapping of `setup` scripts.                                                  |
 
 ### Install Commands
 
@@ -151,6 +151,7 @@ The primary use cases for this command are:
 
 ### Utility Commands
 
+- `ssi download` - use it to download any file using either `curl` or `wget` (whichever is available)
 - `ssi log` - use it to output messages in the same format as the internal
   `ssi` functions.
 - `ssi bootstrap` - use it to output a sample scirpt that you can use for your

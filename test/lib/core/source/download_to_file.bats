@@ -5,6 +5,7 @@ setup() {
   source "$BASE/core/ui/colors.sh"
   source "$BASE/core/ui/log.sh"
   source "$BASE/core/env/is_command.sh"
+  source "$BASE/core/source/download.sh"
   source "$BASE/core/source/download_to_file.sh"
 }
 
@@ -56,5 +57,5 @@ download_and_cat() {
   run source_download_to_file "https://example.com/c" "/tmp/out"
 
   [ "$status" -eq 1 ]
-  [ -n "$output" ]
+  [[ "$output" == *"No downloader available"* ]]
 }

@@ -129,7 +129,7 @@ ssi_install_man_usage() {
     printf "%s\n" "$(bold "Options:")"
 
     printf "  %s\n" "$(green "--name NAME")"
-    printf "    Explicit target file name (required for stdin or ambiguous sources)\n    Not relevant when SOURCE is a directory\n"
+    printf "    Explicit target file name (required for stdin or ambiguous sources)\n    Not relevant when SOURCE is a directory or archive\n"
     echo
 
     printf "  %s\n" "$(green "--help, -h")"
@@ -139,7 +139,7 @@ ssi_install_man_usage() {
     printf "%s\n" "$(bold "Arguments:")"
 
     printf "  %s\n" "$(green "SOURCE")"
-    printf "    Source file. May be:\n    - URL to download from\n    - Path to file\n    - Path to a directory\n    - '-' to read from stdin\n"
+    printf "    Source input. May be:\n    - URL to a single man page\n    - URL to a tarball archive (.tar.gz or .tgz)\n    - Path to a single man page\n    - Path to a tarball archive (.tar.gz or .tgz)\n    - Path to a directory of man pages\n    - '-' to read a single man page from stdin\n"
     echo
 
   fi
@@ -1102,6 +1102,107 @@ completion_uninstall() {
   fi
 }
 
+archive_extract_to_temp_dir() {
+  local source_input="${1:-}"
+  local temp_root="${2:-${TMPDIR:-/tmp}}"
+  local archive_kind source_kind archive_file archive_dir stderr_file
+  local cleanup_archive_file=0 rc error_message message
+
+  archive_kind="$(archive_type "$source_input")" || return 1
+  source_kind="$(source_type "$source_input")" || return 1
+
+  if ! is_command tar; then
+    fail "No archive extractor available (need tar)"
+    return 1
+  fi
+
+  if [[ -n "${SSI_DRY_RUN:-}" && "$source_kind" == "url" ]]; then
+    log debug "[DRY] Extracting archive: $source_input -> /dev/null"
+    printf "%s" "/dev/null"
+    return 0
+  fi
+
+  if [[ "$source_kind" == "file" ]]; then
+    archive_file="$source_input"
+  else
+    archive_file="$(source_to_temp_file "$source_input" "$temp_root")" || return 1
+    cleanup_archive_file=1
+  fi
+
+  archive_dir="$(mktemp -d "${temp_root%/}/ssi.archive.XXXXXX")" || {
+    fail "Could not allocate temporary directory"
+    return 1
+  }
+
+  stderr_file="$(mktemp "${temp_root%/}/ssi.archive.stderr.XXXXXX")" || {
+    remove_dir "$archive_dir" || return 1
+    fail "Could not allocate temporary file"
+    return 1
+  }
+
+  case "$archive_kind" in
+    tar.gz)
+      message="Extracting archive: $archive_file -> $archive_dir"
+      log debug "$message"
+      tar -xzf "$archive_file" -C "$archive_dir" 2>"$stderr_file"
+      rc=$?
+      ;;
+    *)
+      printf "%s\n" "Unsupported archive format: $source_input" > "$stderr_file"
+      rc=1
+      ;;
+  esac
+
+  if [[ "$cleanup_archive_file" -eq 1 && "$archive_file" != "/dev/null" ]]; then
+    remove_file "$archive_file" || {
+      rm -f "$stderr_file"
+      remove_dir "$archive_dir" || return 1
+      return 1
+    }
+  fi
+
+  if [[ "$rc" -ne 0 ]]; then
+    if [[ -s "$stderr_file" ]]; then
+      error_message="$(<"$stderr_file")"
+      error_message="${error_message%$'\n'}"
+    else
+      error_message="Could not extract archive: $source_input"
+    fi
+    rm -f "$stderr_file"
+    remove_dir "$archive_dir" || return 1
+    fail "$error_message"
+    return 1
+  fi
+
+  rm -f "$stderr_file"
+  printf "%s" "$archive_dir"
+}
+
+archive_type() {
+  local source_input="${1:-}"
+  local target_name
+
+  if [[ -z "$source_input" ]]; then
+    fail "Missing archive source"
+    return 1
+  fi
+
+  target_name="$(source_target_name "$source_input" 2>/dev/null || true)"
+  if [[ -z "$target_name" && "$source_input" != "-" ]]; then
+    target_name="$(basename "$source_input")"
+  fi
+
+  case "$target_name" in
+    *.tar.gz | *.tgz)
+      printf "tar.gz"
+      return 0
+      ;;
+  esac
+
+  fail "Unsupported archive format: $source_input"
+  return 1
+}
+
 is_command() {
   local name="${1:-}"
   [[ -n "$name" ]] && command -v "$name" >/dev/null 2>&1
@@ -1188,6 +1289,40 @@ install_file() {
   fi
 
   fail "Could not install file to destination: $destination"
+  return 1
+}
+
+remove_dir() {
+  local path="${1:-}"
+  local message
+
+  if [[ -z "$path" ]]; then
+    fail "Missing directory"
+    return 1
+  fi
+
+  if [[ ! -e "$path" ]]; then
+    return 0
+  fi
+
+  message="Removing directory: $path"
+  if [[ -n "${SSI_DRY_RUN:-}" ]]; then
+    log debug "[DRY] $message"
+    return 0
+  fi
+  log debug "$message"
+
+  rm -rf "$path" 2>/dev/null && return 0
+
+  if is_sudo_usable; then
+    sudo rm -rf "$path" || {
+      fail "Could not remove directory: $path"
+      return 1
+    }
+    return 0
+  fi
+
+  fail "Could not remove directory: $path"
   return 1
 }
 
@@ -1312,7 +1447,7 @@ source_download_to_file() {
 source_to_temp_file() {
   local source="${1:--}"
   local temp_root="${2:-${TMPDIR:-/tmp}}"
-  local detected_type temp_file
+  local detected_type temp_file message
 
   detected_type="$(source_type "$source")" || return 1
 
@@ -1340,12 +1475,16 @@ source_to_temp_file() {
 
   case "$detected_type" in
     stdin)
+      message="Reading source from stdin: - -> $temp_file"
+      log debug "$message"
       cat > "$temp_file" || {
         fail "Could not read source from stdin"
         return 1
       }
       ;;
     file)
+      message="Copying source file: $source -> $temp_file"
+      log debug "$message"
       cp "$source" "$temp_file" || {
         fail "Could not copy source file"
         return 1
@@ -1518,42 +1657,78 @@ fail() {
 man_install() {
   local source_input="${1:-}"
   local explicit_name="${2:-}"
-  local mode matched file
+  local mode archive_dir rc
 
   mode="$(man_mode)" || return 1
 
   if [[ -d "$source_input" ]]; then
     if [[ -n "$explicit_name" ]]; then
-      fail "--name cannot be used with a directory source"
+      fail "--name cannot be used with a directory or archive source"
       return 1
     fi
 
-    matched=0
-    for file in "$source_input"/*; do
-      [[ -f "$file" ]] || continue
-      if [[ "$(basename "$file")" =~ \.([0-9][A-Za-z]{0,3})$ ]]; then
-        man__install_one "$file" "" "$mode" || return 1
-        matched=1
-      fi
-    done
+    man__install_many "$source_input" "$mode" "directory" "$source_input"
+    return $?
+  fi
 
-    if [[ "$matched" -eq 0 ]]; then
-      fail "No matching man pages in directory: $source_input"
+  if archive_type "$source_input" >/dev/null 2>&1; then
+    if [[ -n "$explicit_name" ]]; then
+      fail "--name cannot be used with a directory or archive source"
       return 1
     fi
 
-    return 0
+    archive_dir="$(archive_extract_to_temp_dir "$source_input")" || return 1
+    if [[ "$archive_dir" == "/dev/null" ]]; then
+      log info "Man pages skipped: dry-run archive URL inspection unavailable"
+      return 0
+    fi
+
+    man__install_many "$archive_dir" "$mode" "archive" "$source_input"
+    rc=$?
+    remove_dir "$archive_dir" || return 1
+    return "$rc"
   fi
 
   man__install_one "$source_input" "$explicit_name" "$mode"
+}
+
+man__install_many() {
+  local source_root="${1:-}"
+  local mode="${2:-}"
+  local source_kind="${3:-directory}"
+  local source_label="${4:-}"
+  local matched=0
+  local file
+
+  while IFS= read -r file; do
+    [[ -n "$file" ]] || continue
+    man__install_file "$file" "" "$mode" || return 1
+    matched=1
+  done < <(man__page_files "$source_root")
+
+  if [[ "$matched" -eq 0 ]]; then
+    fail "No matching man pages in ${source_kind}: ${source_label}"
+    return 1
+  fi
+
+  return 0
+}
+
+man__page_files() {
+  local source_root="${1:-}"
+  local file
+
+  find "$source_root" -type f | sort | while IFS= read -r file; do
+    [[ "$(basename "$file")" =~ \.([0-9][A-Za-z]{0,3})$ ]] || continue
+    printf "%s\n" "$file"
+  done
 }
 
 man__install_one() {
   local source_input="${1:-}"
   local explicit_name="${2:-}"
   local mode="${3:-}"
-  local temp_file target_name target_info section filename target_dir
-  local target_path
+  local temp_file rc target_name
 
   if [[ -n "$explicit_name" ]]; then
     target_name="$explicit_name"
@@ -1566,16 +1741,42 @@ man__install_one() {
     return 1
   fi
 
+  temp_file="$(source_to_temp_file "$source_input")" || return 1
+  man__install_file "$temp_file" "$target_name" "$mode"
+  rc=$?
+
+  if [[ "$temp_file" != "/dev/null" ]]; then
+    remove_file "$temp_file" || return 1
+  fi
+
+  return "$rc"
+}
+
+man__install_file() {
+  local source_file="${1:-}"
+  local explicit_name="${2:-}"
+  local mode="${3:-}"
+  local target_name target_info section filename target_dir target_path
+
+  if [[ -n "$explicit_name" ]]; then
+    target_name="$explicit_name"
+  else
+    target_name="$(source_target_name "$source_file")" || return 1
+  fi
+
+  if [[ -z "$target_name" ]]; then
+    fail "Could not determine target name; use --name"
+    return 1
+  fi
+
   target_info="$(man_target "$target_name")" || return 1
   section="${target_info%%:*}"
   filename="${target_info#*:}"
   target_dir="$(man_path "$section" "$mode")" || return 1
   target_path="${target_dir}/${filename}"
-  temp_file="$(source_to_temp_file "$source_input")" || return 1
 
-  install_file "$temp_file" "$target_path" 644 || return 1
+  install_file "$source_file" "$target_path" 644 || return 1
 
-  remove_file "$temp_file"
   log info "Man page installed: $target_path"
 }
 
@@ -2129,9 +2330,14 @@ ssi_install_man_command() {
   source_input="${args[source]}"
   explicit_name="${args[--name]:-}"
   display_name="$explicit_name"
+  batch_install=""
 
   if [[ -d "$source_input" ]]; then
     display_name="$source_input"
+    batch_install=1
+  elif archive_type "$source_input" >/dev/null 2>&1; then
+    display_name="$(source_target_name "$source_input" 2>/dev/null || true)"
+    batch_install=1
   elif [[ -z "$display_name" ]]; then
     display_name="$(source_target_name "$source_input" 2>/dev/null || true)"
   fi
@@ -2139,7 +2345,7 @@ ssi_install_man_command() {
   [[ -n "$display_name" ]] || display_name="$source_input"
 
   dry_run_note
-  if [[ -d "$source_input" ]]; then
+  if [[ -n "$batch_install" ]]; then
     log info "$(bold "Installing man pages"): $display_name"
   else
     log info "$(bold "Installing man page"): $display_name"

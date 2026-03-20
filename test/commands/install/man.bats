@@ -59,11 +59,11 @@ teardown() {
   chmod +x "$fakebin/sudo"
 
   doc_root="$tmp_root/docs"
-  mkdir -p "$doc_root"
-  printf "add" > "$doc_root/rush-add.1"
-  printf "list" > "$doc_root/rush-list.5"
-  printf "main" > "$doc_root/rush.1"
-  printf "ignore" > "$doc_root/rush.md"
+  mkdir -p "$doc_root/share/man/man1" "$doc_root/share/man/man5"
+  printf "add" > "$doc_root/share/man/man1/rush-add.1"
+  printf "list" > "$doc_root/share/man/man5/rush-list.5"
+  printf "main" > "$doc_root/share/man/man1/rush.1"
+  printf "ignore" > "$doc_root/share/man/man1/rush.md"
 
   run ./ssi install man "$doc_root"
 
@@ -78,6 +78,54 @@ teardown() {
   [ "$(cat "$SSI_USER_MAN_ROOT/man1/rush-add.1")" = "add" ]
   [ "$(cat "$SSI_USER_MAN_ROOT/man5/rush-list.5")" = "list" ]
   [ "$(cat "$SSI_USER_MAN_ROOT/man1/rush.1")" = "main" ]
+}
+
+@test "install man installs all matching man pages from a local archive" {
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
+  chmod +x "$fakebin/sudo"
+
+  doc_root="$tmp_root/archive-src"
+  archive_path="$tmp_root/docs.tgz"
+  mkdir -p "$doc_root/share/man/man1" "$doc_root/share/man/man5"
+  printf "add" > "$doc_root/share/man/man1/rush-add.1"
+  printf "list" > "$doc_root/share/man/man5/rush-list.5"
+  printf "ignore" > "$doc_root/share/man/man5/rush.txt"
+  tar -czf "$archive_path" -C "$doc_root" .
+
+  run ./ssi install man "$archive_path"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"• info  → Installing man pages: docs.tgz"* ]]
+  [[ "$output" == *"• info  → Man page installed: $SSI_USER_MAN_ROOT/man1/rush-add.1"* ]]
+  [[ "$output" == *"• info  → Man page installed: $SSI_USER_MAN_ROOT/man5/rush-list.5"* ]]
+  [ -f "$SSI_USER_MAN_ROOT/man1/rush-add.1" ]
+  [ -f "$SSI_USER_MAN_ROOT/man5/rush-list.5" ]
+  [ ! -e "$SSI_USER_MAN_ROOT/man5/rush.txt" ]
+}
+
+@test "install man installs all matching man pages from a url archive" {
+  cp "$FIXTURES/bin/curl_archive" "$fakebin/curl"
+  cp "$FIXTURES/bin/sudo" "$fakebin/sudo"
+  chmod +x "$fakebin/curl" "$fakebin/sudo"
+
+  doc_root="$tmp_root/archive-src"
+  archive_path="$tmp_root/docs.tgz"
+  mkdir -p "$doc_root/share/man/man1" "$doc_root/share/man/man8"
+  printf "main" > "$doc_root/share/man/man1/rush.1"
+  printf "admin" > "$doc_root/share/man/man8/rush-admin.8"
+  tar -czf "$archive_path" -C "$doc_root" .
+  export ARCHIVE_PAYLOAD="$archive_path"
+
+  run ./ssi install man "https://example.com/docs.tgz"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"• info  → Installing man pages: docs.tgz"* ]]
+  [[ "$output" == *"• info  → Man page installed: $SSI_USER_MAN_ROOT/man1/rush.1"* ]]
+  [[ "$output" == *"• info  → Man page installed: $SSI_USER_MAN_ROOT/man8/rush-admin.8"* ]]
+  [ "$(cat "$SSI_USER_MAN_ROOT/man1/rush.1")" = "main" ]
+  [ "$(cat "$SSI_USER_MAN_ROOT/man8/rush-admin.8")" = "admin" ]
+
+  unset -v ARCHIVE_PAYLOAD
 }
 
 @test "install man is a no-op in dry run mode" {

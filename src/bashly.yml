@@ -17,6 +17,7 @@ commands:
   commands:
   - name: bin
     help: Install executable file
+    completions: [<file>]
 
     args: &install_args
     - name: source
@@ -35,6 +36,7 @@ commands:
 
   - name: man
     help: Install man page
+    completions: [<file>, <directory>]
     args:
     - name: source
       help: |
@@ -56,6 +58,7 @@ commands:
 
   - name: completion
     help: Install completion script
+    completions: [<file>]
     args: *install_args
     flags:
     - *name_flag
@@ -72,6 +75,7 @@ commands:
   - name: startup
     help: Install startup script
     args: *install_args
+    completions: [<file>]
     flags:
     - *name_flag
     - *shell_flag
@@ -85,7 +89,7 @@ commands:
   commands:
   - name: bin
     help: Uninstall executable file
-
+    completions: [<file>]
     args: &uninstall_args
     - name: name
       help: File name to uninstall
@@ -93,17 +97,20 @@ commands:
 
   - name: man
     help: Uninstall man page
+    completions: [<file>]
     args: *uninstall_args
 
   - name: completion
     help: Uninstall completion script
     args: *uninstall_args
+    completions: [<file>]
     flags:
     - *shell_flag
 
   - name: startup
     help: Uninstall startup script
     args: *uninstall_args
+    completions: [<file>]
     flags:
     - *shell_flag
     - long: --strict

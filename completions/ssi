@@ -91,7 +91,8 @@ _ssi_completions() {
       ;;
 
     *'uninstall completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
     *'rm completion'*'--shell')
@@ -119,7 +120,8 @@ _ssi_completions() {
       ;;
 
     *'install completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
       ;;
 
     *'rm startup'*'--shell')
@@ -127,11 +129,13 @@ _ssi_completions() {
       ;;
 
     *'uninstall startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     *'remove completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
     *'i startup'*'--shell')
@@ -151,7 +155,8 @@ _ssi_completions() {
       ;;
 
     *'install startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
     *'test completion'*)
@@ -159,23 +164,28 @@ _ssi_completions() {
       ;;
 
     *'add completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
       ;;
 
     *'remove startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     *'uninstall bin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'uninstall man'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'rm completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
     *'check startup'*)
@@ -187,7 +197,8 @@ _ssi_completions() {
       ;;
 
     *'i completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name --shell -h")" -- "$cur")
       ;;
 
     *'test startup'*)
@@ -195,31 +206,38 @@ _ssi_completions() {
       ;;
 
     *'u completion'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell -h")" -- "$cur")
       ;;
 
     *'add startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
     *'install man'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A directory -A file -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
     *'install bin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
     *'rm startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     *'remove man'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'remove bin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'check bin'*)
@@ -239,11 +257,13 @@ _ssi_completions() {
       ;;
 
     *'u startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --shell --strict -h")" -- "$cur")
       ;;
 
     *'i startup'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name --shell --strict -h")" -- "$cur")
       ;;
 
     *'uninstall'*)
@@ -263,11 +283,13 @@ _ssi_completions() {
       ;;
 
     *'add bin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
     *'add man'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A directory -A file -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
     *'install'*)
@@ -275,11 +297,13 @@ _ssi_completions() {
       ;;
 
     *'rm man'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'rm bin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'remove'*)
@@ -287,15 +311,18 @@ _ssi_completions() {
       ;;
 
     *'i bin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
     *'i man'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A directory -A file -W "$(_ssi_completions_filter "--help --name -h")" -- "$cur")
       ;;
 
     *'u bin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'t man'*)
@@ -311,7 +338,8 @@ _ssi_completions() {
       ;;
 
     *'u man'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
+      compopt -o filenames 2>/dev/null
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -A file -W "$(_ssi_completions_filter "--help -h")" -- "$cur")
       ;;
 
     *'test'*)

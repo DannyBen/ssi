@@ -7,6 +7,16 @@
   [ -n "$output" ]
 }
 
+@test "bootstrap prints prepared installer without template markers" {
+  run ./ssi bootstrap
+
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"@PREPARE@"* ]]
+  [[ "$output" == *"2>&1"* ]]
+  [[ "$output" == *"2>/dev/null"* ]]
+  [[ "$output" == *">&2"* ]]
+}
+
 @test "bootstrap writes template when FILE is provided" {
   target="$(mktemp)"
   rm -f "$target"

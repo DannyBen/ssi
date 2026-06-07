@@ -17,5 +17,8 @@ set -euo pipefail
 BOOTSTRAP
 )
 
-  printf "%s\n" "${template//@PREPARE@/$prepare_section}"
+  awk -v prepare="$prepare_section" '
+    $0 == "@PREPARE@" { print prepare; next }
+    { print }
+  ' <<<"$template"
 }

@@ -1,6 +1,13 @@
 Changelog
 ========================================
 
+v0.1.10 - 2026-06-07
+----------------------------------------
+
+- Fix bootstrap PREPARE token replacement [`99c6786`](https://github.com/DannyBen/ssi/commit/99c6786)
+- Compare [`v0.1.9..v0.1.10`](https://github.com/dannyben/ssi/compare/v0.1.9..v0.1.10)
+
+
 v0.1.9 - 2026-03-20
 ----------------------------------------
 
